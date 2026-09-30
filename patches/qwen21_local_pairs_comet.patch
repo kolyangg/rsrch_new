@@ -1,0 +1,181 @@
+diff --git a/examples/dreambooth/train_dreambooth_lora_qwenimage21_img2img.py b/examples/dreambooth/train_dreambooth_lora_qwenimage21_img2img.py
+index 530f95914..a8ee997cc 100644
+--- a/examples/dreambooth/train_dreambooth_lora_qwenimage21_img2img.py
++++ b/examples/dreambooth/train_dreambooth_lora_qwenimage21_img2img.py
+@@ -851,11 +851,18 @@ class DreamBoothDataset(Dataset):
+             # Downloading and loading a dataset from the hub.
+             # See more about loading custom images at
+             # https://huggingface.co/docs/datasets/v2.0.0/en/dataset_script
+-            dataset = load_dataset(
+-                args.dataset_name,
+-                args.dataset_config_name,
+-                cache_dir=args.cache_dir,
+-            )
++            # 30 Sep 2026 - Keep paired private identity images local for smoke runs.
++            from datasets import load_from_disk
++
++            local_dataset = Path(args.dataset_name)
++            if local_dataset.is_dir() and (local_dataset / "dataset_info.json").is_file():
++                dataset = {"train": load_from_disk(str(local_dataset))}
++            else:
++                dataset = load_dataset(
++                    args.dataset_name,
++                    args.dataset_config_name,
++                    cache_dir=args.cache_dir,
++                )
+             # Preprocessing the datasets.
+             column_names = dataset["train"].column_names
+ 
+@@ -1768,8 +1775,15 @@ def main(args):
+     # We need to initialize the trackers we use, and also store our configuration.
+     # The trackers initializes automatically on the main process.
+     if accelerator.is_main_process:
+-        tracker_name = "dreambooth-qwen-image-lora"
++        tracker_name = os.getenv("COMET_PROJECT_NAME", "dreambooth-qwen-image-lora") if args.report_to == "comet_ml" else "dreambooth-qwen-image-lora"
+         accelerator.init_trackers(tracker_name, config=vars(args))
++        if args.report_to == "comet_ml":
++            tracker = accelerator.get_tracker("comet_ml", unwrap=True)
++            key = tracker.writer.get_key()
++            Path(args.output_dir).mkdir(parents=True, exist_ok=True)
++            (Path(args.output_dir) / "comet_experiment.json").write_text(
++                json.dumps({"schema_version": 1, "comet": {"experiment_key": key, "project_name": tracker_name}}, indent=2) + "\n"
++            )
+ 
+     # Train!
+     total_batch_size = args.train_batch_size * accelerator.num_processes * args.gradient_accumulation_steps
+diff --git a/src/diffusers/models/transformers/transformer_qwenimage21.py b/src/diffusers/models/transformers/transformer_qwenimage21.py
+index b6eabfd58..4e1f9cfb7 100644
+--- a/src/diffusers/models/transformers/transformer_qwenimage21.py
++++ b/src/diffusers/models/transformers/transformer_qwenimage21.py
+@@ -366,6 +366,29 @@ def _qwenimage21_prepare_qkv(
+     return query, key, value, seq_len_q
+ 
+ 
++def _qwenimage21_reference_branch_correction(attn, input_hidden_states, query, value, rotary_emb, branch_context, kv_cache_mode):
++    if kv_cache_mode == "cached":
++        raise ValueError("Reference branch requires uncached native Qwen attention")
++    reference_indices, target_indices = branch_context
++    reference_hidden = input_hidden_states.index_select(1, reference_indices)
++    key_pre = attn.to_k(reference_hidden).unflatten(-1, (attn.heads, -1)).permute(0, 2, 1, 3)
++    reference_value = value.index_select(1, reference_indices).permute(0, 2, 1, 3)
++    reference_rotary = None if rotary_emb is None else rotary_emb.index_select(0, reference_indices)
++
++    def native_key_postprocess(key_unmodulated):
++        normalized = attn.norm_k(key_unmodulated.permute(0, 2, 1, 3)).to(reference_value.dtype)
++        if reference_rotary is not None:
++            normalized = apply_rotary_emb_qwen(normalized, reference_rotary, use_real=False)
++        return normalized.permute(0, 2, 1, 3)
++
++    # 30 Sep 2026 - AICODE-NOTE: R0 and R1 read identical face-key positions;
++    # the correction is inserted before the original to_out projection.
++    return attn.reference_branch(
++        query.permute(0, 2, 1, 3), key_pre, reference_value,
++        reference_hidden, target_indices, native_key_postprocess,
++    )
++
++
+ class QwenImage21FlexAttnProcessor:
+     r"""
+     Attention processor for Qwen-Image 2.1 that runs the block-causal prefill as one `flex_attention` call driven by a
+@@ -400,7 +423,9 @@ class QwenImage21FlexAttnProcessor:
+         cache_write_slice: slice | None = None,
+         segments: list[tuple[int, int, bool]] | None = None,
+         key_valid: torch.Tensor | None = None,
++        branch_context: tuple[torch.Tensor, torch.Tensor] | None = None,
+     ) -> torch.Tensor:
++        input_hidden_states = hidden_states
+         query, key, value, seq_len_q = _qwenimage21_prepare_qkv(
+             attn, hidden_states, rotary_emb, layer_cache, kv_cache_mode, cache_write_slice
+         )
+@@ -455,6 +480,11 @@ class QwenImage21FlexAttnProcessor:
+         hidden_states = hidden_states[:, :seq_len_q]
+         hidden_states = hidden_states.flatten(2, 3).type_as(query)
+ 
++        if branch_context is not None and hasattr(attn, "reference_branch"):
++            hidden_states = hidden_states + _qwenimage21_reference_branch_correction(
++                attn, input_hidden_states, query, value, rotary_emb, branch_context, kv_cache_mode
++            )
++
+         hidden_states = attn.to_out[0](hidden_states)
+         return attn.to_out[1](hidden_states)
+ 
+@@ -482,7 +512,9 @@ class QwenImage21AttnProcessor:
+         cache_write_slice: slice | None = None,
+         segments: list[tuple[int, int, bool]] | None = None,
+         key_valid: torch.Tensor | None = None,
++        branch_context: tuple[torch.Tensor, torch.Tensor] | None = None,
+     ) -> torch.Tensor:
++        input_hidden_states = hidden_states
+         query, key, value, seq_len_q = _qwenimage21_prepare_qkv(
+             attn, hidden_states, rotary_emb, layer_cache, kv_cache_mode, cache_write_slice
+         )
+@@ -544,6 +576,11 @@ class QwenImage21AttnProcessor:
+         hidden_states = hidden_states[:, :seq_len_q]
+         hidden_states = hidden_states.flatten(2, 3).type_as(query)
+ 
++        if branch_context is not None and hasattr(attn, "reference_branch"):
++            hidden_states = hidden_states + _qwenimage21_reference_branch_correction(
++                attn, input_hidden_states, query, value, rotary_emb, branch_context, kv_cache_mode
++            )
++
+         hidden_states = attn.to_out[0](hidden_states)
+         return attn.to_out[1](hidden_states)
+ 
+@@ -624,6 +661,7 @@ class QwenImage21TransformerBlock(nn.Module):
+         cache_write_slice: slice | None = None,
+         segments: list[tuple[int, int, bool]] | None = None,
+         key_valid: torch.Tensor | None = None,
++        branch_context: tuple[torch.Tensor, torch.Tensor] | None = None,
+     ) -> torch.Tensor:
+         mod1, mod2 = modulation.chunk(2, dim=-1)
+ 
+@@ -637,6 +675,7 @@ class QwenImage21TransformerBlock(nn.Module):
+             cache_write_slice=cache_write_slice,
+             segments=segments,
+             key_valid=key_valid,
++            **({"branch_context": branch_context} if branch_context is not None else {}),
+         )
+         hidden_states = hidden_states + img_gate1.tanh() * attn_output
+ 
+@@ -925,6 +964,25 @@ class QwenImage21Transformer2DModel(
+         rotary_emb = self.pos_embed(img_shapes[0], image_pad_mask, device=hidden_states.device)
+         image_ids, target_token_mask = self.build_token_metadata(image_pad_mask, img_shapes[0])
+ 
++        branch_context = None
++        branch_mask = None if attention_kwargs is None else attention_kwargs.get("branch_reference_mask")
++        if branch_mask is not None:
++            from ba_dit.nn.reference_read_delta import stratified_reference_indices
++
++            if any(not isinstance(block.attn.processor, QwenImage21AttnProcessor) for block in self.transformer_blocks):
++                raise ValueError("Reference branch requires QwenImage21AttnProcessor on every block")
++            if branch_mask.ndim != 2:
++                raise ValueError("branch_reference_mask must have the reference token grid shape [H,W]")
++            reference_positions = (image_pad_mask & ~target_token_mask).nonzero(as_tuple=True)[0]
++            if branch_mask.numel() != reference_positions.numel():
++                raise ValueError("Reference mask token count differs from native Qwen condition tokens")
++            cap = int(attention_kwargs.get("branch_max_reference_keys", 512))
++            support = stratified_reference_indices(branch_mask.to(hidden_states.device), cap)
++            branch_context = (
++                reference_positions.index_select(0, support),
++                target_token_mask.nonzero(as_tuple=True)[0],
++            )
++
+         timestep = timestep.to(hidden_states.dtype)
+         if self.config.causal_condition:
+             # Extra t=0 row; text and condition-image tokens modulate from it. `modulation_mask` selects which row
+@@ -994,6 +1052,7 @@ class QwenImage21Transformer2DModel(
+                     cache_write_slice,
+                     block_segments,
+                     block_key_valid,
++                    branch_context,
+                 )
+             else:
+                 joint_hidden_states = block(
+@@ -1007,6 +1066,7 @@ class QwenImage21Transformer2DModel(
+                     cache_write_slice=cache_write_slice,
+                     segments=block_segments,
+                     key_valid=block_key_valid,
++                    branch_context=branch_context,
+                 )
+ 
+         joint_hidden_states = self.norm_out(joint_hidden_states, temb, modulation_mask)

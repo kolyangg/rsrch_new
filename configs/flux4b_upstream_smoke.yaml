@@ -1,0 +1,60 @@
+job: extension
+config:
+  name: flux4b_upstream_lora_smoke
+  process:
+  - type: sd_trainer
+    training_folder: /home/kolyangg/rsrch_new/runs
+    device: cuda:0
+    network:
+      type: lora
+      linear: 16
+      linear_alpha: 16
+    save:
+      dtype: bf16
+      save_every: 50
+      max_step_saves_to_keep: 3
+      push_to_hub: false
+    datasets:
+    - folder_path: /home/kolyangg/rsrch_new/data/pairs_export/target
+      control_path: /home/kolyangg/rsrch_new/data/pairs_export/reference
+      caption_ext: txt
+      caption_dropout_rate: 0.0
+      shuffle_tokens: false
+      cache_latents_to_disk: true
+      resolution:
+      - 512
+    train:
+      batch_size: 1
+      steps: 100
+      gradient_accumulation_steps: 8
+      train_unet: true
+      train_text_encoder: false
+      gradient_checkpointing: true
+      noise_scheduler: flowmatch
+      optimizer: adamw8bit
+      lr: 0.0001
+      dtype: bf16
+      skip_first_sample: true
+      disable_sampling: true
+      ema_config:
+        use_ema: false
+    model:
+      name_or_path: /home/kolyangg/rsrch_new/weights/flux4b
+      arch: flux2_klein_4b
+      vae_path: /home/kolyangg/rsrch_new/weights/flux_vae/ae.safetensors
+      quantize: false
+      quantize_te: false
+      model_kwargs:
+        match_target_res: true
+    sample:
+      sampler: flowmatch
+      sample_every: 10000
+      width: 512
+      height: 512
+      prompts: []
+      seed: 42
+      guidance_scale: 4.0
+      sample_steps: 50
+meta:
+  name: '[name]'
+  version: '1.0'

@@ -1,0 +1,100 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-09-30T11:05:00.478323+00:00",
+  "set": "flux48",
+  "components": [
+    {
+      "key": "flux4b",
+      "repo": "black-forest-labs/FLUX.2-klein-base-4B",
+      "revision": "a3b4f4849157f664bdbc776fd7453c2783562f4d",
+      "files": [
+        {
+          "path": "LICENSE.md",
+          "bytes": 9584
+        },
+        {
+          "path": "README.md",
+          "bytes": 10084
+        },
+        {
+          "path": "flux-2-klein-base-4b.safetensors",
+          "bytes": 7751105712
+        }
+      ],
+      "bytes": 7751125380
+    },
+    {
+      "key": "flux4b_text",
+      "repo": "Qwen/Qwen3-4B",
+      "revision": "1cfa9a7208912126459214e8b04321603b3df60c",
+      "files": [
+        {
+          "path": "LICENSE",
+          "bytes": 11343
+        },
+        {
+          "path": "README.md",
+          "bytes": 16857
+        },
+        {
+          "path": "config.json",
+          "bytes": 726
+        },
+        {
+          "path": "generation_config.json",
+          "bytes": 239
+        },
+        {
+          "path": "merges.txt",
+          "bytes": 1671853
+        },
+        {
+          "path": "model-00001-of-00003.safetensors",
+          "bytes": 3957900840
+        },
+        {
+          "path": "model-00002-of-00003.safetensors",
+          "bytes": 3987450520
+        },
+        {
+          "path": "model-00003-of-00003.safetensors",
+          "bytes": 99630640
+        },
+        {
+          "path": "model.safetensors.index.json",
+          "bytes": 32819
+        },
+        {
+          "path": "tokenizer.json",
+          "bytes": 11422654
+        },
+        {
+          "path": "tokenizer_config.json",
+          "bytes": 9732
+        },
+        {
+          "path": "vocab.json",
+          "bytes": 2776833
+        }
+      ],
+      "bytes": 8060925056
+    },
+    {
+      "key": "flux_vae",
+      "repo": "ai-toolkit/flux2_vae",
+      "revision": "3f679cf232e6d91d28396522d9502c31e8f7ccbe",
+      "files": [
+        {
+          "path": "README.md",
+          "bytes": 770
+        },
+        {
+          "path": "ae.safetensors",
+          "bytes": 336211292
+        }
+      ],
+      "bytes": 336212062
+    }
+  ],
+  "bytes": 16148262498
+}

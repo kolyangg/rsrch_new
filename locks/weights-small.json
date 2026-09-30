@@ -1,0 +1,212 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-09-30T11:00:30.082758+00:00",
+  "set": "small",
+  "components": [
+    {
+      "key": "flux4b",
+      "repo": "black-forest-labs/FLUX.2-klein-base-4B",
+      "revision": "a3b4f4849157f664bdbc776fd7453c2783562f4d",
+      "files": [
+        {
+          "path": "LICENSE.md",
+          "bytes": 9584
+        },
+        {
+          "path": "README.md",
+          "bytes": 10084
+        },
+        {
+          "path": "flux-2-klein-base-4b.safetensors",
+          "bytes": 7751105712
+        }
+      ],
+      "bytes": 7751125380
+    },
+    {
+      "key": "flux4b_text",
+      "repo": "Qwen/Qwen3-4B",
+      "revision": "1cfa9a7208912126459214e8b04321603b3df60c",
+      "files": [
+        {
+          "path": "LICENSE",
+          "bytes": 11343
+        },
+        {
+          "path": "README.md",
+          "bytes": 16857
+        },
+        {
+          "path": "config.json",
+          "bytes": 726
+        },
+        {
+          "path": "generation_config.json",
+          "bytes": 239
+        },
+        {
+          "path": "merges.txt",
+          "bytes": 1671853
+        },
+        {
+          "path": "model-00001-of-00003.safetensors",
+          "bytes": 3957900840
+        },
+        {
+          "path": "model-00002-of-00003.safetensors",
+          "bytes": 3987450520
+        },
+        {
+          "path": "model-00003-of-00003.safetensors",
+          "bytes": 99630640
+        },
+        {
+          "path": "model.safetensors.index.json",
+          "bytes": 32819
+        },
+        {
+          "path": "tokenizer.json",
+          "bytes": 11422654
+        },
+        {
+          "path": "tokenizer_config.json",
+          "bytes": 9732
+        },
+        {
+          "path": "vocab.json",
+          "bytes": 2776833
+        }
+      ],
+      "bytes": 8060925056
+    },
+    {
+      "key": "flux_vae",
+      "repo": "ai-toolkit/flux2_vae",
+      "revision": "3f679cf232e6d91d28396522d9502c31e8f7ccbe",
+      "files": [
+        {
+          "path": "README.md",
+          "bytes": 770
+        },
+        {
+          "path": "ae.safetensors",
+          "bytes": 336211292
+        }
+      ],
+      "bytes": 336212062
+    },
+    {
+      "key": "qwen21",
+      "repo": "Qwen/Qwen-Image-2.1",
+      "revision": "d26bb61231c349cf6b7896fa83353113880e1ba3",
+      "files": [
+        {
+          "path": "LICENSE",
+          "bytes": 7831
+        },
+        {
+          "path": "README.md",
+          "bytes": 5707
+        },
+        {
+          "path": "model_index.json",
+          "bytes": 447
+        },
+        {
+          "path": "processor/added_tokens.json",
+          "bytes": 707
+        },
+        {
+          "path": "processor/chat_template.jinja",
+          "bytes": 5292
+        },
+        {
+          "path": "processor/merges.txt",
+          "bytes": 1671853
+        },
+        {
+          "path": "processor/preprocessor_config.json",
+          "bytes": 782
+        },
+        {
+          "path": "processor/special_tokens_map.json",
+          "bytes": 613
+        },
+        {
+          "path": "processor/tokenizer.json",
+          "bytes": 11422654
+        },
+        {
+          "path": "processor/tokenizer_config.json",
+          "bytes": 5445
+        },
+        {
+          "path": "processor/video_preprocessor_config.json",
+          "bytes": 817
+        },
+        {
+          "path": "processor/vocab.json",
+          "bytes": 2776833
+        },
+        {
+          "path": "scheduler/scheduler_config.json",
+          "bytes": 485
+        },
+        {
+          "path": "text_encoder/config.json",
+          "bytes": 1517
+        },
+        {
+          "path": "text_encoder/generation_config.json",
+          "bytes": 213
+        },
+        {
+          "path": "text_encoder/model-00001-of-00004.safetensors",
+          "bytes": 4998056552
+        },
+        {
+          "path": "text_encoder/model-00002-of-00004.safetensors",
+          "bytes": 4915962464
+        },
+        {
+          "path": "text_encoder/model-00003-of-00004.safetensors",
+          "bytes": 4915962496
+        },
+        {
+          "path": "text_encoder/model-00004-of-00004.safetensors",
+          "bytes": 2704357976
+        },
+        {
+          "path": "text_encoder/model.safetensors.index.json",
+          "bytes": 67795
+        },
+        {
+          "path": "transformer/config.json",
+          "bytes": 370
+        },
+        {
+          "path": "transformer/diffusion_pytorch_model-00001-of-00002.safetensors",
+          "bytes": 9968332504
+        },
+        {
+          "path": "transformer/diffusion_pytorch_model-00002-of-00002.safetensors",
+          "bytes": 4261951904
+        },
+        {
+          "path": "transformer/diffusion_pytorch_model.safetensors.index.json",
+          "bytes": 30283
+        },
+        {
+          "path": "vae/config.json",
+          "bytes": 2079
+        },
+        {
+          "path": "vae/diffusion_pytorch_model.safetensors",
+          "bytes": 1350989512
+        }
+      ],
+      "bytes": 33131615131
+    }
+  ],
+  "bytes": 49279877629
+}

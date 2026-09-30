@@ -1,0 +1,16 @@
+.env
+.venv/
+envs/
+sources/
+weights/
+cache/
+runs/
+scratch/
+data/validation/masks/
+data/validation/references/
+data/validation/*.pth
+data/train_smoke/
+data/qwen_smoke_dataset/
+data/pairs_export/
+__pycache__/
+*.pyc
