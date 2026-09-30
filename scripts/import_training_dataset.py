@@ -82,6 +82,8 @@ def main():
     validation = read_manifest(ROOT / "data/validation/manual_val_96.jsonl")
     heldout = {row["identity_id"] for row in validation}
     rows, skipped = [], 0
+    duplicate_pairs = validation_hash_pairs = 0
+    validation_hashes = {row["reference_hash"] for row in validation}
     metadata = json.loads(args.metadata.read_text())
     selected = records(metadata, args.format)
     if args.sample_pairs:
@@ -90,7 +92,7 @@ def main():
                     if aliases.get(record["identity"], record["identity"]) not in heldout
                     and record["identity"] not in excluded]
         skipped = len(candidates) - len(eligible)
-        selected = sorted(eligible, key=lambda record: digest([record["identity"], record["target"], record["reference"]]))[:args.sample_pairs]
+        selected = sorted(eligible, key=lambda record: digest([record["identity"], record["target"], record["reference"]]))
     for record in selected:
         identity = aliases.get(record["identity"], record["identity"])
         if identity in heldout or record["identity"] in excluded:
@@ -102,11 +104,18 @@ def main():
             path = (root / record[role]).resolve()
             paths[role] = prepare_image(path, record[f"{role}_box"], record[f"{role}_crop"], args.format,
                                         args.output.parent / "datasets/prepared")
+        reference_hash, target_hash = file_hash(paths["reference"]), file_hash(paths["target"])
+        if reference_hash == target_hash:
+            duplicate_pairs += 1
+            continue
+        if reference_hash in validation_hashes or target_hash in validation_hashes:
+            validation_hash_pairs += 1
+            continue
         rows.append(dict(sample_id=digest([record["identity"], record["reference"], record["target"]])[:20], identity_id=identity,
             reference_images=[os.path.relpath(paths["reference"], args.output.parent)], reference_face_boxes=[record["reference_box"]],
             target_image=os.path.relpath(paths["target"], args.output.parent), target_face_box=record["target_box"],
             prompt=record["prompt"], split="train"))
-        if args.max_pairs and len(rows) >= args.max_pairs:
+        if (args.max_pairs or args.sample_pairs) and len(rows) >= (args.max_pairs or args.sample_pairs):
             break
     temporary = args.output.with_suffix(".tmp.jsonl")
     try:
@@ -115,7 +124,8 @@ def main():
         temporary.rename(args.output)
     finally:
         temporary.unlink(missing_ok=True)
-    audit = {"pairs": len(rows), "excluded_pairs": skipped, "metadata_sha256": file_hash(args.metadata),
+    audit = {"pairs": len(rows), "excluded_pairs": skipped, "duplicate_content_pairs": duplicate_pairs,
+             "validation_image_overlap_pairs": validation_hash_pairs, "metadata_sha256": file_hash(args.metadata),
              "manifest_sha256": file_hash(args.output), "identity_aliases": aliases, "excluded_identities": sorted(excluded),
              "format": args.format, "images_root": str(args.images_root.resolve()),
              "reference_root": str((args.reference_root or args.images_root).resolve()),
