@@ -71,7 +71,7 @@ scripts/run_profile.sh flux48 train --mode branch_only \
   --train-manifest data/train_pairs_large_4096.jsonl --run-name flux48_large4096_branch
 ```
 
-The 4,096-pair manifest is a named disk-bounded training pilot. Stable hashes select pairs across the complete Large metadata before image preparation, avoiding alphabetical first-N bias. The full release remains available on disk for a larger run. Training, data order, selection method and the immutable Comet key are saved with the pilot.
+The 4,096-pair manifest is a named disk-bounded training pilot. Stable hashes select pairs across the complete Large metadata before image preparation, avoiding alphabetical first-N bias. The Large preset automatically maps seven matching IMDb identities to held-out validation names using [large_dataset_identity_aliases.json](../data/validation/large_dataset_identity_aliases.json). The full release remains available on disk for a larger run. Training, data order, selection method and the immutable Comet key are saved with the pilot.
 
 The two Cosmic links were recovered from the previous project's actual download commands, and their Drive pages returned the archive names above on 30 September 2026. Those commands renamed the downloads to `LAION-5B-Filtered-Large.tar` and `LAION-5B-Filtered-Large-Faces.tar.gz`; these are the same two Drive files. Both are required. The later BigCelebs release is a separate dataset and is not substituted for Large.
 

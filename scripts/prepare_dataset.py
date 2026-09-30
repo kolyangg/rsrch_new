@@ -43,6 +43,8 @@ def main():
     parser.add_argument("--sample-pairs", type=int, help="Stable hash sample across identities for a disk-bounded training pilot")
     args = parser.parse_args()
     preset = DATASETS[args.dataset]
+    if args.dataset == "large" and args.identity_aliases is None:
+        args.identity_aliases = ROOT / "data/validation/large_dataset_identity_aliases.json"
     if args.show:
         print(json.dumps(preset, indent=2))
         return
