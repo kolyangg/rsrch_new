@@ -5,6 +5,10 @@ import os
 from pathlib import Path
 
 from ba_dit.config import ROOT, adapter_identity, digest
+from ba_dit.progress import progress_line, progress_metrics, recent_seconds, total_steps
+
+
+_progress = {}
 
 
 def connect(config, run_dir, name=None):
@@ -38,9 +42,17 @@ def connect(config, run_dir, name=None):
 
 
 def log_metrics(experiment, run_dir, metrics, step):
-    record = {"step": step, **metrics}
-    with (Path(run_dir) / "metrics.jsonl").open("a") as stream:
+    run_dir = Path(run_dir)
+    key = str(run_dir.resolve())
+    if key not in _progress:
+        _progress[key] = (total_steps(run_dir), recent_seconds(run_dir))
+    total, seconds = _progress[key]
+    seconds.append(float(metrics["train/seconds"]))
+    progress = progress_metrics(step, total, seconds)
+    record = {"step": step, **metrics, **progress}
+    with (run_dir / "metrics.jsonl").open("a") as stream:
         stream.write(json.dumps(record, sort_keys=True) + "\n")
     if experiment:
-        experiment.log_metrics(metrics, step=step)
-    print(json.dumps(record), flush=True)
+        experiment.log_metrics({**metrics, **progress}, step=step)
+    if step == 1 or step % 25 == 0 or step == total:
+        print(progress_line(step, total, progress), flush=True)
