@@ -77,6 +77,18 @@ FLUX validation supports an optional `--batch-size 8` experiment when prompts sh
 
 If the process is interrupted before the first optimizer update, resume its fixed step-zero validation and then training with `scripts/run_profile.sh flux48 train --resume-run runs/flux48_large4096_branch --quality-metrics`. It reuses completed latents and the saved Comet experiment key.
 
+For a shorter wiring check, `configs/flux4b_48_pilot12.yaml` selects 12 items from the fixed panel across all eight identities. This is a separate named experiment with its own output-mask set and Comet run:
+
+```bash
+scripts/run_profile.sh flux48-pilot12 preflight --split train \
+  --train-manifest data/train_pairs_large_4096.jsonl
+scripts/run_profile.sh flux48-pilot12 train --mode branch_only --quality-metrics \
+  --train-manifest data/train_pairs_large_4096.jsonl \
+  --run-name flux48_large4096_branch_pilot12
+envs/flux-toolkit/bin/python scripts/compare_validation_steps.py \
+  runs/flux48_large4096_branch_pilot12 --later-step 2000
+```
+
 The two Cosmic links were recovered from the previous project's actual download commands, and their Drive pages returned the archive names above on 30 September 2026. Those commands renamed the downloads to `LAION-5B-Filtered-Large.tar` and `LAION-5B-Filtered-Large-Faces.tar.gz`; these are the same two Drive files. Both are required. The later BigCelebs release is a separate dataset and is not substituted for Large.
 
 First unpack the private metadata bundle transferred in step 1:

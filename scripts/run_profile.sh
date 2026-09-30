@@ -6,6 +6,7 @@ command="${2:?Choose preflight, precompute, train or infer}"
 shift 2
 case "$profile" in
   flux48) env_name=flux-toolkit; config=flux4b_48 ;;
+  flux48-pilot12) env_name=flux-toolkit; config=flux4b_48_pilot12 ;;
   flux80) env_name=flux-toolkit; config=flux9b_80 ;;
   flux80-matched) env_name=flux-toolkit; config=flux9b_80_matched ;;
   qwen48) env_name=qwen21; config=qwen7b_48 ;;

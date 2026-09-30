@@ -21,7 +21,11 @@ def signature(config):
 def mask_directory(config):
     height, width = config["data"]["target_size"]
     geometry = f"{height}x{width}_ref{config['data']['reference_size']}_steps{config['validation']['steps']}_cfg{config['validation']['guidance']:g}"
-    return ROOT / "data/validation/output_masks" / config["model"]["arch"] / geometry
+    directory = ROOT / "data/validation/output_masks" / config["model"]["arch"] / geometry
+    panel_hash = file_hash(config["data"]["validation_manifest"])
+    if panel_hash != file_hash(ROOT / "data/validation/manual_val_96.jsonl"):
+        directory /= f"panel-{panel_hash[:12]}"
+    return directory
 
 
 def mask_images(size, box):
