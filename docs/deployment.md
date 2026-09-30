@@ -73,6 +73,8 @@ scripts/run_profile.sh flux48 train --mode branch_only \
 
 The 4,096-pair manifest is a named disk-bounded training pilot. Stable hashes select pairs across the complete Large metadata before image preparation, avoiding alphabetical first-N bias. The Large preset automatically maps seven matching IMDb identities to held-out validation names using [large_dataset_identity_aliases.json](../data/validation/large_dataset_identity_aliases.json). The full release remains available on disk for a larger run. Training, data order, selection method and the immutable Comet key are saved with the pilot.
 
+The FLUX 4B 48 GB profile validates up to eight prompts at once when they share the exact cached reference and token mask. The fixed 96-item order, seeds and prompts are unchanged. Other profiles retain their recorded batch size of one until measured on their target GPUs.
+
 The two Cosmic links were recovered from the previous project's actual download commands, and their Drive pages returned the archive names above on 30 September 2026. Those commands renamed the downloads to `LAION-5B-Filtered-Large.tar` and `LAION-5B-Filtered-Large-Faces.tar.gz`; these are the same two Drive files. Both are required. The later BigCelebs release is a separate dataset and is not substituted for Large.
 
 First unpack the private metadata bundle transferred in step 1:

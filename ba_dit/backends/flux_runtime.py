@@ -78,7 +78,7 @@ def predict(model, tensors, noisy, sigma, config, branch=True, negative=False):
     prediction = model(
         x=torch.cat((packed, tensors["reference_tokens"]), dim=1),
         x_ids=torch.cat((tensors["target_ids"], tensors["reference_ids"]), dim=1),
-        timesteps=sigma.to(noisy.dtype).reshape(1), ctx=tensors[prefix + "prompt_embeds"],
+        timesteps=sigma.to(noisy.dtype).reshape(1).expand(noisy.shape[0]), ctx=tensors[prefix + "prompt_embeds"],
         ctx_ids=tensors[prefix + "text_ids"], guidance=None,
         branch_reference_mask=tensors["reference_mask"] if branch else None,
         branch_target_tokens=packed.shape[1] if branch else None,
@@ -103,8 +103,14 @@ def training_loss(model, tensors, config, branch=True):
 
 @torch.no_grad()
 def sample(model, tensors, config, seed, branch=True, callback=None):
+    return sample_batch(model, tensors, config, [seed], branch, callback)
+
+
+@torch.no_grad()
+def sample_batch(model, tensors, config, seeds, branch=True, callback=None):
     height, width = config["data"]["target_size"]
-    latent = torch.randn((1, 128, height // 16, width // 16), generator=torch.Generator().manual_seed(seed), dtype=torch.bfloat16).to(model.device)
+    latent = torch.cat([torch.randn((1, 128, height // 16, width // 16), generator=torch.Generator().manual_seed(seed),
+                                    dtype=torch.bfloat16) for seed in seeds]).to(model.device)
     times = get_schedule(config["validation"]["steps"], latent.shape[-2] * latent.shape[-1])
     guidance = config["validation"]["guidance"]
     for index, (current, following) in enumerate(zip(times[:-1], times[1:])):
