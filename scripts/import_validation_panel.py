@@ -39,6 +39,12 @@ def main() -> None:
         if target.exists() and sha256(target) != sha256(src / name):
             raise FileExistsError(f"Different existing validation metadata: {target}")
         shutil.copy2(src / name, target)
+    for name in ("id_embeds_manual_val.pth", "id_embeds_manual_val_subject_v2.pth"):
+        if (src / name).exists():
+            target = dst / name
+            if target.exists() and sha256(target) != sha256(src / name):
+                raise FileExistsError(f"Different existing identity embeddings: {target}")
+            shutil.copy2(src / name, target)
     for image in images:
         target = dst / "references" / image.name
         if target.exists() and sha256(target) != sha256(image):

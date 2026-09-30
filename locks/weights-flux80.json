@@ -1,0 +1,108 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-09-30T12:52:23.692571+00:00",
+  "set": "flux80",
+  "components": [
+    {
+      "key": "flux9b",
+      "repo": "black-forest-labs/FLUX.2-klein-base-9B",
+      "revision": "32773329fbe7e81a90ef971740e8ba4b0364ecf3",
+      "files": [
+        {
+          "path": "LICENSE.md",
+          "bytes": 18158
+        },
+        {
+          "path": "README.md",
+          "bytes": 10395
+        },
+        {
+          "path": "flux-2-klein-base-9b.safetensors",
+          "bytes": 18157185168
+        }
+      ],
+      "bytes": 18157213721
+    },
+    {
+      "key": "flux9b_text",
+      "repo": "Qwen/Qwen3-8B",
+      "revision": "b968826d9c46dd6066d109eabc6255188de91218",
+      "files": [
+        {
+          "path": "LICENSE",
+          "bytes": 11343
+        },
+        {
+          "path": "README.md",
+          "bytes": 16660
+        },
+        {
+          "path": "config.json",
+          "bytes": 728
+        },
+        {
+          "path": "generation_config.json",
+          "bytes": 239
+        },
+        {
+          "path": "merges.txt",
+          "bytes": 1671853
+        },
+        {
+          "path": "model-00001-of-00005.safetensors",
+          "bytes": 3996250744
+        },
+        {
+          "path": "model-00002-of-00005.safetensors",
+          "bytes": 3993160032
+        },
+        {
+          "path": "model-00003-of-00005.safetensors",
+          "bytes": 3959604768
+        },
+        {
+          "path": "model-00004-of-00005.safetensors",
+          "bytes": 3187841392
+        },
+        {
+          "path": "model-00005-of-00005.safetensors",
+          "bytes": 1244659840
+        },
+        {
+          "path": "model.safetensors.index.json",
+          "bytes": 32878
+        },
+        {
+          "path": "tokenizer.json",
+          "bytes": 11422654
+        },
+        {
+          "path": "tokenizer_config.json",
+          "bytes": 9732
+        },
+        {
+          "path": "vocab.json",
+          "bytes": 2776833
+        }
+      ],
+      "bytes": 16397459696
+    },
+    {
+      "key": "flux_vae",
+      "repo": "ai-toolkit/flux2_vae",
+      "revision": "3f679cf232e6d91d28396522d9502c31e8f7ccbe",
+      "files": [
+        {
+          "path": "README.md",
+          "bytes": 770
+        },
+        {
+          "path": "ae.safetensors",
+          "bytes": 336211292
+        }
+      ],
+      "bytes": 336212062
+    }
+  ],
+  "bytes": 34890885479
+}

@@ -1,0 +1,2774 @@
+{
+  "coverage": {
+    "needs_review": [],
+    "prepared": 96,
+    "usable": 96
+  },
+  "samples": {
+    "00": {
+      "baseline_image_sha256": "86d3b252c926437f55ab01d72f0a727ef9a521334342f9ec691cf7b69d12d873",
+      "detected_boxes": [
+        [
+          290,
+          77,
+          492,
+          397
+        ]
+      ],
+      "detected_face_count": 1,
+      "face_bbox": [
+        290,
+        77,
+        492,
+        397
+      ],
+      "identity_id": "eddie",
+      "pixel_mask": "00.png",
+      "pixel_mask_sha256": "3a06076295b6411b638ea3a3a369a0bee16c32c4a4f4ca7e22f1d5ae686ea0a0",
+      "prompt": "Reading paper man img, park bench, calm face, grey overcoat",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "00.tokens.png",
+      "token_mask_sha256": "1911af908792fb17e717de701539047f360036d8aa849316435ac4a0b3c5ddf0"
+    },
+    "01": {
+      "baseline_image_sha256": "110fe8f58b90adbec30909f5b53720a7ac6a4a63008891901b4165a9a705fbd3",
+      "detected_boxes": [
+        [
+          304,
+          83,
+          443,
+          296
+        ],
+        [
+          104,
+          241,
+          129,
+          277
+        ]
+      ],
+      "detected_face_count": 2,
+      "face_bbox": [
+        304,
+        83,
+        443,
+        296
+      ],
+      "identity_id": "eddie",
+      "pixel_mask": "01.png",
+      "pixel_mask_sha256": "96a2f03a5791f8523471f26643efe3544ee02ec6d914c4a16dc83ff678344fd1",
+      "prompt": "Rushing man img portrait, subway platform, anxious face, swinging briefcase",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "01.tokens.png",
+      "token_mask_sha256": "0ce3b9ffa4d8c408ec0dc320602280af13a8e6351d0f3a1190972a0df77d0f3b"
+    },
+    "02": {
+      "baseline_image_sha256": "7f30607691eb91f0d56421484338cb17a7a07ffb6d558ab859ebfa327289227e",
+      "detected_boxes": [
+        [
+          314,
+          145,
+          470,
+          382
+        ]
+      ],
+      "detected_face_count": 1,
+      "face_bbox": [
+        314,
+        145,
+        470,
+        382
+      ],
+      "identity_id": "eddie",
+      "pixel_mask": "02.png",
+      "pixel_mask_sha256": "3e5342abe11ee817ec8e6c234430c65f83ff4b7e012dd14af2b2a214e9c72e7e",
+      "prompt": "Skiing man img, snowy slope, fearless grin, orange goggles",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "02.tokens.png",
+      "token_mask_sha256": "ed8435d343904d81b79c56c65dd552b0e0aa0d5aebf4d6a855c405baf2b85028"
+    },
+    "03": {
+      "baseline_image_sha256": "a909c687cfa2ad4e40a332e6faf04992cd64bd6e1207513fbf58d832f56ff923",
+      "detected_boxes": [
+        [
+          244,
+          77,
+          541,
+          558
+        ]
+      ],
+      "detected_face_count": 1,
+      "face_bbox": [
+        244,
+        77,
+        541,
+        558
+      ],
+      "identity_id": "eddie",
+      "pixel_mask": "03.png",
+      "pixel_mask_sha256": "a0ab5302383a90b11b7807d232b31fe11c6a32fdda64e02ed913734ff37f12eb",
+      "prompt": "Drumming man img, rock concert in rain, passionate angry face, black t-shirt",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "03.tokens.png",
+      "token_mask_sha256": "b7b3b28af943e7fa071e6c089d60b5b43be569a7a6c13fb51c46567313f5f42a"
+    },
+    "04": {
+      "baseline_image_sha256": "1cd9a6805759c188c0651c7ee5dd1472c30b5b427556c69f412623ccfffba149",
+      "detected_boxes": [
+        [
+          291,
+          87,
+          483,
+          409
+        ]
+      ],
+      "detected_face_count": 1,
+      "face_bbox": [
+        291,
+        87,
+        483,
+        409
+      ],
+      "identity_id": "eddie",
+      "pixel_mask": "04.png",
+      "pixel_mask_sha256": "d20e1e3c2251e45606a4e386d56c453b4c93ddc66f2fc1a3bf84f845f5be03e6",
+      "prompt": "Kickboxing man img, gym ring, fierce roar face, sweatband",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "04.tokens.png",
+      "token_mask_sha256": "792ffa95d92557ce24a20777e463b7f330ff976c09d3270a747c81e22d273074"
+    },
+    "05": {
+      "baseline_image_sha256": "115a4f8e33064a34ef81a505263cb20efc9299fa031b2c63b3348f3cf6825d26",
+      "detected_boxes": [
+        [
+          178,
+          301,
+          240,
+          386
+        ],
+        [
+          651,
+          348,
+          706,
+          425
+        ],
+        [
+          289,
+          86,
+          494,
+          406
+        ],
+        [
+          476,
+          333,
+          532,
+          396
+        ],
+        [
+          108,
+          364,
+          144,
+          414
+        ],
+        [
+          582,
+          322,
+          616,
+          368
+        ]
+      ],
+      "detected_face_count": 6,
+      "face_bbox": [
+        289,
+        86,
+        494,
+        406
+      ],
+      "identity_id": "eddie",
+      "pixel_mask": "05.png",
+      "pixel_mask_sha256": "7de35aa1a8ba4e1840d39562f35a9f5f70f1b4435c9bcc05d09f99e380bf73a4",
+      "prompt": "Dancing man img, neon club, euphoric face, silver jumpsuit",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "05.tokens.png",
+      "token_mask_sha256": "792ffa95d92557ce24a20777e463b7f330ff976c09d3270a747c81e22d273074"
+    },
+    "06": {
+      "baseline_image_sha256": "e3df7edfa86ff601df225830c905347e5772c337f9042089ea0f86093e03fc7a",
+      "detected_boxes": [
+        [
+          236,
+          82,
+          538,
+          565
+        ]
+      ],
+      "detected_face_count": 1,
+      "face_bbox": [
+        236,
+        82,
+        538,
+        565
+      ],
+      "identity_id": "eddie",
+      "pixel_mask": "06.png",
+      "pixel_mask_sha256": "e8aad1184cb4490c7c0edcbcc3a6643e8c5440d3190dc1a62f2bd15760c11951",
+      "prompt": "Angry man img, traffic jam, scowling face, dark suit",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "06.tokens.png",
+      "token_mask_sha256": "db8778fdab1f878930b4334de7e5355dc9dd6baf6c2a2a4e4d4787104133eef2"
+    },
+    "07": {
+      "baseline_image_sha256": "0f55c4057cf64a6e9952015b983860bb22a367cabe3faf605bd3fbd074d62be2",
+      "detected_boxes": [
+        [
+          307,
+          80,
+          449,
+          302
+        ]
+      ],
+      "detected_face_count": 1,
+      "face_bbox": [
+        307,
+        80,
+        449,
+        302
+      ],
+      "identity_id": "eddie",
+      "pixel_mask": "07.png",
+      "pixel_mask_sha256": "5d78e0f152b886f3770ddaf2dfd347791224d77f08beb5bf7d5a5c4dffe3f4ef",
+      "prompt": "Crying man img, stormy alley, tearful face, ripped jeans",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "07.tokens.png",
+      "token_mask_sha256": "3c523ec242e03f87c9e150a852cee92b9122a3411fc8e6f3c6d3bbe03881bbb8"
+    },
+    "08": {
+      "baseline_image_sha256": "65f993648d72b2461b16abfd36374bc4d123e08bd2317475c6d390cf96e894b1",
+      "detected_boxes": [
+        [
+          280,
+          112,
+          522,
+          519
+        ]
+      ],
+      "detected_face_count": 1,
+      "face_bbox": [
+        280,
+        112,
+        522,
+        519
+      ],
+      "identity_id": "eddie",
+      "pixel_mask": "08.png",
+      "pixel_mask_sha256": "b20d39bb14691a20bb4a9f9874b2e696f15b3b668f0a51e79754c1140f894c1c",
+      "prompt": "Laughing man img, carnival wheel, carefree laugh, polka-dot shirt",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "08.tokens.png",
+      "token_mask_sha256": "e46f9d621e5d55243d96b48987f969902bcdf193558680a75215d890190267b6"
+    },
+    "09": {
+      "baseline_image_sha256": "f85445f6e46d80db1d03d8fb89f82bd9e4913cf8f6874d95182c14d86b4d2e90",
+      "detected_boxes": [
+        [
+          291,
+          149,
+          501,
+          482
+        ]
+      ],
+      "detected_face_count": 1,
+      "face_bbox": [
+        291,
+        149,
+        501,
+        482
+      ],
+      "identity_id": "eddie",
+      "pixel_mask": "09.png",
+      "pixel_mask_sha256": "3e21ef4e21d1fbe75b23464af8f4676056aad24187617cf92dc2e68e7729fa77",
+      "prompt": "Jumping man img, beach sunset, ecstatic face, blue tank top",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "09.tokens.png",
+      "token_mask_sha256": "85ea88ebe2f5255e30b387b4ebef6e3406463922ca753128cef77b39bea2ff4b"
+    },
+    "10": {
+      "baseline_image_sha256": "4d8bd0012ab0146469d7276711822bff2d355a3373bb8afa87390a4937934803",
+      "detected_boxes": [
+        [
+          273,
+          95,
+          500,
+          460
+        ]
+      ],
+      "detected_face_count": 1,
+      "face_bbox": [
+        273,
+        95,
+        500,
+        460
+      ],
+      "identity_id": "eddie",
+      "pixel_mask": "10.png",
+      "pixel_mask_sha256": "9f3d2efe8b997daefa2ed4d9233e0098f17f46e4a5af8fa07ecd6fea000cd412",
+      "prompt": "Night-ride biker man img, neon city, excited face, reflective vest",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "10.tokens.png",
+      "token_mask_sha256": "b59c29c3a70bed634a9d255648c65adab30c3ea47a483fa1b4fc0aebe0d7e72b"
+    },
+    "11": {
+      "baseline_image_sha256": "0a02f6959e364ef3a1d718e34226ec5d30031b2beff00a512c56b66ba6aa3cab",
+      "detected_boxes": [
+        [
+          535,
+          346,
+          601,
+          425
+        ],
+        [
+          292,
+          209,
+          470,
+          467
+        ],
+        [
+          193,
+          356,
+          218,
+          393
+        ]
+      ],
+      "detected_face_count": 3,
+      "face_bbox": [
+        292,
+        209,
+        470,
+        467
+      ],
+      "identity_id": "eddie",
+      "pixel_mask": "11.png",
+      "pixel_mask_sha256": "2237a652885b63cd27236ab200427fd7525685735bc17fae2fc920145513e2d0",
+      "prompt": "Chef man img, bustling kitchen, proud grin, tall white toque",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "11.tokens.png",
+      "token_mask_sha256": "889208a227d6c7fb5e8f5e3a2fdd4a455171e9dd16c1d2daf9286a26a3a9f91c"
+    },
+    "12": {
+      "baseline_image_sha256": "5d869d2b79d9912c4cd42a8a7bd4d1b7afc6e544fb4a6aab24cde5a41083bb89",
+      "detected_boxes": [
+        [
+          312,
+          78,
+          466,
+          295
+        ]
+      ],
+      "detected_face_count": 1,
+      "face_bbox": [
+        312,
+        78,
+        466,
+        295
+      ],
+      "identity_id": "elon",
+      "pixel_mask": "12.png",
+      "pixel_mask_sha256": "1768648b8cc924bd95ac8fd9789852f717586c0e355462590a79b6ddab0f1050",
+      "prompt": "Reading paper man img, park bench, calm face, grey overcoat",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "12.tokens.png",
+      "token_mask_sha256": "8bb4a4e04dabdef3094c48aafc8b798bd9aa2cae28e24860fea068770922ed66"
+    },
+    "13": {
+      "baseline_image_sha256": "105b087b95bf928cbdf2467e8f3c7fe737b2eff4f4a408bad611fa430300c0b3",
+      "detected_boxes": [
+        [
+          302,
+          84,
+          438,
+          277
+        ],
+        [
+          112,
+          241,
+          135,
+          273
+        ]
+      ],
+      "detected_face_count": 2,
+      "face_bbox": [
+        302,
+        84,
+        438,
+        277
+      ],
+      "identity_id": "elon",
+      "pixel_mask": "13.png",
+      "pixel_mask_sha256": "f8840839a5ae1a665d3aa3c34425d7839994ca2cba62a8a85987daa4c3c43091",
+      "prompt": "Rushing man img portrait, subway platform, anxious face, swinging briefcase",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "13.tokens.png",
+      "token_mask_sha256": "6a699932b6b186c4dead3698b2701e4c84fdffaff994c1207f50ceccf6825128"
+    },
+    "14": {
+      "baseline_image_sha256": "3220b109fb0bcbf66a20dd517c3eba7d23a9730eec4d0cca65006b9032083ba6",
+      "detected_boxes": [
+        [
+          310,
+          131,
+          460,
+          341
+        ]
+      ],
+      "detected_face_count": 1,
+      "face_bbox": [
+        310,
+        131,
+        460,
+        341
+      ],
+      "identity_id": "elon",
+      "pixel_mask": "14.png",
+      "pixel_mask_sha256": "e5ec3266c1b0003fedacb3b1f17c1adaca7d8502ec5c4f2bca59784cc20312cc",
+      "prompt": "Skiing man img, snowy slope, fearless grin, orange goggles",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "14.tokens.png",
+      "token_mask_sha256": "84a2df4da045f2e54db3e65ec70e876681143699dc26e78370e8f044239f5d3d"
+    },
+    "15": {
+      "baseline_image_sha256": "1526c784add92db1138167b3a794174ae6a8058ac9197d57e56856991e69c518",
+      "detected_boxes": [
+        [
+          280,
+          123,
+          529,
+          532
+        ]
+      ],
+      "detected_face_count": 1,
+      "face_bbox": [
+        280,
+        123,
+        529,
+        532
+      ],
+      "identity_id": "elon",
+      "pixel_mask": "15.png",
+      "pixel_mask_sha256": "c83bab75dee5c194c367ac260509374283aba945537b9ddad50c1aac3708638f",
+      "prompt": "Drumming man img, rock concert in rain, passionate angry face, black t-shirt",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "15.tokens.png",
+      "token_mask_sha256": "0581ac966a1b73bd07cc53628beecb1498ff22a65237802ad9bc8ddd29f35d94"
+    },
+    "16": {
+      "baseline_image_sha256": "2066c96b55aea91701625045858ae8505761488dc982a39a23eecf90c989f58f",
+      "detected_boxes": [
+        [
+          296,
+          133,
+          479,
+          394
+        ]
+      ],
+      "detected_face_count": 1,
+      "face_bbox": [
+        296,
+        133,
+        479,
+        394
+      ],
+      "identity_id": "elon",
+      "pixel_mask": "16.png",
+      "pixel_mask_sha256": "dc510679e6b96f118f7a850d3118d91c822a06309e11316209632dd61279c76e",
+      "prompt": "Kickboxing man img, gym ring, fierce roar face, sweatband",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "16.tokens.png",
+      "token_mask_sha256": "89c7dad49e1580c8c24f614c691ca9c36151e30e522137df1f62867949c5286c"
+    },
+    "17": {
+      "baseline_image_sha256": "4451c549d768c833c1332dda2fbc403f0a2fe7bae7d43cc8969cbe0c6dd49777",
+      "detected_boxes": [
+        [
+          301,
+          122,
+          496,
+          400
+        ]
+      ],
+      "detected_face_count": 1,
+      "face_bbox": [
+        301,
+        122,
+        496,
+        400
+      ],
+      "identity_id": "elon",
+      "pixel_mask": "17.png",
+      "pixel_mask_sha256": "c92b13bcd0c24a0298b7981454b87f77f57f74afae3e05099c8219bd82dc5c12",
+      "prompt": "Dancing man img, neon club, euphoric face, silver jumpsuit",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "17.tokens.png",
+      "token_mask_sha256": "e7ec52d984e3c81a4589d9bf91628cb622e9d2ffa627f7586a568bb4f8933378"
+    },
+    "18": {
+      "baseline_image_sha256": "56eae7826a001a59c07f7836df36e2514cd90f60366b43b1dff8d58faaa8a1d7",
+      "detected_boxes": [
+        [
+          266,
+          130,
+          526,
+          497
+        ]
+      ],
+      "detected_face_count": 1,
+      "face_bbox": [
+        266,
+        130,
+        526,
+        497
+      ],
+      "identity_id": "elon",
+      "pixel_mask": "18.png",
+      "pixel_mask_sha256": "61c9671c8f585bddf31ea73b7d6004ffd999aa5ac20ff19df66e609b5a8113c5",
+      "prompt": "Angry man img, traffic jam, scowling face, dark suit",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "18.tokens.png",
+      "token_mask_sha256": "1776f6c129b75a8bacae613d1e3857accc0788fb1f67d1d23110031eaae1dbc0"
+    },
+    "19": {
+      "baseline_image_sha256": "3ad138df3db39cf0bb760d8cffc1d71b51823b8a38f8fd4b308b69f9e96089c4",
+      "detected_boxes": [
+        [
+          307,
+          80,
+          408,
+          224
+        ]
+      ],
+      "detected_face_count": 1,
+      "face_bbox": [
+        307,
+        80,
+        408,
+        224
+      ],
+      "identity_id": "elon",
+      "pixel_mask": "19.png",
+      "pixel_mask_sha256": "3630c0d733b6985d948da76b565488450c883b05399b2dc5f036e1877dce8e5b",
+      "prompt": "Crying man img, stormy alley, tearful face, ripped jeans",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "19.tokens.png",
+      "token_mask_sha256": "a59b537ce945553ac2c84a10739e90d26d52ca08eb0ea6a2eb39df91adae7cd9"
+    },
+    "20": {
+      "baseline_image_sha256": "51b6bd481540ba3f77d135538296bfa4a3d3de4018fa97529d29356690fd4fb8",
+      "detected_boxes": [
+        [
+          276,
+          124,
+          520,
+          493
+        ]
+      ],
+      "detected_face_count": 1,
+      "face_bbox": [
+        276,
+        124,
+        520,
+        493
+      ],
+      "identity_id": "elon",
+      "pixel_mask": "20.png",
+      "pixel_mask_sha256": "d588a2dd5a1d27ced8fb55fba41641be4dd1f312b5ee634a5f554a477e70db20",
+      "prompt": "Laughing man img, carnival wheel, carefree laugh, polka-dot shirt",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "20.tokens.png",
+      "token_mask_sha256": "d6fb0f858e8f8eea7e0c4e4ce5f877067da3c3a037a2b7af1f3333fb66a83ded"
+    },
+    "21": {
+      "baseline_image_sha256": "eed94c49d7a31af5badaedcf413f14314128c8ef989f8e657861dbd4b7fccfd9",
+      "detected_boxes": [
+        [
+          306,
+          132,
+          459,
+          386
+        ]
+      ],
+      "detected_face_count": 1,
+      "face_bbox": [
+        306,
+        132,
+        459,
+        386
+      ],
+      "identity_id": "elon",
+      "pixel_mask": "21.png",
+      "pixel_mask_sha256": "b0a07a1e06bc5b689bbde9b8d4a5817060a8ab4bbf52d1eb2805ea74c021687f",
+      "prompt": "Jumping man img, beach sunset, ecstatic face, blue tank top",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "21.tokens.png",
+      "token_mask_sha256": "cfbab2e17f035fc8a0986da430913fe32bc0ffc1be8478f8d52ff4624ba85a6c"
+    },
+    "22": {
+      "baseline_image_sha256": "fca104ee807b8797db22765cee59b66e4c1c3c8aa79ae7916d5a51458ee00f94",
+      "detected_boxes": [
+        [
+          306,
+          130,
+          455,
+          354
+        ]
+      ],
+      "detected_face_count": 1,
+      "face_bbox": [
+        306,
+        130,
+        455,
+        354
+      ],
+      "identity_id": "elon",
+      "pixel_mask": "22.png",
+      "pixel_mask_sha256": "3718651607f55f88842646daf49416c124783931ed6752ba7f64817af9a9c811",
+      "prompt": "Night-ride biker man img, neon city, excited face, reflective vest",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "22.tokens.png",
+      "token_mask_sha256": "c4d2a52576ab90b51305865beef95f834a0a4b6f5041817f35714437eb6e2811"
+    },
+    "23": {
+      "baseline_image_sha256": "98c9ef6710ceda626706f836a4941d0666ad296718c3185a78204da399eb8ca9",
+      "detected_boxes": [
+        [
+          657,
+          307,
+          715,
+          371
+        ],
+        [
+          309,
+          175,
+          447,
+          348
+        ],
+        [
+          721,
+          347,
+          748,
+          377
+        ],
+        [
+          238,
+          297,
+          280,
+          350
+        ],
+        [
+          584,
+          309,
+          613,
+          347
+        ]
+      ],
+      "detected_face_count": 5,
+      "face_bbox": [
+        309,
+        175,
+        447,
+        348
+      ],
+      "identity_id": "elon",
+      "pixel_mask": "23.png",
+      "pixel_mask_sha256": "4e0799d54d8e031fe90e91303b23b987852bff0933054a1c51dd455e089f7675",
+      "prompt": "Chef man img, bustling kitchen, proud grin, tall white toque",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "23.tokens.png",
+      "token_mask_sha256": "f6432987ecb03d02a30cbe851cf5af6aeed468bfd06799bd058dbca6313ef0dd"
+    },
+    "24": {
+      "baseline_image_sha256": "967ae599a70f0a03147b97c655634c55f42b8f4d1aff3dd6a090c0213bd3da24",
+      "detected_boxes": [
+        [
+          301,
+          115,
+          480,
+          353
+        ]
+      ],
+      "detected_face_count": 1,
+      "face_bbox": [
+        301,
+        115,
+        480,
+        353
+      ],
+      "identity_id": "jennie",
+      "pixel_mask": "24.png",
+      "pixel_mask_sha256": "a11691fd4bfacb035d88594332571a0077fb262cc1939a4bb30c531c8beaf8fb",
+      "prompt": "Reading paper woman img, park bench, calm face, grey overcoat",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "24.tokens.png",
+      "token_mask_sha256": "8b9844f31a3aa2dc1366a4d99df5a088a9afd58609df0394046177c9a3593ce2"
+    },
+    "25": {
+      "baseline_image_sha256": "dc7478627bc35ad35e30ad38c91bd5370ce3886d1a030b8bb44538fc8f39838d",
+      "detected_boxes": [
+        [
+          302,
+          129,
+          438,
+          308
+        ]
+      ],
+      "detected_face_count": 1,
+      "face_bbox": [
+        302,
+        129,
+        438,
+        308
+      ],
+      "identity_id": "jennie",
+      "pixel_mask": "25.png",
+      "pixel_mask_sha256": "6396867abbbbbb0477d618577496cb3f73e75c7a9fc84deb5d1739c730d0156a",
+      "prompt": "Rushing woman img portrait, subway platform, anxious face, swinging briefcase",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "25.tokens.png",
+      "token_mask_sha256": "4e1ea8941ea45ea983778bd4221dfcfa4036e745af642b370c45edffdae318f0"
+    },
+    "26": {
+      "baseline_image_sha256": "4cf1c35c6276a146a65c54f53f65aaaa56fd5b4111ded4ab26883e86f120db2c",
+      "detected_boxes": [
+        [
+          311,
+          162,
+          461,
+          353
+        ]
+      ],
+      "detected_face_count": 1,
+      "face_bbox": [
+        311,
+        162,
+        461,
+        353
+      ],
+      "identity_id": "jennie",
+      "pixel_mask": "26.png",
+      "pixel_mask_sha256": "3c56a8faafe6fc280e504130bf6015268eb29defdc1f6fa92767ac0af3063dd0",
+      "prompt": "Skiing woman img, snowy slope, fearless grin, orange goggles",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "26.tokens.png",
+      "token_mask_sha256": "158b0e78c69394f79e3e16718a13dda4e3890005a97500c1bc1149663ac73541"
+    },
+    "27": {
+      "baseline_image_sha256": "24a2289de71e50343ef9389a41467c5f99bec36f39dfc696771478dbdfe0f6ae",
+      "detected_boxes": [
+        [
+          289,
+          178,
+          480,
+          460
+        ]
+      ],
+      "detected_face_count": 1,
+      "face_bbox": [
+        289,
+        178,
+        480,
+        460
+      ],
+      "identity_id": "jennie",
+      "pixel_mask": "27.png",
+      "pixel_mask_sha256": "92ce49eb7c72eaf3c54964bf9691d2a5385125b35586e49f2809659c4188ac50",
+      "prompt": "Drumming woman img, rock concert in rain, passionate angry face, black t-shirt",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "27.tokens.png",
+      "token_mask_sha256": "fd2dfed004260181ac4582401226958f0a5233d6ddebf357608c8fee7478b29f"
+    },
+    "28": {
+      "baseline_image_sha256": "9574fcb6ac70526810aea09e6c988e3504f43f0fba0e9812bf1a919df87aa387",
+      "detected_boxes": [
+        [
+          292,
+          196,
+          482,
+          476
+        ]
+      ],
+      "detected_face_count": 1,
+      "face_bbox": [
+        292,
+        196,
+        482,
+        476
+      ],
+      "identity_id": "jennie",
+      "pixel_mask": "28.png",
+      "pixel_mask_sha256": "d615fd9334f3ef67e1ae0dd0cf81bf1ebe8314faf4a9cebc5e5f25ec536cfbaa",
+      "prompt": "Kickboxing woman img, gym ring, fierce roar face, sweatband",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "28.tokens.png",
+      "token_mask_sha256": "28b6791c91398e1ef8e56b43f602bc861aafab19e223bc8a1a699100246308a3"
+    },
+    "29": {
+      "baseline_image_sha256": "b844636b8a0e13ebc2591996ae12dc4165bdd13555f97f60674af0821c6b9797",
+      "detected_boxes": [
+        [
+          300,
+          156,
+          472,
+          380
+        ]
+      ],
+      "detected_face_count": 1,
+      "face_bbox": [
+        300,
+        156,
+        472,
+        380
+      ],
+      "identity_id": "jennie",
+      "pixel_mask": "29.png",
+      "pixel_mask_sha256": "10ec5ab20fb32348d96e32f71b62edb4d82f132000e187df343f3137ece96f34",
+      "prompt": "Dancing woman img, neon club, euphoric face, silver jumpsuit",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "29.tokens.png",
+      "token_mask_sha256": "354a0c51f2f9490df685755501a1b9b09fed925de30c54038f74b79381f0fbaa"
+    },
+    "30": {
+      "baseline_image_sha256": "ff0f2f5d31f78ad993301d6afaa1eb2c11911ac67ce9e62fec0d37a51e6270ac",
+      "detected_boxes": [
+        [
+          283,
+          180,
+          484,
+          454
+        ]
+      ],
+      "detected_face_count": 1,
+      "face_bbox": [
+        283,
+        180,
+        484,
+        454
+      ],
+      "identity_id": "jennie",
+      "pixel_mask": "30.png",
+      "pixel_mask_sha256": "09821f7d6d3bb99e28e609a85377b086baebdbbf854bc599cec845792c88ec0a",
+      "prompt": "Angry woman img, traffic jam, scowling face, dark suit",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "30.tokens.png",
+      "token_mask_sha256": "29e52da3015ab5f659c5ce1fc964395ccc0063854cdeb2ee175e6b26eda55462"
+    },
+    "31": {
+      "baseline_image_sha256": "4f140f2793eaa7ae2f50c57ef27a9b9dc4da852b791a68b66dcf7adb717baa0b",
+      "detected_boxes": [
+        [
+          326,
+          148,
+          441,
+          300
+        ]
+      ],
+      "detected_face_count": 1,
+      "face_bbox": [
+        326,
+        148,
+        441,
+        300
+      ],
+      "identity_id": "jennie",
+      "pixel_mask": "31.png",
+      "pixel_mask_sha256": "62ee077183584dc9e11a3ea6b2e81b6a1a1249273c59b11e197ff81c9fb32c56",
+      "prompt": "Crying woman img, stormy alley, tearful face, ripped jeans",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "31.tokens.png",
+      "token_mask_sha256": "6a91451b9d7ef35037b11491f473c7e568b15ebf4c24097bd0c864e593a5b252"
+    },
+    "32": {
+      "baseline_image_sha256": "9a67749a8f2e8e2b29c8eeac430d37f17ea8fe12d65148185400e236300c7e71",
+      "detected_boxes": [
+        [
+          278,
+          158,
+          479,
+          449
+        ]
+      ],
+      "detected_face_count": 1,
+      "face_bbox": [
+        278,
+        158,
+        479,
+        449
+      ],
+      "identity_id": "jennie",
+      "pixel_mask": "32.png",
+      "pixel_mask_sha256": "af62be30d6bbfb403d4132e84a64cd7bdf273d751f25dfd1f7664415b4327306",
+      "prompt": "Laughing woman img, carnival wheel, carefree laugh, polka-dot shirt",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "32.tokens.png",
+      "token_mask_sha256": "5e2be6009b2378196979154b214d844ae1f2076bacac10042cb6cbc8f1e8c05b"
+    },
+    "33": {
+      "baseline_image_sha256": "ca70707ba751861681723189a078bfc84964edc25a1b12bbd12cafbcc280e5f7",
+      "detected_boxes": [
+        [
+          354,
+          211,
+          414,
+          294
+        ]
+      ],
+      "detected_face_count": 1,
+      "face_bbox": [
+        354,
+        211,
+        414,
+        294
+      ],
+      "identity_id": "jennie",
+      "pixel_mask": "33.png",
+      "pixel_mask_sha256": "db6979c78d5ed8ce542130233dce44c311f0a3034010f9acea62c178fe75f00c",
+      "prompt": "Jumping woman img, beach sunset, ecstatic face, blue tank top",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "33.tokens.png",
+      "token_mask_sha256": "eacb507886002ef27931a9ce16c00ce37374628ecbb519b2a9e094a39b7f02d9"
+    },
+    "34": {
+      "baseline_image_sha256": "2de5b635e40a4a0964eea8beaf36ba605b2191610538e918581fbb38a7661430",
+      "detected_boxes": [
+        [
+          296,
+          167,
+          478,
+          425
+        ]
+      ],
+      "detected_face_count": 1,
+      "face_bbox": [
+        296,
+        167,
+        478,
+        425
+      ],
+      "identity_id": "jennie",
+      "pixel_mask": "34.png",
+      "pixel_mask_sha256": "27cc7a25ebb2bf50e4cc0d7843d98dbfe9f8ddede0f6d79745b3bc902db9e1e6",
+      "prompt": "Night-ride biker woman img, neon city, excited face, reflective vest",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "34.tokens.png",
+      "token_mask_sha256": "acb44a0c2907c004185d786c026d74a294cab009fc2d9360220b71f73e1f39ab"
+    },
+    "35": {
+      "baseline_image_sha256": "9be86283b9c31dbba1d3b262d6a58e6f703f34b424dc376d2097f73438a7162b",
+      "detected_boxes": [
+        [
+          313,
+          214,
+          448,
+          389
+        ],
+        [
+          578,
+          306,
+          619,
+          362
+        ]
+      ],
+      "detected_face_count": 2,
+      "face_bbox": [
+        313,
+        214,
+        448,
+        389
+      ],
+      "identity_id": "jennie",
+      "pixel_mask": "35.png",
+      "pixel_mask_sha256": "e1f0dc7c86f661d661af1f2815516454c62a62c5f1c47e436e53f97f69c31d7e",
+      "prompt": "Chef woman img, bustling kitchen, proud grin, tall white toque",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "35.tokens.png",
+      "token_mask_sha256": "0a63f285f5191a549d11571fc453ce15a0b49a38c2b120aef9d2324b1a7ecacb"
+    },
+    "36": {
+      "baseline_image_sha256": "7a22462067d046b484424d47b4f243558ae76b003172a86a7ae9fcc1c146957f",
+      "detected_boxes": [
+        [
+          178,
+          89,
+          303,
+          263
+        ]
+      ],
+      "detected_face_count": 1,
+      "face_bbox": [
+        178,
+        89,
+        303,
+        263
+      ],
+      "identity_id": "jensen",
+      "pixel_mask": "36.png",
+      "pixel_mask_sha256": "5c953cf8d6ffa558f4ed1de07be73b554f755475d59a5c9b87441456ba01721f",
+      "prompt": "Reading paper man img, park bench, calm face, grey overcoat",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "36.tokens.png",
+      "token_mask_sha256": "a2de7c9f565d2ea79278b58531bb0dfe54b435df2f33cfa10d21d01534a0909c"
+    },
+    "37": {
+      "baseline_image_sha256": "419b2efcf8a564335ed04a3504b4ab8846136e4c1dd69ba2ad66c0548176193b",
+      "detected_boxes": [
+        [
+          280,
+          110,
+          388,
+          259
+        ],
+        [
+          109,
+          240,
+          137,
+          277
+        ]
+      ],
+      "detected_face_count": 2,
+      "face_bbox": [
+        280,
+        110,
+        388,
+        259
+      ],
+      "identity_id": "jensen",
+      "pixel_mask": "37.png",
+      "pixel_mask_sha256": "105a7318b682cf1cbd12d0dc239e72088c4a6c05b9555806e84aedcd130a4388",
+      "prompt": "Rushing man img portrait, subway platform, anxious face, swinging briefcase",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "37.tokens.png",
+      "token_mask_sha256": "808fad3f9e759d5082455426460e0135aa6844cda485af2b7182f28b4c95ff9d"
+    },
+    "38": {
+      "baseline_image_sha256": "c7e82f9a53a2f1d8656b3af0d188951547ab61a83c6825cb750981d4952db66c",
+      "detected_boxes": [
+        [
+          299,
+          179,
+          429,
+          338
+        ]
+      ],
+      "detected_face_count": 1,
+      "face_bbox": [
+        299,
+        179,
+        429,
+        338
+      ],
+      "identity_id": "jensen",
+      "pixel_mask": "38.png",
+      "pixel_mask_sha256": "db4829f202ca0a1818cf2a56560c20ec01072f5fbb53cdb1254e97a998755600",
+      "prompt": "Skiing man img, snowy slope, fearless grin, orange goggles",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "38.tokens.png",
+      "token_mask_sha256": "469ee09d8fdcaa876522c92ba427de0026fe6327d449b61454f58ac8623761a6"
+    },
+    "39": {
+      "baseline_image_sha256": "27192b28a3fbbf1292850ce7dede7c0adffaf06a1d74df6dc144bb336b11be6a",
+      "detected_boxes": [
+        [
+          310,
+          171,
+          426,
+          354
+        ]
+      ],
+      "detected_face_count": 1,
+      "face_bbox": [
+        310,
+        171,
+        426,
+        354
+      ],
+      "identity_id": "jensen",
+      "pixel_mask": "39.png",
+      "pixel_mask_sha256": "57569e728ed071fc53cac07f9c89c7bff8d9649f662ce7f39a60bb5b26dbbf26",
+      "prompt": "Drumming man img, rock concert in rain, passionate angry face, black t-shirt",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "39.tokens.png",
+      "token_mask_sha256": "06b9b7413d2e5582892e17b81d45863b18be296541ab20799c9d55c6c26a5c86"
+    },
+    "40": {
+      "baseline_image_sha256": "c92a88975d0cac567bbe2cd187d4c59f8673595da5fe743ea1aeba3cc931ca15",
+      "detected_boxes": [
+        [
+          304,
+          135,
+          471,
+          392
+        ]
+      ],
+      "detected_face_count": 1,
+      "face_bbox": [
+        304,
+        135,
+        471,
+        392
+      ],
+      "identity_id": "jensen",
+      "pixel_mask": "40.png",
+      "pixel_mask_sha256": "fcbab83541005dd9f544f0b0f2bb065d0206b48b3d6fef57cd64f06def703a26",
+      "prompt": "Kickboxing man img, gym ring, fierce roar face, sweatband",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "40.tokens.png",
+      "token_mask_sha256": "84b2dd195226677e03e5d39213568da7ef6cb500a19593981697260460462998"
+    },
+    "41": {
+      "baseline_image_sha256": "d905fd51938fc2e8dffbf712ed2b88339b8088ef2b94ba81330934c3078eca71",
+      "detected_boxes": [
+        [
+          298,
+          172,
+          397,
+          308
+        ],
+        [
+          721,
+          351,
+          739,
+          375
+        ],
+        [
+          137,
+          380,
+          160,
+          408
+        ],
+        [
+          588,
+          349,
+          606,
+          375
+        ],
+        [
+          8,
+          372,
+          38,
+          404
+        ],
+        [
+          646,
+          353,
+          667,
+          384
+        ]
+      ],
+      "detected_face_count": 6,
+      "face_bbox": [
+        298,
+        172,
+        397,
+        308
+      ],
+      "identity_id": "jensen",
+      "pixel_mask": "41.png",
+      "pixel_mask_sha256": "965c28b8dab960f15bb7cf8a79b7290ba18216b769ae4425b21395d67349c5e5",
+      "prompt": "Dancing man img, neon club, euphoric face, silver jumpsuit",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "41.tokens.png",
+      "token_mask_sha256": "baceed5bccaf081ab0a19989fd1d6e2d03900921d95d6ff7e73e6a828005157e"
+    },
+    "42": {
+      "baseline_image_sha256": "80cc8b025eeefeddbe9bfa79738591c582f4837a88feff75a964c769b7ddbf53",
+      "detected_boxes": [
+        [
+          121,
+          119,
+          306,
+          378
+        ]
+      ],
+      "detected_face_count": 1,
+      "face_bbox": [
+        121,
+        119,
+        306,
+        378
+      ],
+      "identity_id": "jensen",
+      "pixel_mask": "42.png",
+      "pixel_mask_sha256": "f03e2e83d3777b1cc9c6a314ae2b0a89846e8ae0ff0cb517746d565d92fe836a",
+      "prompt": "Angry man img, traffic jam, scowling face, dark suit",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "42.tokens.png",
+      "token_mask_sha256": "230a1c32322aa77d02487a38f6536a69f1304d3d474c08a0618daf5cee38d8f2"
+    },
+    "43": {
+      "baseline_image_sha256": "aaf644b0a819327ff20d6c444e23ec2af4acfcdb528d6aaafff7fb24daecb8d5",
+      "detected_boxes": [
+        [
+          168,
+          84,
+          292,
+          255
+        ]
+      ],
+      "detected_face_count": 1,
+      "face_bbox": [
+        168,
+        84,
+        292,
+        255
+      ],
+      "identity_id": "jensen",
+      "pixel_mask": "43.png",
+      "pixel_mask_sha256": "7db850fc01e72bac4dd083b4698809344f5d50ae20acced22ef13caf0a21c7d2",
+      "prompt": "Crying man img, stormy alley, tearful face, ripped jeans",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "43.tokens.png",
+      "token_mask_sha256": "03d089e518edcfc50e4509d6f8c8cbd93c71e92840d8e56e992e261c04351ce0"
+    },
+    "44": {
+      "baseline_image_sha256": "e73a64fe5cdc9aaf114e7899af0c944be1f114bdc354ef7c77fca77e74e94733",
+      "detected_boxes": [
+        [
+          220,
+          207,
+          415,
+          495
+        ],
+        [
+          634,
+          605,
+          649,
+          631
+        ],
+        [
+          602,
+          600,
+          615,
+          622
+        ]
+      ],
+      "detected_face_count": 3,
+      "face_bbox": [
+        220,
+        207,
+        415,
+        495
+      ],
+      "identity_id": "jensen",
+      "pixel_mask": "44.png",
+      "pixel_mask_sha256": "ab0228dc9e8f210a5d4d4431f387da26d5a4068c9c0514c6ce0665ce287b18fe",
+      "prompt": "Laughing man img, carnival wheel, carefree laugh, polka-dot shirt",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "44.tokens.png",
+      "token_mask_sha256": "431b4415df3f482fac86a20bc4762e89d52388d354830fe7d5aff65a236a3ede"
+    },
+    "45": {
+      "baseline_image_sha256": "7275ea5553663b473d07825ac68e9a3f3cc4ae1a07e7496e3c9e880092ca77cc",
+      "detected_boxes": [
+        [
+          325,
+          80,
+          400,
+          195
+        ]
+      ],
+      "detected_face_count": 1,
+      "face_bbox": [
+        325,
+        80,
+        400,
+        195
+      ],
+      "identity_id": "jensen",
+      "pixel_mask": "45.png",
+      "pixel_mask_sha256": "1c4c9cd1013e83e944e1d08d9b173fce3c4bf2c223408d5a8a57263ef8b90dcf",
+      "prompt": "Jumping man img, beach sunset, ecstatic face, blue tank top",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "45.tokens.png",
+      "token_mask_sha256": "4fcd250b9f2bd36432fd207ef8519901d055a59aaef277113764fb704e73602a"
+    },
+    "46": {
+      "baseline_image_sha256": "568fd151830673f2c3511d9dc5208b65c40c3f735c29282e15974f69b2ba943e",
+      "detected_boxes": [
+        [
+          269,
+          154,
+          371,
+          294
+        ]
+      ],
+      "detected_face_count": 1,
+      "face_bbox": [
+        269,
+        154,
+        371,
+        294
+      ],
+      "identity_id": "jensen",
+      "pixel_mask": "46.png",
+      "pixel_mask_sha256": "be7d4c27859a13c356d8fee6cf8fd3574ab0841185ead8c5300e706fad360c58",
+      "prompt": "Night-ride biker man img, neon city, excited face, reflective vest",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "46.tokens.png",
+      "token_mask_sha256": "d25733a634d0d9c338695a62217e1a187eb6822cbed4f0a548ad26664ce96f1c"
+    },
+    "47": {
+      "baseline_image_sha256": "15f5c09a0237f6746f664b787d0e21bf933c20be7f564f592c02e532622c5830",
+      "detected_boxes": [
+        [
+          262,
+          210,
+          395,
+          371
+        ],
+        [
+          471,
+          320,
+          493,
+          350
+        ],
+        [
+          93,
+          318,
+          113,
+          351
+        ],
+        [
+          188,
+          317,
+          205,
+          340
+        ]
+      ],
+      "detected_face_count": 4,
+      "face_bbox": [
+        262,
+        210,
+        395,
+        371
+      ],
+      "identity_id": "jensen",
+      "pixel_mask": "47.png",
+      "pixel_mask_sha256": "56cd62582ba5ae6fb9899b3824c063108b4f86fd1c9a4e76fe4b56d05278a1bd",
+      "prompt": "Chef man img, bustling kitchen, proud grin, tall white toque",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "47.tokens.png",
+      "token_mask_sha256": "fa04a178ae966ba306209f20a37d2e6c86a0d25c44d8a54856aedae3dbeab1fd"
+    },
+    "48": {
+      "baseline_image_sha256": "26adebe58bec634a36cd3a9752f41b3f98493dc61640bf5bb315c23c010c7517",
+      "detected_boxes": [
+        [
+          318,
+          86,
+          448,
+          270
+        ]
+      ],
+      "detected_face_count": 1,
+      "face_bbox": [
+        318,
+        86,
+        448,
+        270
+      ],
+      "identity_id": "jisoo",
+      "pixel_mask": "48.png",
+      "pixel_mask_sha256": "40d50d58f27d5c5f951eae1e5938b104cfd63446c1cdb3078a687bee6f6efd79",
+      "prompt": "Reading paper woman img, park bench, calm face, grey overcoat",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "48.tokens.png",
+      "token_mask_sha256": "62d8acc862097e53556550e9f2b3918f5de81c3d101e864349d63104707d072f"
+    },
+    "49": {
+      "baseline_image_sha256": "8c0d7155e15b457c89e14daa410ce13f633f92fbd16526c314bd51801bbf3dce",
+      "detected_boxes": [
+        [
+          315,
+          158,
+          432,
+          321
+        ],
+        [
+          84,
+          260,
+          93,
+          274
+        ]
+      ],
+      "detected_face_count": 2,
+      "face_bbox": [
+        315,
+        158,
+        432,
+        321
+      ],
+      "identity_id": "jisoo",
+      "pixel_mask": "49.png",
+      "pixel_mask_sha256": "d9f51f7f2f0212c7f6462ae5058f5809e9fefcc25737e08f692412b2ec5f1c3c",
+      "prompt": "Rushing woman img portrait, subway platform, anxious face, swinging briefcase",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "49.tokens.png",
+      "token_mask_sha256": "95a9249740f4308a130bebee4f111d0f817edff26d24760541c5f2b8c5f39618"
+    },
+    "50": {
+      "baseline_image_sha256": "3b5f9ae1f4d052ca762cf7532fcdcd57b9fc04f12a58522b2d54ab3b5fd07d2e",
+      "detected_boxes": [
+        [
+          315,
+          162,
+          446,
+          354
+        ]
+      ],
+      "detected_face_count": 1,
+      "face_bbox": [
+        315,
+        162,
+        446,
+        354
+      ],
+      "identity_id": "jisoo",
+      "pixel_mask": "50.png",
+      "pixel_mask_sha256": "1f424c8d09b6ffc7e05c7f46f4bdbb9b45c4ebf9d90ca830c68d9d5a4f5ae2d4",
+      "prompt": "Skiing woman img, snowy slope, fearless grin, orange goggles",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "50.tokens.png",
+      "token_mask_sha256": "a8bb54bd142fa86ee0adf5234a8145fe7cf8bfbb7bed125bf45cad030ac7f442"
+    },
+    "51": {
+      "baseline_image_sha256": "26d73bd77848235c0b487d840b406c311bbabe59a9fd85e602fcab0034943307",
+      "detected_boxes": [
+        [
+          303,
+          140,
+          466,
+          386
+        ]
+      ],
+      "detected_face_count": 1,
+      "face_bbox": [
+        303,
+        140,
+        466,
+        386
+      ],
+      "identity_id": "jisoo",
+      "pixel_mask": "51.png",
+      "pixel_mask_sha256": "782186919ce420401206c15c2ce193896b545e13926c9c0902fbfc621cb3db2a",
+      "prompt": "Drumming woman img, rock concert in rain, passionate angry face, black t-shirt",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "51.tokens.png",
+      "token_mask_sha256": "89c7dad49e1580c8c24f614c691ca9c36151e30e522137df1f62867949c5286c"
+    },
+    "52": {
+      "baseline_image_sha256": "c2591441bd4d215b0c1a13c29e3c1968259fc705db0731e0824e2994d999978d",
+      "detected_boxes": [
+        [
+          309,
+          183,
+          481,
+          419
+        ]
+      ],
+      "detected_face_count": 1,
+      "face_bbox": [
+        309,
+        183,
+        481,
+        419
+      ],
+      "identity_id": "jisoo",
+      "pixel_mask": "52.png",
+      "pixel_mask_sha256": "39717c420daee5432c3d77552856faf1bca0a7ba0e024ab103eadd546b34a4a0",
+      "prompt": "Kickboxing woman img, gym ring, fierce roar face, sweatband",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "52.tokens.png",
+      "token_mask_sha256": "95a502ae8b91f5b64855c304c29c8d1bdfc49fe015b1c85bafb0862236010c7b"
+    },
+    "53": {
+      "baseline_image_sha256": "c29a7e7cad47fdbcd0df13e9312f1fc032796bd166bc15ab91a4ac0c513bf53d",
+      "detected_boxes": [
+        [
+          314,
+          160,
+          433,
+          332
+        ]
+      ],
+      "detected_face_count": 1,
+      "face_bbox": [
+        314,
+        160,
+        433,
+        332
+      ],
+      "identity_id": "jisoo",
+      "pixel_mask": "53.png",
+      "pixel_mask_sha256": "d2315883b39439472b2276999aa7ef4a4edded8583a9d44ea694b33d425d5be0",
+      "prompt": "Dancing woman img, neon club, euphoric face, silver jumpsuit",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "53.tokens.png",
+      "token_mask_sha256": "fa6a5f15b384c4364a57d1fc43b99c9b38cc3664385f7609ca4d6a6aa11b3b23"
+    },
+    "54": {
+      "baseline_image_sha256": "02dd7ffe137b67169786bc988e1b206e7dd9a9d91b447aa9d7417c41edc2155a",
+      "detected_boxes": [
+        [
+          292,
+          178,
+          457,
+          409
+        ]
+      ],
+      "detected_face_count": 1,
+      "face_bbox": [
+        292,
+        178,
+        457,
+        409
+      ],
+      "identity_id": "jisoo",
+      "pixel_mask": "54.png",
+      "pixel_mask_sha256": "fdc863de72c2b10b0798f42994e746844f4c8c801518ac9c02a5066d746046d1",
+      "prompt": "Angry woman img, traffic jam, scowling face, dark suit",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "54.tokens.png",
+      "token_mask_sha256": "d1471cef6251133a731b8d53fd0fe5bbe1533e2cd70d3a7e993338cc8d576409"
+    },
+    "55": {
+      "baseline_image_sha256": "01ac0facc1bf4000cdb18936ccfdac18c1e06e14724b6d4e9021374ba5af687a",
+      "detected_boxes": [
+        [
+          318,
+          162,
+          433,
+          325
+        ]
+      ],
+      "detected_face_count": 1,
+      "face_bbox": [
+        318,
+        162,
+        433,
+        325
+      ],
+      "identity_id": "jisoo",
+      "pixel_mask": "55.png",
+      "pixel_mask_sha256": "3279ddcdd65625cbdebc2492c703167b80c5bb6e134fb5f60adfefb3e034e251",
+      "prompt": "Crying woman img, stormy alley, tearful face, ripped jeans",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "55.tokens.png",
+      "token_mask_sha256": "fa6a5f15b384c4364a57d1fc43b99c9b38cc3664385f7609ca4d6a6aa11b3b23"
+    },
+    "56": {
+      "baseline_image_sha256": "bc8a8697a4020e2142e07531c1a9b4160119cacd58a12003aeacda77e8fa13bc",
+      "detected_boxes": [
+        [
+          304,
+          164,
+          471,
+          421
+        ]
+      ],
+      "detected_face_count": 1,
+      "face_bbox": [
+        304,
+        164,
+        471,
+        421
+      ],
+      "identity_id": "jisoo",
+      "pixel_mask": "56.png",
+      "pixel_mask_sha256": "10a0cf11e5e496fc04929b95f47b2b5a8982e412a1760049c5778a63820d1331",
+      "prompt": "Laughing woman img, carnival wheel, carefree laugh, polka-dot shirt",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "56.tokens.png",
+      "token_mask_sha256": "b601a5167ab65ec215700b5180249a5351e0e4bc272f872bb9ce52e2bb74f6b1"
+    },
+    "57": {
+      "baseline_image_sha256": "7d1ba9c1fd87921d5043460acd79d6944040acdc45a51807e3341da6a01a34a2",
+      "detected_boxes": [
+        [
+          334,
+          131,
+          398,
+          223
+        ]
+      ],
+      "detected_face_count": 1,
+      "face_bbox": [
+        334,
+        131,
+        398,
+        223
+      ],
+      "identity_id": "jisoo",
+      "pixel_mask": "57.png",
+      "pixel_mask_sha256": "71a59e231f3e83310c961d6430f2c5dd60cab39d390d7b0e7dca296998492bc8",
+      "prompt": "Jumping woman img, beach sunset, ecstatic face, blue tank top",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "57.tokens.png",
+      "token_mask_sha256": "0e49b8bb95b52760c18a32c678caa705f61c32676941c1949cb0f425a5aec726"
+    },
+    "58": {
+      "baseline_image_sha256": "c5904f01945ab81d0739dc647eed1b7ae785faf08c28f9a11ec70d616a7ef633",
+      "detected_boxes": [
+        [
+          318,
+          169,
+          430,
+          330
+        ]
+      ],
+      "detected_face_count": 1,
+      "face_bbox": [
+        318,
+        169,
+        430,
+        330
+      ],
+      "identity_id": "jisoo",
+      "pixel_mask": "58.png",
+      "pixel_mask_sha256": "bcb861e5f108d92f1e555ed09ad982605563a8c3dd9d02b6b7d7d6430635222e",
+      "prompt": "Night-ride biker woman img, neon city, excited face, reflective vest",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "58.tokens.png",
+      "token_mask_sha256": "986fdb859dc0ee38e64b78f69d43f0280bbb0b2e1379a0472de449a1ae44c825"
+    },
+    "59": {
+      "baseline_image_sha256": "c930e737afa3f3c1c052d0dec5a9dd32d78696f4f3dbd9f13a9aec42b9e5ee43",
+      "detected_boxes": [
+        [
+          317,
+          181,
+          433,
+          330
+        ],
+        [
+          572,
+          308,
+          617,
+          356
+        ]
+      ],
+      "detected_face_count": 2,
+      "face_bbox": [
+        317,
+        181,
+        433,
+        330
+      ],
+      "identity_id": "jisoo",
+      "pixel_mask": "59.png",
+      "pixel_mask_sha256": "6984be97192df0843dced2f8f231532dac630c1e4535ef54699c518704c7191b",
+      "prompt": "Chef woman img, bustling kitchen, proud grin, tall white toque",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "59.tokens.png",
+      "token_mask_sha256": "19f15e8ac164f6779dcaa35cf4e4562073aeeff05f1ebbc7a7aa7e24fcf225bb"
+    },
+    "60": {
+      "baseline_image_sha256": "2ab70c8d00db131aea8db62964da7a5a5cdbc7b9e8c880a7f278d46220504457",
+      "detected_boxes": [
+        [
+          337,
+          115,
+          489,
+          355
+        ]
+      ],
+      "detected_face_count": 1,
+      "face_bbox": [
+        337,
+        115,
+        489,
+        355
+      ],
+      "identity_id": "keanu",
+      "pixel_mask": "60.png",
+      "pixel_mask_sha256": "0a0ad636a1e1ebd6a952bc5d94bf869374a0421e4e57731c9c98e7c033c14c33",
+      "prompt": "Reading paper man img, park bench, calm face, grey overcoat",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "60.tokens.png",
+      "token_mask_sha256": "8467f7c882adf57ab2ec9a355076e32c3b50db323539f0a5e77c19bca0b138bd"
+    },
+    "61": {
+      "baseline_image_sha256": "6b74688c74408ead19c4b9302c7fcb8f0c60905f3feb180841cf385441e25ab6",
+      "detected_boxes": [
+        [
+          346,
+          131,
+          485,
+          350
+        ]
+      ],
+      "detected_face_count": 1,
+      "face_bbox": [
+        346,
+        131,
+        485,
+        350
+      ],
+      "identity_id": "keanu",
+      "pixel_mask": "61.png",
+      "pixel_mask_sha256": "389590762e5a69651e924bf71507f091a7d09abc9c8f1029512697253f333e9f",
+      "prompt": "Rushing man img portrait, subway platform, anxious face, swinging briefcase",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "61.tokens.png",
+      "token_mask_sha256": "57dee3b0d126c773841f6f049aec4cc0fdfc0d0707b641903c77a9f99a133dab"
+    },
+    "62": {
+      "baseline_image_sha256": "c8ee08118fa922536ae1b9f8355c0f813661aa8bc1da9fd337ec5a42e0c423d1",
+      "detected_boxes": [
+        [
+          327,
+          168,
+          466,
+          362
+        ]
+      ],
+      "detected_face_count": 1,
+      "face_bbox": [
+        327,
+        168,
+        466,
+        362
+      ],
+      "identity_id": "keanu",
+      "pixel_mask": "62.png",
+      "pixel_mask_sha256": "987b72f3e372bd53347b2fecbf7cb144413f09cf1e82958cdfa38515648dc6c8",
+      "prompt": "Skiing man img, snowy slope, fearless grin, orange goggles",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "62.tokens.png",
+      "token_mask_sha256": "7790a881bff81f349810c1ad0ca7ce82059d8210b06fc22a2342cf22fa595e24"
+    },
+    "63": {
+      "baseline_image_sha256": "c448d1d3fa8742618bf174339bbc15e049c2c8b10a58e9a27e0b4866c4c30f0c",
+      "detected_boxes": [
+        [
+          333,
+          123,
+          506,
+          398
+        ]
+      ],
+      "detected_face_count": 1,
+      "face_bbox": [
+        333,
+        123,
+        506,
+        398
+      ],
+      "identity_id": "keanu",
+      "pixel_mask": "63.png",
+      "pixel_mask_sha256": "c125a84e23fa2222cdb1309cf2cfe6aa10b6b2ab9bd82f4c07685dbd655a81f0",
+      "prompt": "Drumming man img, rock concert in rain, passionate angry face, black t-shirt",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "63.tokens.png",
+      "token_mask_sha256": "39c420829942e6a7813632fd7ede8bdc48ea2ddf7cc0a9dfb658cdf515f4b7c7"
+    },
+    "64": {
+      "baseline_image_sha256": "8011adecb0373b981b5c50194bb0fa7928b377ad407cb5f2dd8a51dea8522525",
+      "detected_boxes": [
+        [
+          338,
+          145,
+          502,
+          404
+        ]
+      ],
+      "detected_face_count": 1,
+      "face_bbox": [
+        338,
+        145,
+        502,
+        404
+      ],
+      "identity_id": "keanu",
+      "pixel_mask": "64.png",
+      "pixel_mask_sha256": "294e5b48ddfa9779d7d1d0abbee352cf5fff11d56bdaf94df8ce8ef1590f08c4",
+      "prompt": "Kickboxing man img, gym ring, fierce roar face, sweatband",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "64.tokens.png",
+      "token_mask_sha256": "4c0ef0afb1322e4a87b45a6e834318bf8539e252db8033bc12ab65e8a0f88d08"
+    },
+    "65": {
+      "baseline_image_sha256": "9fe4fa7f20b9c3cac1672fe955f7d110772ceb5c101001dc1f8544ab162a567f",
+      "detected_boxes": [
+        [
+          343,
+          144,
+          480,
+          359
+        ]
+      ],
+      "detected_face_count": 1,
+      "face_bbox": [
+        343,
+        144,
+        480,
+        359
+      ],
+      "identity_id": "keanu",
+      "pixel_mask": "65.png",
+      "pixel_mask_sha256": "e02972cedb0f19b69ba233464bdd61bd9d7c12e68366189690b5f7ec67bf9ea3",
+      "prompt": "Dancing man img, neon club, euphoric face, silver jumpsuit",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "65.tokens.png",
+      "token_mask_sha256": "3fd847d88a8c365fe3477e5126422d4fccdb9d0cfd85d16d177a080847b28332"
+    },
+    "66": {
+      "baseline_image_sha256": "d2fabd571e68d2f932e12fce871581ae11aaf89d7093b4335a4f9f7afb0f9dee",
+      "detected_boxes": [
+        [
+          337,
+          130,
+          501,
+          387
+        ]
+      ],
+      "detected_face_count": 1,
+      "face_bbox": [
+        337,
+        130,
+        501,
+        387
+      ],
+      "identity_id": "keanu",
+      "pixel_mask": "66.png",
+      "pixel_mask_sha256": "2e9aaee75a1ad3380c811fa9a7eebf3cd8d12a4cd1a7cb3ad9a9254c193fb073",
+      "prompt": "Angry man img, traffic jam, scowling face, dark suit",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "66.tokens.png",
+      "token_mask_sha256": "9503fe651f9ad13035b721b2dd6ac87865332e0968736d1a279010e209c83e20"
+    },
+    "67": {
+      "baseline_image_sha256": "aa2ec4ce204b90955f1440cbd0a17a04391118160c0794c0211171b4bdb2458a",
+      "detected_boxes": [
+        [
+          345,
+          161,
+          446,
+          309
+        ]
+      ],
+      "detected_face_count": 1,
+      "face_bbox": [
+        345,
+        161,
+        446,
+        309
+      ],
+      "identity_id": "keanu",
+      "pixel_mask": "67.png",
+      "pixel_mask_sha256": "b7efa5528d9fb70055ad3a987be0f255be409e3504d077489cea8e4512e0fb2d",
+      "prompt": "Crying man img, stormy alley, tearful face, ripped jeans",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "67.tokens.png",
+      "token_mask_sha256": "d227b3be3e4858ae08f9149c55f39b075ee506ea637a01e0c2dfb383d2426b4c"
+    },
+    "68": {
+      "baseline_image_sha256": "7668f8ba96b84d716f3966ddce82e62ccdd1eb71a522847ea1fd12e91b442c7d",
+      "detected_boxes": [
+        [
+          336,
+          133,
+          505,
+          408
+        ]
+      ],
+      "detected_face_count": 1,
+      "face_bbox": [
+        336,
+        133,
+        505,
+        408
+      ],
+      "identity_id": "keanu",
+      "pixel_mask": "68.png",
+      "pixel_mask_sha256": "fbd4438b37c7bcbf0560b7b88af7a1676634baf410d86f4a68b20ce080ce8cf7",
+      "prompt": "Laughing man img, carnival wheel, carefree laugh, polka-dot shirt",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "68.tokens.png",
+      "token_mask_sha256": "4948ef8f69d9db4ce359a51a2c07be64dce5b26bf0eb540a257d38c892129b63"
+    },
+    "69": {
+      "baseline_image_sha256": "73761d612834b913eca8dfd9f4345da77d06994cc3f91a11bc9815508d025078",
+      "detected_boxes": [
+        [
+          330,
+          75,
+          402,
+          186
+        ]
+      ],
+      "detected_face_count": 1,
+      "face_bbox": [
+        330,
+        75,
+        402,
+        186
+      ],
+      "identity_id": "keanu",
+      "pixel_mask": "69.png",
+      "pixel_mask_sha256": "108951bb9a113520c50c895763966523c983caa692dd07a7c007fd3e118b4ab2",
+      "prompt": "Jumping man img, beach sunset, ecstatic face, blue tank top",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "69.tokens.png",
+      "token_mask_sha256": "fc309a0a9185cd1568678e97d575cd9d802eed8b58472c3717eb1695d9f53bf0"
+    },
+    "70": {
+      "baseline_image_sha256": "63ce0e8bd66b4e0b191be394abba54db93ee5d1e715fa7b4933f89edc823bb53",
+      "detected_boxes": [
+        [
+          341,
+          152,
+          471,
+          349
+        ]
+      ],
+      "detected_face_count": 1,
+      "face_bbox": [
+        341,
+        152,
+        471,
+        349
+      ],
+      "identity_id": "keanu",
+      "pixel_mask": "70.png",
+      "pixel_mask_sha256": "2d9d9cf468ff08d6e9a0113f23a6ab5daeb3700743dcae06a56bd718568cdded",
+      "prompt": "Night-ride biker man img, neon city, excited face, reflective vest",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "70.tokens.png",
+      "token_mask_sha256": "6e6627e675a5641234952c8c039164a2dae94fb3718e279dc6851c900a2ab3c1"
+    },
+    "71": {
+      "baseline_image_sha256": "73a8ce46a3aa6938f89bdd3026bad04ae4fc073b659116a6b577c7b627f8851b",
+      "detected_boxes": [
+        [
+          325,
+          176,
+          447,
+          341
+        ],
+        [
+          571,
+          283,
+          640,
+          372
+        ],
+        [
+          185,
+          292,
+          215,
+          335
+        ]
+      ],
+      "detected_face_count": 3,
+      "face_bbox": [
+        325,
+        176,
+        447,
+        341
+      ],
+      "identity_id": "keanu",
+      "pixel_mask": "71.png",
+      "pixel_mask_sha256": "0201fdc67844c1bac693d6bf88134555059e49822a73c7a3436cf3027eb3ffa6",
+      "prompt": "Chef man img, bustling kitchen, proud grin, tall white toque",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "71.tokens.png",
+      "token_mask_sha256": "f89529080ceb8dcd47a0d17c1b071d70d6f84940164968b754dbb0b694c870ac"
+    },
+    "72": {
+      "baseline_image_sha256": "6f47a5a4629fd69fb63da9606ca9d2043c85729c466956c02e0b5a9613df3297",
+      "detected_boxes": [
+        [
+          301,
+          147,
+          490,
+          390
+        ]
+      ],
+      "detected_face_count": 1,
+      "face_bbox": [
+        301,
+        147,
+        490,
+        390
+      ],
+      "identity_id": "lex",
+      "pixel_mask": "72.png",
+      "pixel_mask_sha256": "f74f3b12f47a7f6fa032a48ebdb38548e7946c15dba9a65527eedf2a2c49336a",
+      "prompt": "Reading paper man img, park bench, calm face, grey overcoat",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "72.tokens.png",
+      "token_mask_sha256": "a95602460122e012eba5187254bdf6c03564cf8add73f446553cc771d55390d5"
+    },
+    "73": {
+      "baseline_image_sha256": "6bce1dc47ec317a248a0b10b5b3468c507beedc0b635be1e294c71fdda748ae4",
+      "detected_boxes": [
+        [
+          312,
+          91,
+          452,
+          279
+        ],
+        [
+          106,
+          242,
+          128,
+          275
+        ]
+      ],
+      "detected_face_count": 2,
+      "face_bbox": [
+        312,
+        91,
+        452,
+        279
+      ],
+      "identity_id": "lex",
+      "pixel_mask": "73.png",
+      "pixel_mask_sha256": "0b31102a08724ccf4a6943ff631f955f0de536e91ee12f06859c2bcfa36c1fdb",
+      "prompt": "Rushing man img portrait, subway platform, anxious face, swinging briefcase",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "73.tokens.png",
+      "token_mask_sha256": "94b3d08c3ca2e51d5e2e8184e45035ce53e7c9c49f3aec42c7e105f28da0d9cc"
+    },
+    "74": {
+      "baseline_image_sha256": "130712e0baa158f1114cbe052cc6c93544e14909df872907bcd922acae47848c",
+      "detected_boxes": [
+        [
+          300,
+          198,
+          536,
+          518
+        ]
+      ],
+      "detected_face_count": 1,
+      "face_bbox": [
+        300,
+        198,
+        536,
+        518
+      ],
+      "identity_id": "lex",
+      "pixel_mask": "74.png",
+      "pixel_mask_sha256": "24807765a8d713afa6dd8918c7a9aba46773e42f33a9b754238b73e15db86b4f",
+      "prompt": "Skiing man img, snowy slope, fearless grin, orange goggles",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "74.tokens.png",
+      "token_mask_sha256": "60f080f059db777d2ec98dc6b14f4b569b0a4090ed69154dcc5274fba20b38a1"
+    },
+    "75": {
+      "baseline_image_sha256": "36399427e62ece6bf1881c7313e17113db4f194ade42b798bed744c809d2a30a",
+      "detected_boxes": [
+        [
+          262,
+          148,
+          543,
+          563
+        ]
+      ],
+      "detected_face_count": 1,
+      "face_bbox": [
+        262,
+        148,
+        543,
+        563
+      ],
+      "identity_id": "lex",
+      "pixel_mask": "75.png",
+      "pixel_mask_sha256": "ccc81c5644e0782e33ad45e487492ec230b5a0dce8009b339517b76e9ff2ee40",
+      "prompt": "Drumming man img, rock concert in rain, passionate angry face, black t-shirt",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "75.tokens.png",
+      "token_mask_sha256": "fc7814248bb6e131cc556b428d059c0d8809047ea75e05a8f491a85babb73026"
+    },
+    "76": {
+      "baseline_image_sha256": "78ced16c755808905b3cde2367b4d44daa8f76acda6e39bc6b05189a1fe2b95a",
+      "detected_boxes": [
+        [
+          292,
+          145,
+          505,
+          442
+        ]
+      ],
+      "detected_face_count": 1,
+      "face_bbox": [
+        292,
+        145,
+        505,
+        442
+      ],
+      "identity_id": "lex",
+      "pixel_mask": "76.png",
+      "pixel_mask_sha256": "db72f90352390d26b8c6a83e54fa89b62b8a9cf4ed97c661965f0584d78a9c74",
+      "prompt": "Kickboxing man img, gym ring, fierce roar face, sweatband",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "76.tokens.png",
+      "token_mask_sha256": "b222f9f574d2f957ce18986547d791a8398c7d4a31da0f5c575087af67247e2d"
+    },
+    "77": {
+      "baseline_image_sha256": "6acca4ff14d630d7d3940ee12e470af07977ccbab3c1fc0205a44c85024c448b",
+      "detected_boxes": [
+        [
+          304,
+          221,
+          497,
+          467
+        ],
+        [
+          202,
+          339,
+          229,
+          383
+        ],
+        [
+          671,
+          337,
+          690,
+          370
+        ]
+      ],
+      "detected_face_count": 3,
+      "face_bbox": [
+        304,
+        221,
+        497,
+        467
+      ],
+      "identity_id": "lex",
+      "pixel_mask": "77.png",
+      "pixel_mask_sha256": "c79f6264274c61d461fd26b9192243528151c4bae6bdfc3ad0201418e091e25b",
+      "prompt": "Dancing man img, neon club, euphoric face, silver jumpsuit",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "77.tokens.png",
+      "token_mask_sha256": "12a6b52831115aec5e191411288a468e2ceee809025df6c8e6062ef4e11d7588"
+    },
+    "78": {
+      "baseline_image_sha256": "07661328e971cb06c7546b0de4aed071858ddd940b6727e548c42d41eb980908",
+      "detected_boxes": [
+        [
+          259,
+          150,
+          548,
+          518
+        ]
+      ],
+      "detected_face_count": 1,
+      "face_bbox": [
+        259,
+        150,
+        548,
+        518
+      ],
+      "identity_id": "lex",
+      "pixel_mask": "78.png",
+      "pixel_mask_sha256": "38bd82e2b6dae9e2f3342c0f9f234157bab134e49a9f0d25cde6b3a92b9fcf54",
+      "prompt": "Angry man img, traffic jam, scowling face, dark suit",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "78.tokens.png",
+      "token_mask_sha256": "3d9453e693d2f53de40f3621dc31273c6572998bce8deff44119ce7c5b15a83e"
+    },
+    "79": {
+      "baseline_image_sha256": "3ba82787886ca802a026f8bf0e8ddbebabb3abcd4d0237b5466e16fb89938e8e",
+      "detected_boxes": [
+        [
+          372,
+          85,
+          484,
+          237
+        ]
+      ],
+      "detected_face_count": 1,
+      "face_bbox": [
+        372,
+        85,
+        484,
+        237
+      ],
+      "identity_id": "lex",
+      "pixel_mask": "79.png",
+      "pixel_mask_sha256": "398e76dc74ec26b77ff4d8d3ab982bf3c97aca4b7586b71f7ae0a344ac79c941",
+      "prompt": "Crying man img, stormy alley, tearful face, ripped jeans",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "79.tokens.png",
+      "token_mask_sha256": "0eadeb9200456b5a1bb265265a35699c7a99ef876ae991214048fef207bc4ed7"
+    },
+    "80": {
+      "baseline_image_sha256": "5335a26fbcec5fd0af60dc4eeaa8f45d6c383ae3c5690a186a4c14f9945aa281",
+      "detected_boxes": [
+        [
+          305,
+          166,
+          518,
+          478
+        ]
+      ],
+      "detected_face_count": 1,
+      "face_bbox": [
+        305,
+        166,
+        518,
+        478
+      ],
+      "identity_id": "lex",
+      "pixel_mask": "80.png",
+      "pixel_mask_sha256": "aabaa82021bfa149d4ba9b3bfe55bd6e843ecc7eb5e8054b86fc28f77170aa63",
+      "prompt": "Laughing man img, carnival wheel, carefree laugh, polka-dot shirt",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "80.tokens.png",
+      "token_mask_sha256": "fffeb337880374b1b776056db27ec5c8bfd926770183167b95fd66b1c2fc4f23"
+    },
+    "81": {
+      "baseline_image_sha256": "b08c62be4b56405f287af3a8e3ca4a2c8a7d468337aa3a69933bdb74c240ffbf",
+      "detected_boxes": [
+        [
+          351,
+          123,
+          407,
+          208
+        ]
+      ],
+      "detected_face_count": 1,
+      "face_bbox": [
+        351,
+        123,
+        407,
+        208
+      ],
+      "identity_id": "lex",
+      "pixel_mask": "81.png",
+      "pixel_mask_sha256": "64b29d6a4841248a427f062734afcfaadd5fc809eab2553603df3c6241e5b019",
+      "prompt": "Jumping man img, beach sunset, ecstatic face, blue tank top",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "81.tokens.png",
+      "token_mask_sha256": "3c64a6c9956df3d4de2421153349eea4a65ac018e42c0f07108ccaad63a50bb3"
+    },
+    "82": {
+      "baseline_image_sha256": "a6f8ea7a1d4615259e0ad76e3fe21e10ad405e7a28a330b3fdb9493522f727d1",
+      "detected_boxes": [
+        [
+          310,
+          225,
+          502,
+          480
+        ]
+      ],
+      "detected_face_count": 1,
+      "face_bbox": [
+        310,
+        225,
+        502,
+        480
+      ],
+      "identity_id": "lex",
+      "pixel_mask": "82.png",
+      "pixel_mask_sha256": "9dcc0939cb5efaffa3065d33f4c5a33fac88c06954d37b80ef09af41498269f8",
+      "prompt": "Night-ride biker man img, neon city, excited face, reflective vest",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "82.tokens.png",
+      "token_mask_sha256": "99dc34752e3a297985499a7880ed345fbd8d601f2fad973d9464fbd6439aa2ce"
+    },
+    "83": {
+      "baseline_image_sha256": "2954ad65d16215cb6c83b93ad098748299e8d75c5e96140bf7f54432723b01bd",
+      "detected_boxes": [
+        [
+          492,
+          335,
+          527,
+          376
+        ],
+        [
+          319,
+          204,
+          465,
+          391
+        ],
+        [
+          207,
+          341,
+          233,
+          373
+        ],
+        [
+          575,
+          303,
+          623,
+          369
+        ]
+      ],
+      "detected_face_count": 4,
+      "face_bbox": [
+        319,
+        204,
+        465,
+        391
+      ],
+      "identity_id": "lex",
+      "pixel_mask": "83.png",
+      "pixel_mask_sha256": "82963401958444f7798d4bf82dd88571f4ed298aca598d420f0d0f9e27ab5d3a",
+      "prompt": "Chef man img, bustling kitchen, proud grin, tall white toque",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "83.tokens.png",
+      "token_mask_sha256": "b68791e98e9942527dbad710f4acc159fdc4fcead43ed886f5828706859f6e33"
+    },
+    "84": {
+      "baseline_image_sha256": "5d6eae6d76400f821a8f48d0655051debedc9239d74e0c98e6734dcc2040a9b6",
+      "detected_boxes": [
+        [
+          422,
+          98,
+          606,
+          375
+        ]
+      ],
+      "detected_face_count": 1,
+      "face_bbox": [
+        422,
+        98,
+        606,
+        375
+      ],
+      "identity_id": "marion",
+      "pixel_mask": "84.png",
+      "pixel_mask_sha256": "2f46caab1959896382d7293f1fe82c537523e8929d7dea1adde0c8f877a0034d",
+      "prompt": "Reading paper woman img, park bench, calm face, grey overcoat",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "84.tokens.png",
+      "token_mask_sha256": "cb565775a1ac1831782056f12d906ab7e06ec7c65305282feb124a3d4098e889"
+    },
+    "85": {
+      "baseline_image_sha256": "1cda91a0ee17443e9686ef3e804966a8039416afa9f4795c46e13541c7396dae",
+      "detected_boxes": [
+        [
+          387,
+          120,
+          527,
+          334
+        ],
+        [
+          128,
+          209,
+          147,
+          233
+        ]
+      ],
+      "detected_face_count": 2,
+      "face_bbox": [
+        387,
+        120,
+        527,
+        334
+      ],
+      "identity_id": "marion",
+      "pixel_mask": "85.png",
+      "pixel_mask_sha256": "70ccfe651e0cef036fde464e521ed66bba48b9704e48fa48c7a15123b5a2199a",
+      "prompt": "Rushing woman img portrait, subway platform, anxious face, swinging briefcase",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "85.tokens.png",
+      "token_mask_sha256": "fceebb6ae0bd6e8b1339a0741abc3ac7f9218a99b098527b474eac356617f37f"
+    },
+    "86": {
+      "baseline_image_sha256": "e32861a61a82db11ee8ab42a366719a4286e368ed6230b044f4c0500a6b53c10",
+      "detected_boxes": [
+        [
+          348,
+          179,
+          601,
+          516
+        ]
+      ],
+      "detected_face_count": 1,
+      "face_bbox": [
+        348,
+        179,
+        601,
+        516
+      ],
+      "identity_id": "marion",
+      "pixel_mask": "86.png",
+      "pixel_mask_sha256": "24b1425dec550bb438bffaa7fd3d3d127186de28a81850b0c15c1ffdbdadc5e6",
+      "prompt": "Skiing woman img, snowy slope, fearless grin, orange goggles",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "86.tokens.png",
+      "token_mask_sha256": "f75c8f0f735475c18deafc3d4c48943a433a5c16bccf2b5791c3effb3a6ce825"
+    },
+    "87": {
+      "baseline_image_sha256": "a6eae70e6dcbb3bc1efc42609487e08374df937d0cf1f309dac371102dab0fb7",
+      "detected_boxes": [
+        [
+          378,
+          133,
+          622,
+          496
+        ]
+      ],
+      "detected_face_count": 1,
+      "face_bbox": [
+        378,
+        133,
+        622,
+        496
+      ],
+      "identity_id": "marion",
+      "pixel_mask": "87.png",
+      "pixel_mask_sha256": "bfa585011983fe6154b1528b5d182a8a5beeee52d99c4ceefa6e1297c96753cf",
+      "prompt": "Drumming woman img, rock concert in rain, passionate angry face, black t-shirt",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "87.tokens.png",
+      "token_mask_sha256": "85433976235c5a373633d4f36b2184bd025d099df22109a9c1bcbd49ebfc8ebb"
+    },
+    "88": {
+      "baseline_image_sha256": "a3ca334dfb5256379391a65bee26fe02d9bd545a2bc1f59d4ef1862338102ed7",
+      "detected_boxes": [
+        [
+          319,
+          191,
+          531,
+          485
+        ]
+      ],
+      "detected_face_count": 1,
+      "face_bbox": [
+        319,
+        191,
+        531,
+        485
+      ],
+      "identity_id": "marion",
+      "pixel_mask": "88.png",
+      "pixel_mask_sha256": "5cf3e6fdd950d130fbfe1241413fc64301b488ab802a7760bb8de10b89f87866",
+      "prompt": "Kickboxing woman img, gym ring, fierce roar face, sweatband",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "88.tokens.png",
+      "token_mask_sha256": "ead971e079171b497a5eacb931bba81a2de6a40382eab4853708c1a6f82fcc83"
+    },
+    "89": {
+      "baseline_image_sha256": "bfb8f8a622ed51de63a5450f79bd9de2b08368d25daaca65f261e36a2cac285e",
+      "detected_boxes": [
+        [
+          664,
+          347,
+          699,
+          386
+        ],
+        [
+          358,
+          110,
+          512,
+          356
+        ],
+        [
+          588,
+          303,
+          626,
+          361
+        ],
+        [
+          106,
+          367,
+          132,
+          411
+        ],
+        [
+          567,
+          334,
+          603,
+          391
+        ]
+      ],
+      "detected_face_count": 5,
+      "face_bbox": [
+        358,
+        110,
+        512,
+        356
+      ],
+      "identity_id": "marion",
+      "pixel_mask": "89.png",
+      "pixel_mask_sha256": "600e3a067f14cf17b2f052bc44b39b0277ad7ac0e3a64a1118c9f747d9c647c2",
+      "prompt": "Dancing woman img, neon club, euphoric face, silver jumpsuit",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "89.tokens.png",
+      "token_mask_sha256": "f4f17f53220fa0865d113b5b9eed4e076140990dfb12ae302856d3efb9724b21"
+    },
+    "90": {
+      "baseline_image_sha256": "ea1750a7659381922bf401ac1c4bd2ab639f26f7a7fec2e0c13d9e02f34d8850",
+      "detected_boxes": [
+        [
+          406,
+          123,
+          645,
+          497
+        ]
+      ],
+      "detected_face_count": 1,
+      "face_bbox": [
+        406,
+        123,
+        645,
+        497
+      ],
+      "identity_id": "marion",
+      "pixel_mask": "90.png",
+      "pixel_mask_sha256": "7ba16e0282ba710ad8733f7d6eeaaa137a8261ecdede8ccc3d74bc5af7324db4",
+      "prompt": "Angry woman img, traffic jam, scowling face, dark suit",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "90.tokens.png",
+      "token_mask_sha256": "887861666e7ca1b469b84bf4a3ef5055eb2f82eae922a9e9dd5d1deaeb44128b"
+    },
+    "91": {
+      "baseline_image_sha256": "aaac3b94f35c33880babb20bb6081847bd08b6e15183ff14d21ce552fc955bd4",
+      "detected_boxes": [
+        [
+          419,
+          131,
+          629,
+          439
+        ]
+      ],
+      "detected_face_count": 1,
+      "face_bbox": [
+        419,
+        131,
+        629,
+        439
+      ],
+      "identity_id": "marion",
+      "pixel_mask": "91.png",
+      "pixel_mask_sha256": "21e423e82d061327fdebf01996c7c4f240acfa0ab18c960e4bf6ce4a1e44e90d",
+      "prompt": "Crying woman img, stormy alley, tearful face, ripped jeans",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "91.tokens.png",
+      "token_mask_sha256": "ad570662a9953fac29cfa9a8328eabe29674731165caf267a4b45732dfcafbae"
+    },
+    "92": {
+      "baseline_image_sha256": "6b8c1ddca00b1719829e9adf5ffaf34ca4a7eb13ff826e8751b0833bef03e4b8",
+      "detected_boxes": [
+        [
+          409,
+          119,
+          644,
+          513
+        ]
+      ],
+      "detected_face_count": 1,
+      "face_bbox": [
+        409,
+        119,
+        644,
+        513
+      ],
+      "identity_id": "marion",
+      "pixel_mask": "92.png",
+      "pixel_mask_sha256": "50b665bf95c6b9db3c8ea2e96e5862874fabc29642e3e4fd2d1bdcaf02a2ddb2",
+      "prompt": "Laughing woman img, carnival wheel, carefree laugh, polka-dot shirt",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "92.tokens.png",
+      "token_mask_sha256": "dce4c88a31c811b848cda8cdd03fde5a6697a9d0d0d478d2d15a5dff8ca99c4e"
+    },
+    "93": {
+      "baseline_image_sha256": "1b580e83dadcd75da509c26491e02f8999913b265ef2a2429eb38ace2d25f7f5",
+      "detected_boxes": [
+        [
+          329,
+          102,
+          515,
+          393
+        ]
+      ],
+      "detected_face_count": 1,
+      "face_bbox": [
+        329,
+        102,
+        515,
+        393
+      ],
+      "identity_id": "marion",
+      "pixel_mask": "93.png",
+      "pixel_mask_sha256": "ea6fd3bc2ec5765e67a9d41522b64451dc30d2da931ebd9bdd32296258c81802",
+      "prompt": "Jumping woman img, beach sunset, ecstatic face, blue tank top",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "93.tokens.png",
+      "token_mask_sha256": "1c361259a6bf8d71cb0d4c797a9f01162d831c025a12742d6ed3a4305d3613d1"
+    },
+    "94": {
+      "baseline_image_sha256": "ae55ac00d1f4582996c949873d24195ffcd380fdd0616e71b0ee0e0741d08955",
+      "detected_boxes": [
+        [
+          404,
+          116,
+          631,
+          504
+        ]
+      ],
+      "detected_face_count": 1,
+      "face_bbox": [
+        404,
+        116,
+        631,
+        504
+      ],
+      "identity_id": "marion",
+      "pixel_mask": "94.png",
+      "pixel_mask_sha256": "0e7f2e5839fbaa696dc64c1f0c955c7062b0db859a930e7b303070648784f20d",
+      "prompt": "Night-ride biker woman img, neon city, excited face, reflective vest",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "94.tokens.png",
+      "token_mask_sha256": "5c2906ec5f021f6e66c1d633453c155fe22d443a52f39841061bb31591a57233"
+    },
+    "95": {
+      "baseline_image_sha256": "d7dca26245f32db029db8057ed7a2d5a6ac7c4e87de191820bbe62aaa422a14d",
+      "detected_boxes": [
+        [
+          337,
+          178,
+          475,
+          360
+        ],
+        [
+          573,
+          285,
+          644,
+          375
+        ],
+        [
+          10,
+          373,
+          36,
+          407
+        ]
+      ],
+      "detected_face_count": 3,
+      "face_bbox": [
+        337,
+        178,
+        475,
+        360
+      ],
+      "identity_id": "marion",
+      "pixel_mask": "95.png",
+      "pixel_mask_sha256": "9fe74ebc0cc38262156a0e33ab635dd8e0c27be1af098bf9c22fcfe9e3f51274",
+      "prompt": "Chef woman img, bustling kitchen, proud grin, tall white toque",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "95.tokens.png",
+      "token_mask_sha256": "1f8f756836e14a354e962093ee89109a454dcde5215f019e6daad8dfff4394d0"
+    }
+  },
+  "schema": 1,
+  "selection": "largest detected face; >=.95 area tie is ambiguous; no identity-score selection",
+  "signature": {
+    "arch": "qwen_image_2_1",
+    "guidance": 1.0,
+    "panel_sha256": "d769406704ddbcdf0bb09d408ad4929b302aaa84a12e295872618e3df9f09a65",
+    "reference_size": 512,
+    "revisions": {
+      "qwen21": "d26bb61231c349cf6b7896fa83353113880e1ba3"
+    },
+    "steps": 40,
+    "target_size": [
+      768,
+      768
+    ]
+  },
+  "usage": "validation scoring only"
+}

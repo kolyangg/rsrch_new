@@ -1,0 +1,11 @@
+transformers
+accelerate
+peft
+safetensors
+sentencepiece
+comet-ml
+gdown
+pillow
+numpy
+pyyaml
+datasets

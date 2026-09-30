@@ -1,105 +1,50 @@
 #!/usr/bin/env python3
-"""Project original reference face boxes through each backend's native resize path."""
+"""Export the same reference masks and geometry used by both runtime backends."""
 
 import argparse
-import hashlib
 import json
-import math
 from pathlib import Path
 
-from PIL import Image, ImageDraw
+import numpy as np
+from PIL import Image
+
+from ba_dit.data.geometry import face_mask, reference_geometry
+from ba_dit.data.manifest import file_hash
 
 
-def sha256(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
-
-
-def flux_geometry(width: int, height: int, size: int) -> tuple[int, int, tuple[int, int, int, int]]:
-    # Same cap_pixels + center_crop_to_multiple_of_x sequence as pinned Toolkit.
-    pixel_count = width * height
-    if pixel_count > size * size:
-        scale = math.sqrt(size * size / pixel_count)
-        width, height = int(width * scale), int(height * scale)
-    final_width, final_height = width // 16 * 16, height // 16 * 16
-    if min(final_width, final_height) <= 0:
-        raise ValueError("Reference becomes empty in FLUX preprocessing")
-    left, top = (width - final_width) // 2, (height - final_height) // 2
-    return width, height, (left, top, left + final_width, top + final_height)
-
-
-def qwen_geometry(width: int, height: int, size: int) -> tuple[int, int]:
-    # Same calculate_dimensions area/aspect rounding as pinned Qwen pipeline.
-    ratio = width / height
-    output_width = round(math.sqrt(size * size * ratio) / 32) * 32
-    output_height = round((math.sqrt(size * size * ratio) / ratio) / 32) * 32
-    if min(output_width, output_height) <= 0:
-        raise ValueError("Reference becomes empty in Qwen preprocessing")
-    return output_width, output_height
-
-
-def token_support(mask: Image.Image) -> Image.Image:
-    if mask.width % 16 or mask.height % 16:
-        raise ValueError("Encoded dimensions must be divisible by 16")
-    output = Image.new("L", (mask.width // 16, mask.height // 16), 0)
-    pixels = output.load()
-    for y in range(output.height):
-        for x in range(output.width):
-            pixels[x, y] = 255 if mask.crop((x * 16, y * 16, (x + 1) * 16, (y + 1) * 16)).getbbox() else 0
-    return output
-
-
-def main() -> None:
+def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--panel", type=Path, default=Path(__file__).resolve().parents[1] / "data/validation")
-    parser.add_argument("--reference-sizes", type=int, nargs="+", default=[512, 768])
+    parser.add_argument('--panel', type=Path, default=Path(__file__).resolve().parents[1] / 'data/validation')
+    parser.add_argument('--reference-sizes', type=int, nargs='+', default=[512, 768])
     args = parser.parse_args()
     panel = args.panel.resolve()
-    boxes = json.loads((panel / "ref_bboxes.json").read_text())
-    root = panel / "masks"
-    root.mkdir(parents=True, exist_ok=True)
+    boxes = json.loads((panel / 'ref_bboxes.json').read_text())
     records = []
-    for image_path in sorted((panel / "references").iterdir()):
-        if image_path.name not in boxes:
+    for path in sorted((panel / 'references').iterdir()):
+        if path.name not in boxes:
             continue
-        with Image.open(image_path) as source:
-            width, height = source.size
-        bbox = boxes[image_path.name]["face_crop_new"]
-        if not (0 <= bbox[0] < bbox[2] <= width and 0 <= bbox[1] < bbox[3] <= height):
-            raise ValueError(f"Invalid reference face box: {image_path.name}: {bbox}")
-        native = Image.new("L", (width, height), 0)
-        ImageDraw.Draw(native).rectangle(tuple(bbox), fill=255)
+        with Image.open(path) as source:
+            image = source.convert('RGB')
+        box = boxes[path.name]['face_crop_new']
         for size in args.reference_sizes:
-            for backend in ("flux2", "qwen21"):
-                if backend == "flux2":
-                    resize_width, resize_height, crop = flux_geometry(width, height, size)
-                    prepared = native.resize((resize_width, resize_height), Image.Resampling.NEAREST).crop(crop)
-                else:
-                    resize_width, resize_height = qwen_geometry(width, height, size)
-                    prepared = native.resize((resize_width, resize_height), Image.Resampling.NEAREST)
-                tokens = token_support(prepared)
-                if not tokens.getbbox():
-                    raise ValueError(f"Face box disappeared after {backend} transform: {image_path.name}")
-                target_dir = root / backend / f"ref{size}"
-                target_dir.mkdir(parents=True, exist_ok=True)
-                pixel_path = target_dir / f"{image_path.stem}.png"
-                token_path = target_dir / f"{image_path.stem}.tokens.png"
-                prepared.save(pixel_path)
-                tokens.save(token_path)
-                records.append({
-                    "backend": backend, "reference_size": size, "identity_id": image_path.stem,
-                    "reference_image": str(image_path.relative_to(panel)),
-                    "reference_sha256": sha256(image_path), "source_size_wh": [width, height],
-                    "source_face_bbox": bbox, "encoded_size_wh": list(prepared.size),
-                    "token_grid_hw": [tokens.height, tokens.width],
-                    "pixel_mask": str(pixel_path.relative_to(panel)),
-                    "token_mask": str(token_path.relative_to(panel)),
-                    "token_mask_sha256": sha256(token_path),
-                    "geometry": "toolkit_default_prep_cap_crop16" if backend == "flux2" else "qwen_pipeline_calculate_dimensions_resize",
-                })
-    manifest = panel / "reference_masks.jsonl"
-    manifest.write_text("".join(json.dumps(r, sort_keys=True) + "\n" for r in records))
-    print(f"Built {len(records)} backend/size reference masks; manifest SHA256 {sha256(manifest)}")
+            for backend, native in [('flux2', 'flux'), ('qwen21', 'qwen')]:
+                _, tokens, geometry = reference_geometry(image, box, native, size)
+                mask = face_mask(image, box).resize(tuple(geometry['resize_wh']), Image.Resampling.NEAREST).crop(geometry['crop_xyxy'])
+                destination = panel / 'masks' / backend / f'ref{size}'
+                destination.mkdir(parents=True, exist_ok=True)
+                pixel_path, token_path = destination / f'{path.stem}.png', destination / f'{path.stem}.tokens.png'
+                mask.save(pixel_path)
+                Image.fromarray(tokens.astype(np.uint8) * 255).save(token_path)
+                records.append(dict(backend=backend, reference_size=size, identity_id=path.stem,
+                    reference_image=str(path.relative_to(panel)), reference_sha256=file_hash(path),
+                    source_size_wh=list(image.size), source_face_bbox=box, encoded_size_wh=geometry['encoded_wh'],
+                    token_grid_hw=geometry['token_hw'], pixel_mask=str(pixel_path.relative_to(panel)),
+                    token_mask=str(token_path.relative_to(panel)), token_mask_sha256=file_hash(token_path),
+                    geometry=geometry, box_convention='xyxy-exclusive'))
+    manifest = panel / 'reference_masks.jsonl'
+    manifest.write_text(''.join(json.dumps(row, sort_keys=True) + '\n' for row in records))
+    print(f'Built {len(records)} masks; manifest SHA256 {file_hash(manifest)}')
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

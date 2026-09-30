@@ -1,0 +1,39 @@
+{
+  "cosmic": {
+    "description": "Original Cosmic Large targets and reference-face bank",
+    "format": "cosmic",
+    "metadata": "gathered_data_cosmic_large_filtered.json",
+    "metadata_sha256": "8ba369ef2fdc0496a0d3d55afb5c7923c1aa299343a676ac6bc0d94f3a3a0196",
+    "legacy_metadata": "cosmic_large/gathered_data_cosmic_large_filtered.json",
+    "archives": [
+      {
+        "name": "targets",
+        "filename": "cosmic_dataset_images.tar",
+        "url": "https://drive.google.com/file/d/16upgN9HNXRKdASiWsYvo1pw1-ndpC3uO/view?usp=sharing",
+        "image_directory": "LAION-5B-Filtered-Large"
+      },
+      {
+        "name": "references",
+        "filename": "cosmic_large.tar.gz",
+        "url": "https://drive.google.com/file/d/1YV1sGZIFE4qQ1Ju-5Yqo9NvcKt2q16zO/view?usp=sharing",
+        "image_directory": "LAION-5B-Filtered-Large-Faces"
+      }
+    ]
+  },
+  "large": {
+    "description": "Original adjusted Large Dataset (separate from the later BigCelebs release)",
+    "format": "large",
+    "metadata": "filtered_ids3_adj.json",
+    "metadata_sha256": "0056f9647c6ca69079c3b7ae479ea5cdf9e642f076460249b160000eecb3ee50",
+    "legacy_metadata": "filtered_ids3_adj.json",
+    "archives": [
+      {
+        "name": "images",
+        "filename": "large_dataset_adj.tar",
+        "url": null,
+        "url_env": "LARGE_DATASET_URL",
+        "image_directory": "large_dataset"
+      }
+    ]
+  }
+}

@@ -2,6 +2,8 @@
 
 Research CL39-inspired branched reference attention on FLUX.2-klein Base 4B/9B and Qwen-Image-2.1 7B. Read `plans/260930/CL39_Qwen_FLUX_48GB_80GB_Implementation_Plan.md` for architecture and `plans/260930/IMPLEMENTATION_NOTES.md` for actual implementation status. Separate proposals from measured results.
 
+For Vast.ai GPU offer search, provisioning, SSH, stopping, and termination, follow `SKILLS.MD`. Show current offers and costs before renting; provision only after the user confirms a specific offer and configuration.
+
 # Working practices
 
 - Start by checking branch, worktree status, and relevant `AICODE-NOTE:`, `AICODE-TODO:`, and `AICODE-QUESTION:` anchors. Preserve unrelated edits.

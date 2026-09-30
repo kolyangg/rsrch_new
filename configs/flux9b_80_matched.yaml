@@ -1,127 +1,49 @@
-schema_version: 1
-status: proposed_ba_dit_schema_not_an_upstream_config
-run:
-  name: flux9b_80_matched
-  output_dir: ${BA_ROOT}/runs/${RUN_NAME}
-  seed: 42
-hardware:
-  device: cuda:0
-  world_size: 1
-  nominal_vram_gb: 80
-  max_reserved_fraction: 0.9
+schema_version: 2
+name: flux9b_80_matched
 model:
-  backend: flux2_native_toolkit
-  checkpoint: ${BA_ROOT}/weights/flux9b
-  revision_source: ${BA_ROOT}/locks/weights-all.json
-  dtype: bfloat16
-  freeze_base: true
-  quantization: none
-  text_encoder_checkpoint: ${BA_ROOT}/weights/flux9b_text
-  vae_checkpoint: ${BA_ROOT}/weights/flux_vae/ae.safetensors
+  backend: flux
   arch: flux2_klein_9b
+  weights: ${BA_ROOT}/weights/flux9b
+  encoder: ${BA_ROOT}/weights/flux9b_text
+  vae: ${BA_ROOT}/weights/flux_vae/ae.safetensors
+  revision_lock: ${BA_ROOT}/locks/weights-flux80.json
 data:
-  manifest: ${BA_ROOT}/data/train_pairs.jsonl
-  validation_manifest: ${BA_ROOT}/data/validation_pairs.jsonl
+  train_manifest: ${BA_ROOT}/data/train_pairs.jsonl
+  train_limit: null
+  validation_manifest: ${BA_ROOT}/data/validation/manual_val_96.jsonl
   target_size:
   - 768
   - 768
-  reference_size:
-  - 512
-  - 512
-  max_reference_images: 1
-  independent_pair_geometry: true
-  crop_policy: fixed_identity_preserving
-  random_flip: false
-  caption_dropout: 0.0
-  max_pixels_policy: assert_actual_encoded_grid
-cache:
-  root: ${BA_ROOT}/cache/conditioning
-  encoder_outputs: true
-  target_latents: true
-  reference_latents: true
-  reference_position_ids: true
-  store_exact_native_layout: true
-  storage_dtype: bfloat16
-  deep_reference_kv: disabled
-  allow_missing_entries: false
-  max_cpu_cache_gb: 4
-  max_gpu_cache_gb: 0
-  load_encoders_during_train: false
-training:
-  mode: branch_only
-  microbatch: 1
-  gradient_accumulation_steps: 8
-  max_optimizer_steps: 2000
-  checkpoint_every_optimizer_steps: 500
-  optimizer: adamw
-  learning_rate_branch: 0.0001
-  learning_rate_native_lora: 0.0001
-  weight_decay: 0.0
-  max_grad_norm: 1.0
-  lr_schedule: constant_with_warmup
-  warmup_optimizer_steps: 100
-  gradient_checkpointing: true
-  checkpoint_use_reentrant: false
-  native_loss_and_sigma_sampling: true
-  identity_loss_weight: 0.0
-  ema: false
-  trainable_parameter_dtype: float32
-native_lora:
-  rank: 8
-  alpha: 8
-  target_policy: attention_only_rows
-  site_policy: branch_sites
-  dropout: 0.0
-  initialize_A: kaiming_uniform
-  initialize_B: zeros
+  reference_size: 512
+  cache_dir: ${BA_ROOT}/cache/conditioning
 branch:
-  variant: reference_read_delta
-  projection_targets:
-  - k
-  - v
   rank: 16
   alpha: 16
-  initialize_A: kaiming_uniform
-  initialize_B: zeros
-  gamma_init: 0.1
-  gamma_max: 0.3
-  gamma_trainable: false
-  target_gate: all_target
-  reference_key_policy: face_head_mask_then_spatially_stratified_cap
+  gamma: 0.1
+  query_chunk: 128
   max_reference_keys: 512
-  empty_reference_action: zero_correction
-  query_chunk_size: 128
-  confidence: disabled
-  frequency_filter: disabled
-  sites:
-    double_blocks:
-    - 2
-    - 4
-    - 6
-    - 7
-    single_blocks:
-    - 4
-    - 10
-    - 16
-    - 22
-inference:
-  separate_process: true
-  prefix_kv_cache: disabled_preserve_causal_mask
-  sequential_cfg: true
+lora:
+  rank: 8
+  alpha: 8
+training:
+  steps: 2000
+  grad_accum: 8
+  lr: 0.0001
+  warmup: 100
+  checkpoint_every: 500
+  validation_every: 2000
+  seed: 42
+  deterministic: true
+  gradient_checkpointing: true
+  weight_decay: 0.0
+  gradient_clip: 1.0
+  max_reserved_fraction: 0.9
+validation:
   steps: 50
-  guidance_scale: 4.0
-  resize_masks_from_explicit_grid: true
-checkpoint:
-  format: native_lora_plus_branch
-  save_frozen_backbone: false
-  keep_latest: 3
-  keep_best: 1
-  save_optimizer: true
-  strict_backbone_and_shapes: true
-runtime:
-  import_origin_assertions: true
-  checkpoint_context: explicit_immutable_argument
-  compile: false
-  dense_attention_maps: false
-  log_actual_token_shapes: true
-  log_optimizer_parameter_inventory: true
+  guidance: 4.0
+  limit: 96
+hardware:
+  min_vram_gb: 75
+logging:
+  comet_project: rsrch_new
+  enabled: true

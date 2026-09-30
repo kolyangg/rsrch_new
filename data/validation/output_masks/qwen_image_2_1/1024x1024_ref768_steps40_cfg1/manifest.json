@@ -1,0 +1,58 @@
+{
+  "coverage": {
+    "needs_review": [],
+    "prepared": 1,
+    "usable": 1
+  },
+  "samples": {
+    "00": {
+      "baseline_image_sha256": "a20b32ad0ae3bd095c7d637a27e4e4d74503285141833ee74e32fcc802bee9c0",
+      "detected_boxes": [
+        [
+          385,
+          73,
+          655,
+          480
+        ],
+        [
+          695,
+          271,
+          794,
+          429
+        ]
+      ],
+      "detected_face_count": 2,
+      "face_bbox": [
+        385,
+        73,
+        655,
+        480
+      ],
+      "identity_id": "eddie",
+      "pixel_mask": "00.png",
+      "pixel_mask_sha256": "be769a40f1753dfbac27d4a932c93be6b0741fbb7152b8b0c7aacff7fc9c6ec9",
+      "prompt": "Reading paper man img, park bench, calm face, grey overcoat",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "00.tokens.png",
+      "token_mask_sha256": "bada7521196cf765229fa4096df2e8e60be4473e14df12ee6b19046b310b6277"
+    }
+  },
+  "schema": 1,
+  "selection": "largest detected face; >=.95 area tie is ambiguous; no identity-score selection",
+  "signature": {
+    "arch": "qwen_image_2_1",
+    "guidance": 1.0,
+    "panel_sha256": "d769406704ddbcdf0bb09d408ad4929b302aaa84a12e295872618e3df9f09a65",
+    "reference_size": 768,
+    "revisions": {
+      "qwen21": "d26bb61231c349cf6b7896fa83353113880e1ba3"
+    },
+    "steps": 40,
+    "target_size": [
+      1024,
+      1024
+    ]
+  },
+  "usage": "validation scoring only"
+}

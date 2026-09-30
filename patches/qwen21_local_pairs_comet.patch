@@ -44,40 +44,23 @@ index 530f95914..a8ee997cc 100644
      # Train!
      total_batch_size = args.train_batch_size * accelerator.num_processes * args.gradient_accumulation_steps
 diff --git a/src/diffusers/models/transformers/transformer_qwenimage21.py b/src/diffusers/models/transformers/transformer_qwenimage21.py
-index b6eabfd58..4e1f9cfb7 100644
+index b6eabfd58..94e20c911 100644
 --- a/src/diffusers/models/transformers/transformer_qwenimage21.py
 +++ b/src/diffusers/models/transformers/transformer_qwenimage21.py
-@@ -366,6 +366,29 @@ def _qwenimage21_prepare_qkv(
+@@ -366,6 +366,12 @@ def _qwenimage21_prepare_qkv(
      return query, key, value, seq_len_q
  
  
 +def _qwenimage21_reference_branch_correction(attn, input_hidden_states, query, value, rotary_emb, branch_context, kv_cache_mode):
-+    if kv_cache_mode == "cached":
-+        raise ValueError("Reference branch requires uncached native Qwen attention")
-+    reference_indices, target_indices = branch_context
-+    reference_hidden = input_hidden_states.index_select(1, reference_indices)
-+    key_pre = attn.to_k(reference_hidden).unflatten(-1, (attn.heads, -1)).permute(0, 2, 1, 3)
-+    reference_value = value.index_select(1, reference_indices).permute(0, 2, 1, 3)
-+    reference_rotary = None if rotary_emb is None else rotary_emb.index_select(0, reference_indices)
++    from ba_dit.backends.attention import qwen_reference_delta
 +
-+    def native_key_postprocess(key_unmodulated):
-+        normalized = attn.norm_k(key_unmodulated.permute(0, 2, 1, 3)).to(reference_value.dtype)
-+        if reference_rotary is not None:
-+            normalized = apply_rotary_emb_qwen(normalized, reference_rotary, use_real=False)
-+        return normalized.permute(0, 2, 1, 3)
-+
-+    # 30 Sep 2026 - AICODE-NOTE: R0 and R1 read identical face-key positions;
-+    # the correction is inserted before the original to_out projection.
-+    return attn.reference_branch(
-+        query.permute(0, 2, 1, 3), key_pre, reference_value,
-+        reference_hidden, target_indices, native_key_postprocess,
-+    )
++    return qwen_reference_delta(attn, input_hidden_states, query, value, rotary_emb, branch_context, kv_cache_mode)
 +
 +
  class QwenImage21FlexAttnProcessor:
      r"""
      Attention processor for Qwen-Image 2.1 that runs the block-causal prefill as one `flex_attention` call driven by a
-@@ -400,7 +423,9 @@ class QwenImage21FlexAttnProcessor:
+@@ -400,7 +406,9 @@ class QwenImage21FlexAttnProcessor:
          cache_write_slice: slice | None = None,
          segments: list[tuple[int, int, bool]] | None = None,
          key_valid: torch.Tensor | None = None,
@@ -87,7 +70,7 @@ index b6eabfd58..4e1f9cfb7 100644
          query, key, value, seq_len_q = _qwenimage21_prepare_qkv(
              attn, hidden_states, rotary_emb, layer_cache, kv_cache_mode, cache_write_slice
          )
-@@ -455,6 +480,11 @@ class QwenImage21FlexAttnProcessor:
+@@ -455,6 +463,11 @@ class QwenImage21FlexAttnProcessor:
          hidden_states = hidden_states[:, :seq_len_q]
          hidden_states = hidden_states.flatten(2, 3).type_as(query)
  
@@ -99,7 +82,7 @@ index b6eabfd58..4e1f9cfb7 100644
          hidden_states = attn.to_out[0](hidden_states)
          return attn.to_out[1](hidden_states)
  
-@@ -482,7 +512,9 @@ class QwenImage21AttnProcessor:
+@@ -482,7 +495,9 @@ class QwenImage21AttnProcessor:
          cache_write_slice: slice | None = None,
          segments: list[tuple[int, int, bool]] | None = None,
          key_valid: torch.Tensor | None = None,
@@ -109,7 +92,7 @@ index b6eabfd58..4e1f9cfb7 100644
          query, key, value, seq_len_q = _qwenimage21_prepare_qkv(
              attn, hidden_states, rotary_emb, layer_cache, kv_cache_mode, cache_write_slice
          )
-@@ -544,6 +576,11 @@ class QwenImage21AttnProcessor:
+@@ -544,6 +559,11 @@ class QwenImage21AttnProcessor:
          hidden_states = hidden_states[:, :seq_len_q]
          hidden_states = hidden_states.flatten(2, 3).type_as(query)
  
@@ -121,7 +104,7 @@ index b6eabfd58..4e1f9cfb7 100644
          hidden_states = attn.to_out[0](hidden_states)
          return attn.to_out[1](hidden_states)
  
-@@ -624,6 +661,7 @@ class QwenImage21TransformerBlock(nn.Module):
+@@ -624,6 +644,7 @@ class QwenImage21TransformerBlock(nn.Module):
          cache_write_slice: slice | None = None,
          segments: list[tuple[int, int, bool]] | None = None,
          key_valid: torch.Tensor | None = None,
@@ -129,7 +112,7 @@ index b6eabfd58..4e1f9cfb7 100644
      ) -> torch.Tensor:
          mod1, mod2 = modulation.chunk(2, dim=-1)
  
-@@ -637,6 +675,7 @@ class QwenImage21TransformerBlock(nn.Module):
+@@ -637,6 +658,7 @@ class QwenImage21TransformerBlock(nn.Module):
              cache_write_slice=cache_write_slice,
              segments=segments,
              key_valid=key_valid,
@@ -137,7 +120,7 @@ index b6eabfd58..4e1f9cfb7 100644
          )
          hidden_states = hidden_states + img_gate1.tanh() * attn_output
  
-@@ -925,6 +964,25 @@ class QwenImage21Transformer2DModel(
+@@ -925,6 +947,25 @@ class QwenImage21Transformer2DModel(
          rotary_emb = self.pos_embed(img_shapes[0], image_pad_mask, device=hidden_states.device)
          image_ids, target_token_mask = self.build_token_metadata(image_pad_mask, img_shapes[0])
  
@@ -163,7 +146,7 @@ index b6eabfd58..4e1f9cfb7 100644
          timestep = timestep.to(hidden_states.dtype)
          if self.config.causal_condition:
              # Extra t=0 row; text and condition-image tokens modulate from it. `modulation_mask` selects which row
-@@ -994,6 +1052,7 @@ class QwenImage21Transformer2DModel(
+@@ -994,6 +1035,7 @@ class QwenImage21Transformer2DModel(
                      cache_write_slice,
                      block_segments,
                      block_key_valid,
@@ -171,7 +154,7 @@ index b6eabfd58..4e1f9cfb7 100644
                  )
              else:
                  joint_hidden_states = block(
-@@ -1007,6 +1066,7 @@ class QwenImage21Transformer2DModel(
+@@ -1007,6 +1049,7 @@ class QwenImage21Transformer2DModel(
                      cache_write_slice=cache_write_slice,
                      segments=block_segments,
                      key_valid=block_key_valid,
