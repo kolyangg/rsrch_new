@@ -139,7 +139,12 @@ def train(config, args, config_path):
         raise ValueError("Use infer for the native mode")
     if not args.allow_small_gpu and torch.cuda.get_device_properties(0).total_memory < config["hardware"]["min_vram_gb"] * 10**9:
         raise RuntimeError("GPU does not meet this training profile; --allow-small-gpu is only for a named local smoke")
-    if args.resume:
+    if args.resume_run:
+        run_dir = Path(args.resume_run).resolve()
+        if not (run_dir / "resolved_config.yaml").is_file() or (run_dir / "latest_checkpoint.txt").exists():
+            raise ValueError("--resume-run requires an existing run before its first optimizer checkpoint")
+        start = 0
+    elif args.resume:
         run_dir = Path(args.resume).resolve().parent
         start = json.loads((Path(args.resume) / "manifest.json").read_text())["step"]
     else:
@@ -156,6 +161,8 @@ def train(config, args, config_path):
     if not args.smoke_steps and start == 0:
         initial = ["--checkpoint", args.init_adapter] if args.init_adapter else []
         initial += ["--quality-metrics" if args.quality_metrics else "--no-quality-metrics"]
+        if args.resume_run:
+            initial += ["--resume-validation"]
         call("infer", config_path, "--mode", args.mode, "--output-dir", run_dir / "validation-000000", "--log-dir", run_dir, *initial)
     while start < config["training"]["steps"]:
         interval = config["training"]["validation_every"]
@@ -220,10 +227,12 @@ def main():
     parser.add_argument("--log-dir", type=Path)
     parser.add_argument("--checkpoint", type=Path)
     parser.add_argument("--resume", type=Path)
+    parser.add_argument("--resume-run", type=Path, help="Resume a run interrupted during step-zero validation")
     parser.add_argument("--init-adapter", type=Path)
     parser.add_argument("--run-name")
     parser.add_argument("--limit", type=int)
     parser.add_argument("--steps", type=int)
+    parser.add_argument("--batch-size", type=int, help="Optional FLUX validation batch size; use a separate named experiment")
     parser.add_argument("--smoke-steps", type=int)
     parser.add_argument("--until", type=int)
     parser.add_argument("--global-step", type=int, default=0)
@@ -239,10 +248,14 @@ def main():
     parser.add_argument("--resume-validation", action="store_true", help="Continue a partial validation in --output-dir")
     parser.add_argument("--no-comet", action="store_true")
     args = parser.parse_args()
-    for name in ("limit", "steps", "smoke_steps", "grad_accum", "until"):
+    for name in ("limit", "steps", "smoke_steps", "grad_accum", "until", "batch_size"):
         if getattr(args, name) is not None and getattr(args, name) <= 0:
             parser.error(f"--{name.replace('_', '-')} must be positive")
-    saved = Path(args.resume) / "resume_config.yaml" if args.resume else args.config
+    if args.resume and args.resume_run:
+        parser.error("Choose --resume or --resume-run")
+    if args.resume_run and args.command != "train":
+        parser.error("--resume-run is for train only")
+    saved = Path(args.resume) / "resume_config.yaml" if args.resume else (Path(args.resume_run) / "resolved_config.yaml" if args.resume_run else args.config)
     if args.resume and not saved.exists():
         saved = Path(args.resume) / "resolved_config.yaml"
     config = load_config(saved)
@@ -260,6 +273,10 @@ def main():
         config["training"]["max_reserved_fraction"] = args.memory_fraction
     if args.steps:
         config["training" if "train" in args.command else "validation"]["steps"] = args.steps
+    if args.batch_size:
+        if config["model"]["backend"] != "flux":
+            parser.error("Batched validation is currently supported for FLUX only")
+        config["validation"]["batch_size"] = args.batch_size
     if args.smoke_steps and not args.resume:
         config["training"]["steps"] = args.smoke_steps
     if args.no_comet:

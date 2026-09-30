@@ -54,7 +54,7 @@ def denoise(config, mode, output_dir, checkpoint=None, limit=None, compare_nativ
         group = [pending.pop(0)]
         if config["model"]["backend"] == "flux":
             reference_key = cache_path(config, group[0], "vae")
-            while pending and len(group) < config["validation"]["batch_size"] and cache_path(config, pending[0], "vae") == reference_key:
+            while pending and len(group) < config["validation"].get("batch_size", 1) and cache_path(config, pending[0], "vae") == reference_key:
                 group.append(pending.pop(0))
         started = time.monotonic()
         torch.cuda.reset_peak_memory_stats()
@@ -93,7 +93,7 @@ def denoise(config, mode, output_dir, checkpoint=None, limit=None, compare_nativ
             results.append(record)
             temporary_report = report_path.with_suffix(".json.tmp")
             temporary_report.write_text(json.dumps({"backend": config["model"]["arch"], "mode": mode, "compare_native": compare_native,
-                "steps": config["validation"]["steps"], "batch_size": config["validation"]["batch_size"],
+                "steps": config["validation"]["steps"], "batch_size": config["validation"].get("batch_size", 1),
                 "target_size": config["data"]["target_size"], "reference_size": config["data"]["reference_size"],
                 "config_sha256": digest(config), "panel_sha256": file_hash(config["data"]["validation_manifest"]),
                 "checkpoint": {"path": str(checkpoint), "manifest_sha256": file_hash(Path(checkpoint) / "manifest.json")} if checkpoint else None,

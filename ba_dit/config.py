@@ -16,7 +16,7 @@ FIELDS = {
     "branch": {"rank", "alpha", "gamma", "query_chunk", "max_reference_keys"},
     "lora": {"rank", "alpha"},
     "training": {"steps", "grad_accum", "lr", "warmup", "checkpoint_every", "validation_every", "seed", "gradient_checkpointing", "weight_decay", "gradient_clip", "max_reserved_fraction", "deterministic"},
-    "validation": {"steps", "guidance", "limit", "batch_size"},
+    "validation": {"steps", "guidance", "limit"},
     "hardware": {"min_vram_gb"},
     "logging": {"comet_project", "enabled"},
 }
@@ -50,13 +50,13 @@ def load_config(path: str | Path) -> dict:
     config = yaml.safe_load(text)
     config["data"].setdefault("train_limit", None)
     config["training"].setdefault("deterministic", True)
-    config["validation"].setdefault("batch_size", 1)
     expected = {"schema_version", "name", *FIELDS}
     if set(config) != expected or config["schema_version"] != 2:
         raise ValueError(f"Expected schema 2 and fields {sorted(expected)}")
     for section, fields in FIELDS.items():
-        if set(config[section]) != fields:
-            raise ValueError(f"Invalid {section} fields: missing={fields-set(config[section])}, unknown={set(config[section])-fields}")
+        allowed = fields | ({"batch_size"} if section == "validation" else set())
+        if not fields <= set(config[section]) or set(config[section]) - allowed:
+            raise ValueError(f"Invalid {section} fields: missing={fields-set(config[section])}, unknown={set(config[section])-allowed}")
     if config["model"]["backend"] not in {"flux", "qwen"}:
         raise ValueError("Unsupported backend")
     arches = {"flux": {"flux2_klein_4b", "flux2_klein_9b"}, "qwen": {"qwen_image_2_1"}}
@@ -68,11 +68,13 @@ def load_config(path: str | Path) -> dict:
     multiple = 32 if config["model"]["backend"] == "qwen" else 16
     if min(h, w, config["data"]["reference_size"]) <= 0 or h % multiple or w % multiple or config["data"]["reference_size"] % 32:
         raise ValueError("Invalid target/reference dimensions")
-    for section, keys in (("branch", ("rank", "alpha", "query_chunk", "max_reference_keys")), ("lora", ("rank", "alpha")), ("training", ("steps", "grad_accum", "lr", "checkpoint_every", "validation_every")), ("validation", ("steps", "limit", "batch_size"))):
+    for section, keys in (("branch", ("rank", "alpha", "query_chunk", "max_reference_keys")), ("lora", ("rank", "alpha")), ("training", ("steps", "grad_accum", "lr", "checkpoint_every", "validation_every")), ("validation", ("steps", "limit"))):
         if any(config[section][key] <= 0 for key in keys):
             raise ValueError(f"Nonpositive {section} setting")
     if not 0 < config["training"]["max_reserved_fraction"] <= 1 or config["branch"]["gamma"] < 0:
         raise ValueError("Invalid memory gate or branch scale")
+    if config["validation"].get("batch_size", 1) <= 0:
+        raise ValueError("Validation batch size must be positive")
     return config
 
 
