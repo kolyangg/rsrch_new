@@ -177,12 +177,14 @@ For matched controls use separate run names with `--mode lora_only` or `--mode l
 - `resolved_config.yaml`: actual parameters and paths.
 - `comet_experiment.json`: immutable project/run key, reused on resume.
 - `optimizer_inventory.json`: exact trainable names/shapes.
-- `metrics.jsonl`: loss, gradients, B updates, memory and step time.
+- `metrics.jsonl`: every loss, gradient, memory and step-time scalar, plus progress percentage, remaining steps, ETA seconds and updates/hour. These are also sent to Comet at each optimizer update; the console prints a compact progress bar every 25 updates.
 - `checkpoint-NNNNNN/`: adapter tensors, optimizer/scheduler/RNG/cursor, source/data/config fingerprints, relocatable resume config.
 - `validation-NNNNNN/`: latents, PNGs, per-image timing/parity, identity/CLIP scores and the seven face-quality curves (scoring is on by default).
 - `data/validation/output_masks/<backbone>/<geometry-and-schedule>/`: native-baseline face masks consumed by validation scoring.
 
 Move the checkpoint together with the same code, dataset and weight revisions. Project-local paths in `resume_config.yaml` expand against the checkout on the destination host. External dataset paths must remain valid or be deliberately relocated as a new experiment. Full resume checks the data fingerprint, configuration and training implementation.
+
+For a worker started before progress logging was added, run `python -m scripts.live_training_progress RUN_DIR` from the matching training environment. It tails the existing metrics file and logs progress to the same Comet experiment without restarting training. `--once --no-comet` prints a local snapshot.
 
 The original face-quality models download their pretrained weights on first scoring. Both scoring environments use CPU after generation exits. Face-quality scoring uses up to eight CPU threads by default; `scripts/evaluate_face_quality.py --threads N` overrides this. Per-model progress and elapsed times are recorded because MANIQA can dominate CPU evaluation time. `BA_ENVS_DIR` optionally moves all four environments together; setup and launch scripts use the same root. Output-mask PNGs can be reconstructed from the frozen manifest boxes when transferring metadata alone, with their recorded hashes checked afterward.
 
