@@ -44,3 +44,21 @@ Step-zero and step-2,000 resolved validation configs are equal, the final report
 One-ID step-zero generation and both scoring passes completed. All 12 output masks are usable; the overlay grid was visually reviewed and selects the intended foreground face, including crowd scenes, without corrections. Baseline identity similarity is 0.310866, CLIP text similarity 28.510215, TOPIQ-Face 0.687094, MUSIQ 67.124743, MANIQA 0.615123, and TOPIQ 0.492962. The review image is stored remotely at `validation-000000/mask_review.jpg` and locally at `runs/review_one_id/baseline_mask_review.jpg`.
 
 Training reached step 117 with all 16 B matrices updated at the first optimizer step; recent losses/gradients are finite, the latest B-gradient norm is 0.005645, and peak reserved CUDA memory is 9.52734 GiB. Mean update time over the last 100 steps is 10.58375 seconds. Queue PID 5913 and training parent PID 6851 remain alive. No trained one-ID validation is available before the first scheduled checkpoint at 500; no intervention was made.
+
+## 2026-10-01 04:39 UTC step-500 comparison
+
+One-ID checkpoint 500 and its complete twelve-image validation/scoring are saved; training resumed and reached step 572. Recent losses/gradients remain finite, latest B-gradient norm is 0.008103, and peak reserved memory is 9.52734 GiB. Queue and training parent are alive.
+
+All 12 images changed versus step zero; per-image mean absolute pixel difference ranges from 10.436 to 47.001 on the 0–255 scale. The paired contact sheet shows visible changes in facial details, pose, framing, clothing, and background, especially prompts 04, 10 and 11. Step-zero and step-500 resolved configs are identical. The validation report records `branch_only` and `checkpoint-000500`, manifest SHA256 `a76ae60ceba10b1d08d07173e1c67da4cc829446b42c97647ef32a276dc4a260`. All 16 B matrices are nonzero; combined L2 norm is 5.788778. This satisfies the early check that trained branches affect validation, so no speculative wiring change or retry was made. Continue the scheduled run through 2,000 and review later validations before closing the diagnostic.
+
+| Metric | Step 0 | Step 500 |
+| --- | ---: | ---: |
+| Identity similarity, mask matched | 0.310866 | 0.301947 |
+| Identity similarity, best face | 0.310866 | 0.305427 |
+| CLIP text similarity | 28.510215 | 28.073405 |
+| TOPIQ-Face | 0.687094 | 0.682798 |
+| MUSIQ | 67.124743 | 68.458800 |
+| MANIQA | 0.615123 | 0.614962 |
+| TOPIQ | 0.492962 | 0.488238 |
+
+All twelve images retain detected/owned faces. Identity and text similarity decreased slightly, so output changes alone are not evidence of better personalization. Comparison report and contact sheet are stored in the remote one-ID run (`validation_change_000000_to_000500.json`, `comparison_000000_000500.jpg`), with local copies under `runs/review_one_id/`.
