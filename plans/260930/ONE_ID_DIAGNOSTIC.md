@@ -62,3 +62,21 @@ All 12 images changed versus step zero; per-image mean absolute pixel difference
 | TOPIQ | 0.492962 | 0.488238 |
 
 All twelve images retain detected/owned faces. Identity and text similarity decreased slightly, so output changes alone are not evidence of better personalization. Comparison report and contact sheet are stored in the remote one-ID run (`validation_change_000000_to_000500.json`, `comparison_000000_000500.jpg`), with local copies under `runs/review_one_id/`.
+
+## 2026-10-01 06:09 UTC step-1,000 comparison
+
+Checkpoint 1,000 and all validation/scoring completed; training resumed to step 1,028 with finite recent losses/gradients and peak reserved memory 9.52734 GiB. Both queue PID 5913 and training parent PID 6851 remain alive. All twelve images differ visibly from baseline (per-image mean absolute pixel difference 12.958–47.537/255); the contact sheet was reviewed. Changes include face details, action/pose and framing, including newly visible ski poles and changed motorcycle/chef compositions.
+
+Resolved validation configs remain identical to baseline. The report records `branch_only`, `checkpoint-001000`, and checkpoint manifest SHA256 `9bd4455a3b6b835364e01614cad721dee372fb40babff0c483fde44a24de230b`. All sixteen B matrices are nonzero, with combined L2 norm 8.454246; their combined L2 change since checkpoint 500 is 4.409597, confirming continued parameter updates across the save/resume boundary.
+
+| Metric | Step 0 | Step 1,000 |
+| --- | ---: | ---: |
+| Identity similarity, mask matched | 0.310866 | 0.302849 |
+| Identity similarity, best face | 0.310866 | 0.307433 |
+| CLIP text similarity | 28.510215 | 28.299676 |
+| TOPIQ-Face | 0.687094 | 0.667383 |
+| MUSIQ | 67.124743 | 68.069789 |
+| MANIQA | 0.615123 | 0.614712 |
+| TOPIQ | 0.492962 | 0.483583 |
+
+All twelve images still have detected/owned faces. Identity similarity recovered slightly from checkpoint 500 but remains below baseline; output changes and continued parameter updates demonstrate branch influence without establishing improved identity fidelity. No evidence-backed wiring fix is indicated. Continue through the remaining scheduled validations. Reports `validation_change_000000_to_001000.json` and `comparison_000000_001000.jpg` are stored in the remote run and local `runs/review_one_id/`.
