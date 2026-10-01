@@ -1,0 +1,254 @@
+{
+  "report_date": "2026-10-01",
+  "evidence_cutoff": "2026-10-01T08:41:06Z",
+  "project_head": "56fffea20d7f3755052c56d9c381dbf3e55dec21",
+  "checkpoint_manifest": {
+    "schema": 2,
+    "identity": {
+      "backend": "flux",
+      "arch": "flux2_klein_4b",
+      "revisions": {
+        "flux4b": "a3b4f4849157f664bdbc776fd7453c2783562f4d",
+        "flux4b_text": "1cfa9a7208912126459214e8b04321603b3df60c",
+        "flux_vae": "3f679cf232e6d91d28396522d9502c31e8f7ccbe"
+      },
+      "source_commit": "ecee894ed2b1f3716d9d7326693061ec1a3105bb",
+      "source_patch_sha256": "e3b8e1b61857a9d0071283e7e0e593833ff9b45cfc6a9dac7aad132a4872cdb3",
+      "adapter_code_sha256": "e0995efb7df54403b1a3d94a66ae6fa577b37ae330805b47450ce128c22960c1",
+      "branch": {
+        "rank": 16,
+        "alpha": 16,
+        "gamma": 0.1,
+        "query_chunk": 128,
+        "max_reference_keys": 512
+      },
+      "lora": {
+        "rank": 8,
+        "alpha": 8
+      }
+    },
+    "mode": "branch_only",
+    "step": 1500,
+    "config_sha256": "669f16059d6e6bafb183db392641129da73109ec94d3a553b1177b7f8de45f1b",
+    "data_sha256": "e004b263fcf7d825a773aacbb275f015644b1e34e06ffe08396fa1c131a5c0c0",
+    "training_code_sha256": "9856bbee105574169e457b14b600931d828fbdcccaf6ab3c8d6025a7b6fd310e",
+    "parameters": {
+      "double_blocks.1.reference_branch.k_delta.a": [
+        16,
+        3072
+      ],
+      "double_blocks.1.reference_branch.k_delta.b": [
+        3072,
+        16
+      ],
+      "double_blocks.1.reference_branch.v_delta.a": [
+        16,
+        3072
+      ],
+      "double_blocks.1.reference_branch.v_delta.b": [
+        3072,
+        16
+      ],
+      "double_blocks.2.reference_branch.k_delta.a": [
+        16,
+        3072
+      ],
+      "double_blocks.2.reference_branch.k_delta.b": [
+        3072,
+        16
+      ],
+      "double_blocks.2.reference_branch.v_delta.a": [
+        16,
+        3072
+      ],
+      "double_blocks.2.reference_branch.v_delta.b": [
+        3072,
+        16
+      ],
+      "double_blocks.3.reference_branch.k_delta.a": [
+        16,
+        3072
+      ],
+      "double_blocks.3.reference_branch.k_delta.b": [
+        3072,
+        16
+      ],
+      "double_blocks.3.reference_branch.v_delta.a": [
+        16,
+        3072
+      ],
+      "double_blocks.3.reference_branch.v_delta.b": [
+        3072,
+        16
+      ],
+      "double_blocks.4.reference_branch.k_delta.a": [
+        16,
+        3072
+      ],
+      "double_blocks.4.reference_branch.k_delta.b": [
+        3072,
+        16
+      ],
+      "double_blocks.4.reference_branch.v_delta.a": [
+        16,
+        3072
+      ],
+      "double_blocks.4.reference_branch.v_delta.b": [
+        3072,
+        16
+      ],
+      "single_blocks.3.reference_branch.k_delta.a": [
+        16,
+        3072
+      ],
+      "single_blocks.3.reference_branch.k_delta.b": [
+        3072,
+        16
+      ],
+      "single_blocks.3.reference_branch.v_delta.a": [
+        16,
+        3072
+      ],
+      "single_blocks.3.reference_branch.v_delta.b": [
+        3072,
+        16
+      ],
+      "single_blocks.8.reference_branch.k_delta.a": [
+        16,
+        3072
+      ],
+      "single_blocks.8.reference_branch.k_delta.b": [
+        3072,
+        16
+      ],
+      "single_blocks.8.reference_branch.v_delta.a": [
+        16,
+        3072
+      ],
+      "single_blocks.8.reference_branch.v_delta.b": [
+        3072,
+        16
+      ],
+      "single_blocks.13.reference_branch.k_delta.a": [
+        16,
+        3072
+      ],
+      "single_blocks.13.reference_branch.k_delta.b": [
+        3072,
+        16
+      ],
+      "single_blocks.13.reference_branch.v_delta.a": [
+        16,
+        3072
+      ],
+      "single_blocks.13.reference_branch.v_delta.b": [
+        3072,
+        16
+      ],
+      "single_blocks.18.reference_branch.k_delta.a": [
+        16,
+        3072
+      ],
+      "single_blocks.18.reference_branch.k_delta.b": [
+        3072,
+        16
+      ],
+      "single_blocks.18.reference_branch.v_delta.a": [
+        16,
+        3072
+      ],
+      "single_blocks.18.reference_branch.v_delta.b": [
+        3072,
+        16
+      ]
+    }
+  },
+  "trainable_parameter_count": 1572864,
+  "source_hashes": {
+    "/home/kolyangg/rsrch_clean_new/diffusion_template/src/configs/CL39_cosmic_null_key_confidence_router_24k.yaml": "978e47c57d59a71162ee0cbfd08600b5cf75afee4cf45ec3648b8fb8bca98ca7",
+    "/home/kolyangg/rsrch_clean_new/diffusion_template/src/model/photomaker_branched/hardcase_attn_processor.py": "d32426fff556b43ccd30352e8bc248524f285e5f8b20ec4b088c3514a957fd3f",
+    "/home/kolyangg/rsrch_new/ba_dit/adapters.py": "f06d7000158e722e7d242c0cf3c34a987d54c75364dbebcb37131600e5d342ae",
+    "/home/kolyangg/rsrch_new/ba_dit/backends/attention.py": "8a60ef1e945acdc8558597cdde542d29a0f7f4b5cf7cccd255eba429e39d4e0b",
+    "/home/kolyangg/rsrch_new/ba_dit/backends/flux2_native.py": "f57551036340f86bd5199b277e45d303c803cf06f7eac64d2023a3adc8aab7fa",
+    "/home/kolyangg/rsrch_new/ba_dit/backends/flux_runtime.py": "ba3f9f39549917875303641067913315229afed593fc28649eb68e89fd64f036",
+    "/home/kolyangg/rsrch_new/ba_dit/checkpoint.py": "8d8bd5ea6ca45001fe3fce9e50558b8793d1c200890ae988181a274ae7a8c86d",
+    "/home/kolyangg/rsrch_new/ba_dit/data/geometry.py": "0a24fea226e5a1a8a4344b2e8f534a4e2fbc6e425df835124693b0e83da799bd",
+    "/home/kolyangg/rsrch_new/ba_dit/nn/reference_read_delta.py": "d75c338d5b25a3cf2d6d7274ffe869684b585701803f3c2d2a74069b367ded23",
+    "/home/kolyangg/rsrch_new/ba_dit/training.py": "1ebe59e2ef51e56533e9269e99b9675d9da4ef008f09d45b6f83cfc010ba5fe6",
+    "/home/kolyangg/rsrch_new/configs/flux4b_48_one_id.yaml": "9b98432e1b3cce99701298047d5ff387366c96ed94acdea4df82c95e9c7d51d0",
+    "/home/kolyangg/rsrch_new/patches/flux2_reference_branch_and_offload.patch": "e3b8e1b61857a9d0071283e7e0e593833ff9b45cfc6a9dac7aad132a4872cdb3",
+    "/home/kolyangg/rsrch_new/reports/261001_flux4b_branched_attention/build_report.py": "8887157e89dc9a1488be7631adc6c2bd0fbd9bcc7c20d319e97a98399c47de2e",
+    "/home/kolyangg/rsrch_new/runs/flux48_one_id_diagnostic/checkpoint-001500/manifest.json": "87b450984641b26c845591d10b3c568438fcf4e211073a45f0c2408f782ef934",
+    "/home/kolyangg/rsrch_new/runs/review_one_id/status_20261001_0840.json": "c433c12d61992198dea130f61b4aa2c8a3bb51d14ec9b4e4ddb4c6ab18efe53a",
+    "/home/kolyangg/rsrch_new/runs/review_one_id/validation_change_000000_to_000500.json": "1bfef27df98f2089bb69053c7f1b8f6be7a6c181d0bf75a1c4f3a775d4eb15ac",
+    "/home/kolyangg/rsrch_new/runs/review_one_id/validation_change_000000_to_001000.json": "43889904db9a670a07568c01f73a9dfc1541ab8a040022c6fca6701eaa443f3d",
+    "/home/kolyangg/rsrch_new/runs/review_one_id/validation_change_000000_to_001500.json": "06aaf71ef355a775abd8d9c23a71978d197164bf6d66e3872edf168c687f6bb4",
+    "/home/kolyangg/rsrch_new/sources/ai-toolkit-flux/extensions_built_in/diffusion_models/flux2/src/model.py": "a511a46ceffa247cb5c78e716fece7e4e5d44dc132030cb184b27156179faf2f"
+  },
+  "pages": [
+    {
+      "number": 1,
+      "title": "FLUX.2-klein Base 4B \u2014 the architecture we train"
+    },
+    {
+      "number": 2,
+      "title": "Whole model \u2014 text, target and reference enter one FLUX transformer"
+    },
+    {
+      "number": 3,
+      "title": "Where BA is connected \u2014 eight registered sites, zero-based indices"
+    },
+    {
+      "number": 4,
+      "title": "Branched attention \u2014 paired reference reads, then an additive correction"
+    },
+    {
+      "number": 5,
+      "title": "Token coordinates and masks \u2014 the current one-ID validation reference"
+    },
+    {
+      "number": 6,
+      "title": "The branch equation \u2014 what cancels and what remains trainable"
+    },
+    {
+      "number": 7,
+      "title": "Code walkthrough 1 \u2014 register adapters and pass the reference contract"
+    },
+    {
+      "number": 8,
+      "title": "Code walkthrough 2 \u2014 the exact double-stream and single-stream seams"
+    },
+    {
+      "number": 9,
+      "title": "Code walkthrough 3 \u2014 gather reference support without changing coordinates"
+    },
+    {
+      "number": 10,
+      "title": "Code walkthrough 4 \u2014 learned K/V, paired SDPA, and target-only scatter"
+    },
+    {
+      "number": 11,
+      "title": "CL39 versus current FLUX \u2014 two different residual definitions"
+    },
+    {
+      "number": 12,
+      "title": "What was carried over \u2014 and which CL39 mechanisms are absent"
+    },
+    {
+      "number": 13,
+      "title": "CL39 code reference \u2014 spatial routing, frequency bands and confidence"
+    },
+    {
+      "number": 14,
+      "title": "Training and validation \u2014 the same patched backend and adapter weights"
+    },
+    {
+      "number": 15,
+      "title": "Measured evidence \u2014 branches update and validation images change"
+    },
+    {
+      "number": 16,
+      "title": "Source ledger \u2014 exact implementation, checkpoint and reproducible figures"
+    }
+  ]
+}

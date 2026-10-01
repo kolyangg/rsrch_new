@@ -1,0 +1,22 @@
+FLUX Base 4B architecture report — 1 October 2026
+
+Read flux4b_branched_attention_architecture.pdf or index.html.
+Standalone vector diagrams: whole_model.pdf and branched_attention.pdf.
+Every page also has an editable SVG and a PNG preview.
+
+Rebuild from /home/kolyangg/rsrch_new:
+  uv venv --python 3.13 envs/report
+  uv pip install --python envs/report/bin/python -r reports/261001_flux4b_branched_attention/report_requirements.txt
+  envs/report/bin/python reports/261001_flux4b_branched_attention/build_report.py
+
+The builder reads the current local source and preserves source line numbers.
+Its prerequisites are the pinned and patched AI Toolkit checkout, the prior
+rsrch_clean_new CL39 source, the copied one-ID checkpoint manifest, the local
+step-500/1000/1500 comparison JSONs, and the one-ID reference-mask diagram.
+See source_audit.json for the exact source hashes and checkpoint identity.
+
+The report records the architecture verified against checkpoint 1500 and
+measurements available at 08:41 UTC. A later source change or newly completed
+validation requires an explicit report revision, including captions and audit.
+
+Building the report performs no model inference and changes no training job.

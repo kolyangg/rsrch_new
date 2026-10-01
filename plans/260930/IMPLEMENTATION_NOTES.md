@@ -130,3 +130,56 @@ At 04:39 UTC the one-ID step-500 validation/scoring was complete and training ha
 At 06:09 UTC one-ID checkpoint 1,000 and validation/scoring were complete, and training had resumed to step 1,028. All twelve images again showed visible changes relative to baseline with the correct checkpoint and equal settings. Branch B-matrix L2 norm increased to 8.454246, with L2 parameter change 4.409597 since step 500. Identity similarity was 0.302849 (baseline 0.310866), CLIP 28.299676 (28.510215), and TOPIQ-Face 0.667383 (0.687094). Gradients remained finite. No branch activation/loading fault was indicated; the 2,000-step diagnostic continues.
 
 At 08:09 UTC one-ID checkpoint 1,500 and scoring were complete, with training at step 1,654. All twelve images changed visibly under matched settings and the correct checkpoint. Identity similarity improved over baseline to 0.338955 (0.310866), CLIP to 28.673897 (28.510215), and TOPIQ-Face to 0.713561 (0.687094); MUSIQ, MANIQA and TOPIQ means also improved. All sixteen B matrices remained nonzero (combined L2 norm 10.430811; change since step 1,000 is 3.877858), and gradients were finite. No wiring repair is indicated; the final 2,000-step validation remains pending.
+
+## Validation mask visualization — 2026-10-01
+
+`scripts/visualize_validation_masks.py` overlays actual cached reference masks on the backbone-preprocessed references, showing the source face box, selected reference keys and enlarged 16×16 pixel token cells. Local report: `runs/mask_review_20261001/index.html`. The one-ID reference and all eight references in each fixed 96-item FLUX/Qwen panel were inspected: all 17 cached masks match runtime geometry and token counts exactly and align with the intended faces. All nine FLUX reference images also match native preprocessing pixel-for-pixel. This verifies mask placement, not additional pretrained inference.
+
+The one-ID face selects 88 of 1,024 reference tokens. Qwen's Eddie reference has 567 face cells; the configured 512-key cap selects spatially spread cells inside it, explaining gaps in the overlay. Cell boundaries can extend beyond the original face rectangle. The report also shows all twelve frozen one-ID generated-face scoring masks on step-zero outputs; those visually align with the faces.
+
+Mask roles are explicit: both attention backends read masked reference keys/values but apply the branch correction to **all generated-image tokens**. Neither passes the optional `target_gate` to `reference_branch`. Generated-image masks are evaluation-only and are never supplied to inference. No training process or mask was changed for this visualization.
+
+Reproduce the current diagnostic report with:
+
+```bash
+envs/flux-toolkit/bin/python -m scripts.visualize_validation_masks \
+  --config configs/flux4b_48_one_id.yaml \
+  --output runs/mask_review_20261001/one_id_flux \
+  --validation-dir runs/flux48_one_id_diagnostic/validation-000000
+```
+
+For the full reference panels, use `configs/flux4b_48.yaml` or `configs/qwen7b_48.yaml`, choose a separate output directory and omit `--validation-dir`. Existing conditioning caches and private validation assets are required; visualization itself performs no GPU inference.
+
+## Current FLUX architecture report — 2026-10-01
+
+`reports/261001_flux4b_branched_attention/flux4b_branched_attention_architecture.pdf` is a 16-page illustrated audit of the active one-ID FLUX Base 4B run, following the earlier E13/CL39 report style. It includes whole-model and BA diagrams, exact insertion sites, token/mask geometry, equations, source excerpts with line numbers, the original CL39 comparison, and measurements through the 08:41 UTC snapshot. The same directory contains an HTML viewer, per-page SVG/PNG exports, standalone `whole_model.pdf` and `branched_attention.pdf`, the generator and a source-hash audit.
+
+Before generation, the local adapter identity, training-code digest and config digest were verified against the copied step-1,500 checkpoint; all match. Its inventory contains 32 trainable tensors / 1,572,864 parameters. The comparison uses the actual `rsrch_clean_new` `hardcase_attn_processor.py` cited by the old project's report, plus the user-supplied PDF. It explicitly distinguishes the current pre-projection `R1-R0` reference-read delta from CL39's projected `R-N` spatial/frequency/confidence route. The current run has no target-face gate, entropy confidence, frequency split or surface-ownership objective. All 16 report pages and both standalone diagrams were rendered and checked; no model or training code was changed.
+
+At 09:12 UTC the one-ID run had completed all 2,000 updates and saved its final checkpoint. All tensors and recent gradients/losses are finite; all sixteen B matrices are nonzero (L2 norm 11.996713; change since 1,500 is 3.454949). Peak reserved training memory was 9.52930 GiB. Serial final validation started from checkpoint 2,000 and had recorded its first sample. Decoding/scoring and the final comparison remain pending; the follow-up stays active. The architecture report above retains its explicitly dated earlier evidence snapshot.
+
+## Completed one-ID diagnostic — 2026-10-01 09:41 UTC
+
+All 2,000 updates and final validation/scoring completed; the queue records `one_id_complete` and all training/validation/queue processes have exited. All twelve final images change visibly versus step zero under identical settings, prompts, seeds and geometry. The final validation uses the verified step-2,000 branch checkpoint. All 2,000 logged losses/gradient norms and all final adapter tensors are finite; all sixteen B matrices updated. Peak reserved memory was 9.52930 GiB.
+
+Final identity similarity is 0.331836 (baseline 0.310866), CLIP 28.009225 (28.510215), and TOPIQ-Face 0.672174 (0.687094). Step 1,500 is stronger on all three: 0.338955, 28.673897 and 0.713561. Branch influence is established, but quality improvement is not monotonic. No wiring fix or retry is indicated. Full metrics, checkpoint checks and artifact paths are in `ONE_ID_DIAGNOSTIC.md`; the local visual review is `runs/review_one_id/final_review.html`. Complete checkpoints 1,500 and 2,000 are retained locally.
+
+The follow-up automation was paused through the app and its saved `PAUSED` state verified. Vast instance `53574065` remains running with an idle GPU; it was not stopped or terminated. No model or training code was changed during this final review.
+
+## Training source verification and artifact delivery — 2026-10-01
+
+Before the requested Git push, local `adapter_identity`, `training_code_digest`
+and `config_digest` were recomputed and exactly matched the copied final
+step-2,000 checkpoint manifest. The architecture audit's model/training source
+hashes also matched local files and committed HEAD `56fffea`. Fetching GitHub
+confirmed that HEAD was already on `origin/main`. A live Vast source comparison
+could not run because SSH refused the connection; checkpoint provenance supplies
+the verification here. No machine state was changed.
+
+The newer mask-visualization script, report generator/dependency pins/source
+audit, completed-run notes and Dropbox helper are included in the subsequent
+source commit. Generated report exports, run artifacts, weights and credentials
+remain untracked. The 16-page PDF was uploaded with verified Dropbox content
+hash to `Apps/temp/rsrch_new/2026-10-01/flux4b_branched_attention_architecture.pdf`.
+The Dropbox helper was copied from EMDR and configured for API root
+`/rsrch_new` inside `Apps/temp`; credentials are in ignored `.env` with mode 0600.

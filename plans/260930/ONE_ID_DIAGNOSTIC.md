@@ -98,3 +98,37 @@ The validation configs match baseline. The report records `branch_only` with `ch
 | TOPIQ | 0.492962 | 0.494588 |
 
 All twelve outputs retain detected/owned faces. This checkpoint improves identity similarity and all listed text/quality means on the diagnostic panel, supporting useful learning in addition to visible branch influence. These small-panel observations do not establish generalization. No wiring fix or retry is indicated. Continue to the planned final 2,000-step validation before pausing the follow-up. Reports `validation_change_000000_to_001500.json` and `comparison_000000_001500.jpg` are stored in the remote run and local `runs/review_one_id/`.
+
+## 2026-10-01 08:40 UTC progress
+
+The queue remains `one_id_running` (PID 5913), with parent PID 6851 and one training worker, PID 11431, resuming checkpoint 1,500 toward 2,000. At 08:41 UTC it reached 1,827/2,000 updates (91.35%). The last 100 updates have finite losses and gradient norms; B-gradient norms range from 0.007395 to 0.053983. Peak reserved memory remains 9.52734 GiB. Mean update time is 10.5976 seconds, estimating about 31 minutes to step 2,000 (approximately 09:12 UTC), plus final validation/scoring. No newly completed validation is available after step 1,500, so no duplicate comparison or intervention was performed. Evidence: `runs/review_one_id/status_20261001_0840.json`. The follow-up remains active until final validation is reviewed.
+
+## 2026-10-01 09:12 UTC training complete; final validation running
+
+All 2,000 optimizer updates completed, and checkpoint `checkpoint-002000` was saved in `branch_only` mode. Manifest SHA256: `592182ccf8b961bf015bf5240040e53afd122bb1eb36c5c0a08de7b9ea898f77`. All checkpoint tensors are finite and all sixteen B matrices are nonzero; combined B L2 norm is 11.996713, with L2 change 3.454949 since checkpoint 1,500. The last 100 training losses and gradient norms are finite. Peak reserved training memory is 9.52930 GiB (20.10% of device capacity).
+
+The training worker exited and the parent launched serial final validation from checkpoint 2,000 (inference parent PID 11771, one GPU worker PID 11902). At 09:12:39 UTC one of twelve denoised samples was recorded; decoding and both scoring summaries are pending. Queue PID 5913 remains `one_id_running` while validation finishes. No duplicate GPU job or retry was started. Final comparison and follow-up pause must wait for complete images/scoring. Evidence: `runs/review_one_id/status_20261001_0910.json` and `status_20261001_0912.json`.
+
+## 2026-10-01 09:41 UTC completed diagnostic and final review
+
+The run completed all 2,000 updates, twelve final images and both scoring passes. The queue records `one_id_complete`; the queue, training and scoring processes have exited. At the completion check the GPU was idle (0% utilization, 15 MiB occupied). Instance `53574065` remains running. No additional GPU job was launched.
+
+The comparison script was rerun for step 2,000. All twelve paired images were visually reviewed and show meaningful changes in faces, poses, framing and scene details; per-image mean absolute pixel differences are 23.482–47.143 on the 0–255 scale. Resolved validation configs, sample order, prompts, seeds and geometry match baseline. The final validation records `branch_only` and checkpoint `checkpoint-002000`; its recorded manifest SHA256 matches the file (`592182ccf8b961bf015bf5240040e53afd122bb1eb36c5c0a08de7b9ea898f77`).
+
+All 2,000 logged training losses, gradient norms and B-gradient norms are finite. All final adapter tensors are finite, all sixteen B matrices are nonzero, and the first-update record confirms sixteen updated B matrices. Final combined B L2 norm is 11.996713; L2 parameter change since step 1,500 is 3.454949. Peak reserved CUDA memory was 9.52930 GiB (20.10% of device capacity).
+
+| Metric | Step 0 | Step 1,500 | Step 2,000 |
+| --- | ---: | ---: | ---: |
+| Identity similarity, mask matched | 0.310866 | 0.338955 | 0.331836 |
+| Identity similarity, best face | 0.310866 | 0.338955 | 0.331836 |
+| CLIP text similarity | 28.510215 | 28.673897 | 28.009225 |
+| TOPIQ-Face | 0.687094 | 0.713561 | 0.672174 |
+| MUSIQ | 67.124743 | 69.520918 | 68.754972 |
+| MANIQA | 0.615123 | 0.633927 | 0.625326 |
+| TOPIQ | 0.492962 | 0.494588 | 0.487089 |
+
+All twelve outputs retain detected/owned faces without missing masks or ambiguous ownership. Final identity similarity improves over baseline, while CLIP and TOPIQ-Face decline. Step 1,500 has stronger means than step 2,000 on every listed metric. These results establish that trained branches affect validation; they do not establish monotonic improvement or generalization. No inactive-branch or checkpoint-loading fault is indicated, so no wiring repair or retry was made.
+
+The final audit and comparison JSON are saved both remotely in the run and locally under `runs/review_one_id/`. Local artifacts are `final_review.html`, `final_metric_curves.png` and `comparison_000000_002000.jpg`. The complete step-2,000 checkpoint and final validation images/metadata were copied to local `runs/flux48_one_id_diagnostic/`; the requested complete step-1,500 checkpoint is also preserved there. The earlier architecture report retains its dated step-1,500 evidence snapshot.
+
+The scheduled follow-up `review-one-id-training-and-repair-branch-wiring` was paused after this successful completed review. The automation tool returned `PAUSED`, and its saved configuration was checked. The Vast instance was not stopped or terminated.
