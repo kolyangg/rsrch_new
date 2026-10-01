@@ -80,3 +80,21 @@ Resolved validation configs remain identical to baseline. The report records `br
 | TOPIQ | 0.492962 | 0.483583 |
 
 All twelve images still have detected/owned faces. Identity similarity recovered slightly from checkpoint 500 but remains below baseline; output changes and continued parameter updates demonstrate branch influence without establishing improved identity fidelity. No evidence-backed wiring fix is indicated. Continue through the remaining scheduled validations. Reports `validation_change_000000_to_001000.json` and `comparison_000000_001000.jpg` are stored in the remote run and local `runs/review_one_id/`.
+
+## 2026-10-01 08:09 UTC step-1,500 comparison
+
+Checkpoint 1,500 and all validation/scoring completed; training resumed to step 1,654 with finite recent losses/gradients and peak reserved memory 9.52734 GiB. Queue and training parent remain alive. All twelve images changed versus baseline (per-image mean absolute pixel difference 18.147–42.608/255); the paired contact sheet was visually reviewed, showing changes in faces, poses and composition.
+
+The validation configs match baseline. The report records `branch_only` with `checkpoint-001500`, manifest SHA256 `87b450984641b26c845591d10b3c568438fcf4e211073a45f0c2408f782ef934`. All sixteen B matrices remain nonzero; combined L2 norm is 10.430811, and L2 change since checkpoint 1,000 is 3.877858.
+
+| Metric | Step 0 | Step 1,500 |
+| --- | ---: | ---: |
+| Identity similarity, mask matched | 0.310866 | 0.338955 |
+| Identity similarity, best face | 0.310866 | 0.338955 |
+| CLIP text similarity | 28.510215 | 28.673897 |
+| TOPIQ-Face | 0.687094 | 0.713561 |
+| MUSIQ | 67.124743 | 69.520918 |
+| MANIQA | 0.615123 | 0.633927 |
+| TOPIQ | 0.492962 | 0.494588 |
+
+All twelve outputs retain detected/owned faces. This checkpoint improves identity similarity and all listed text/quality means on the diagnostic panel, supporting useful learning in addition to visible branch influence. These small-panel observations do not establish generalization. No wiring fix or retry is indicated. Continue to the planned final 2,000-step validation before pausing the follow-up. Reports `validation_change_000000_to_001500.json` and `comparison_000000_001500.jpg` are stored in the remote run and local `runs/review_one_id/`.
