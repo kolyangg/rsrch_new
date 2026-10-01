@@ -37,6 +37,10 @@ def read_manifest(path: str | Path, training: bool = False, limit: int | None = 
         row = {"sample_id": raw["sample_id"], "identity_id": raw["identity_id"], "prompt": raw["prompt"],
                "reference": str(reference), "reference_box": boxes[0], "reference_hash": image_hash(reference),
                "seed": raw.get("seed", 0)}
+        if "split_policy" in raw:
+            if raw["split_policy"] != "one_id_diagnostic":
+                raise ValueError("Unknown explicit split policy")
+            row["split_policy"] = raw["split_policy"]
         if raw.get("reference_sha256", row["reference_hash"]) != row["reference_hash"]:
             raise ValueError(f"Reference bytes changed in the fixed validation panel: {raw['sample_id']}")
         if target is not None:
@@ -52,6 +56,15 @@ def read_manifest(path: str | Path, training: bool = False, limit: int | None = 
 
 
 def assert_disjoint(train: list[dict], validation: list[dict]) -> None:
+    rows = train + validation
+    if any(row.get("split_policy") == "one_id_diagnostic" for row in rows):
+        # AICODE-NOTE: The explicitly named one-ID wiring experiment reuses the
+        # original validation reference seen in training. Never infer this exception.
+        if not train or not validation or not all(row.get("split_policy") == "one_id_diagnostic" for row in rows):
+            raise ValueError("Both complete manifests must opt into the one-ID diagnostic")
+        if len({row["identity_id"] for row in rows}) != 1:
+            raise ValueError("The one-ID diagnostic must contain exactly one shared identity")
+        return
     identities = {row["identity_id"] for row in train} & {row["identity_id"] for row in validation}
     train_images = {row[key] for row in train for key in ("reference_hash", "target_hash")}
     if identities or train_images & {row["reference_hash"] for row in validation}:

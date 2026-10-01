@@ -57,12 +57,14 @@ def evaluate(directory, ownership_boxes=None, with_clip=True, no_comet=False, lo
     panel = {row["sample_id"]: row for row in read_manifest(config["data"]["validation_manifest"])}
     identities = {}
     hashes = {}
+    one_id = all(row.get("split_policy") == "one_id_diagnostic" for row in panel.values())
     for name in ("id_embeds_manual_val", "id_embeds_manual_val_subject_v2"):
-        path = ROOT / "data/validation" / f"{name}.pth"
+        path = (Path(config["data"]["validation_manifest"]).parent / "id_embeds_one_id.pth"
+                if one_id else ROOT / "data/validation" / f"{name}.pth")
         if not path.exists():
             raise FileNotFoundError(f"Import the original validation embeddings: {path}")
         identities[name] = torch.load(path, map_location="cpu", weights_only=True)
-        hashes[name] = file_hash(path)
+        hashes[path.stem] = file_hash(path)
     owned = json.loads(Path(ownership_boxes).read_text()) if ownership_boxes else None
     mask_manifest = None
     if owned is None:
