@@ -28,3 +28,5 @@ Pause the follow-up after a completed diagnostic has shown finite branch updates
 ## Verification so far
 
 Local import checked all face boxes and target/reference preprocessing geometry. The original embedding contains identity key `51`. Focused split checks passed: unmarked identity overlap, partial opt-in, and multiple identities in diagnostic mode are rejected. Python syntax, shell syntax, and whitespace checks passed. The one-ID pretrained run has not started yet.
+
+Deployed commit `dd14647` and the dataset to Vast. All transferred file and manifest hashes passed verification. Queue PID `5913` is detached, with phase `waiting_for_previous_training_and_validation`; the previous worker was alive at step 1,215. Checked that incomplete final artifacts reject handoff and the one-ID run directory does not yet exist. Active thread follow-up `review-one-id-training-and-repair-branch-wiring` runs every 30 minutes to perform the conditional diagnosis/repair above. The queue itself runs on Vast and does not need an open SSH session.
