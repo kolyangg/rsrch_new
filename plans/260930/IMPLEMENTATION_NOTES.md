@@ -365,3 +365,21 @@ and disable user-site packages. Separate pinned metric tools remain isolated
 under envs/clust-v100 because their CLIP/Transformers versions conflict with
 the training stack. Job4372978 was held pending corrected setup. No pretrained
 V100 result or optimizer update is claimed at this point.
+
+### 3 October — Compute-node download timeout; prepared shared caches
+
+One-V100 job4373031 activated rsrch_new, found its Git and GCC, and verified
+the patched Toolkit revision, then failed before training after44 seconds of
+connection timeouts to download.pytorch.org. The same endpoint worked on the
+login node. Dependency installation and downloads were moved to login with
+one build worker, excluding model imports/inference; GPU checks remain in
+Slurm. All three pinned environments passed uv dependency checks. The full
+16.148GB pinned FLUX4B, Qwen3-4B and VAE files downloaded successfully and were
+size-verified; aliases point to exact locked HF revisions. Original metric
+weight hashes and timm revisions are now locked separately for offline cache
+preparation without importing models. Compute jobs set HF_HUB_OFFLINE=1.
+The hold placed on4372978 became JobHeldAdmin and the site's release operation
+was denied. Cancelled that never-started job and submitted replacement4373033
+with the same two-V10020k configuration. Its prerequisite remains unmet until
+the corrected GPU probe passes. No optimizer update or GPU memory measurement
+is claimed from these failed preparation jobs.

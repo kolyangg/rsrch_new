@@ -30,4 +30,6 @@ if [[ ! -f scratch/clust-v100/setup-complete.json ]]; then
   fi
   bash scripts/setup_clust_v100.sh --download-weights
 fi
+export HF_HUB_OFFLINE=1
+CUDA_VISIBLE_DEVICES='' "$BA_FLUX_PYTHON" scripts/check_invariants.py flux
 exec "$BA_FLUX_PYTHON" -m scripts.clust_v100_smoke

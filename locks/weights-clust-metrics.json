@@ -1,0 +1,89 @@
+{
+  "schema_version": 1,
+  "provenance": "Exact files used by the original local fixed96 metric implementations; copied hashes, not redefined metrics.",
+  "files": [
+    {
+      "path": ".cache/torch/hub/pyiqa/MANIQA_PIPAL-ae6d356b.pth",
+      "bytes": 543335435,
+      "sha256": "ae6d356bcd583ae3c1ca81d84817cf96d662073896c7e40fceddb305ddc2f155",
+      "url": "https://huggingface.co/chaofengc/IQA-PyTorch-Weights/resolve/main/MANIQA_PIPAL-ae6d356b.pth"
+    },
+    {
+      "path": ".cache/torch/hub/pyiqa/cfanet_nr_koniq_res50-9a73138b.pth",
+      "bytes": 181196009,
+      "sha256": "9a73138beb3748dd6a83365610ac88fa1cd53225342c77fc9ed44a3be461354c",
+      "url": "https://huggingface.co/chaofengc/IQA-PyTorch-Weights/resolve/main/cfanet_nr_koniq_res50-9a73138b.pth"
+    },
+    {
+      "path": ".cache/torch/hub/pyiqa/detection_Resnet50_Final.pth",
+      "bytes": 109497761,
+      "sha256": "6d1de9c2944f2ccddca5f5e010ea5ae64a39845a86311af6fdf30841b0a5a16d",
+      "url": "https://github.com/xinntao/facexlib/releases/download/v0.1.0/detection_Resnet50_Final.pth"
+    },
+    {
+      "path": ".cache/torch/hub/pyiqa/musiq_koniq_ckpt-e95806b9.pth",
+      "bytes": 108610983,
+      "sha256": "e95806b9eae5f3814c410f574ba8e552362bd5bc63d758ed5b97860f5d6185aa",
+      "url": "https://huggingface.co/chaofengc/IQA-PyTorch-Weights/resolve/main/musiq_koniq_ckpt-e95806b9.pth"
+    },
+    {
+      "path": ".cache/torch/hub/pyiqa/parsing_parsenet.pth",
+      "bytes": 85331193,
+      "sha256": "3d558d8d0e42c20224f13cf5a29c79eba2d59913419f945545d8cf7b72920de2",
+      "url": "https://github.com/xinntao/facexlib/releases/download/v0.2.2/parsing_parsenet.pth"
+    },
+    {
+      "path": ".cache/torch/hub/pyiqa/topiq_nr_cgfiqa_res50-0a8b8e4f.pth",
+      "bytes": 181185898,
+      "sha256": "0a8b8e4f458c782301b9940e15699d2b5b8919252c973f52e7060d8070997898",
+      "url": "https://huggingface.co/chaofengc/IQA-PyTorch-Weights/resolve/main/topiq_nr_cgfiqa_res50-0a8b8e4f.pth"
+    },
+    {
+      "path": ".cache/clip/ViT-L-14-336px.pt",
+      "bytes": 934088680,
+      "sha256": "3035c92b350959924f9f00213499208652fc7ea050643e8b385c2dac08641f02",
+      "url": "https://openaipublic.azureedge.net/clip/models/3035c92b350959924f9f00213499208652fc7ea050643e8b385c2dac08641f02/ViT-L-14-336px.pt"
+    },
+    {
+      "path": ".insightface/models/buffalo_l/1k3d68.onnx",
+      "bytes": 143607619,
+      "sha256": "df5c06b8a0c12e422b2ed8947b8869faa4105387f199c477af038aa01f9a45cc"
+    },
+    {
+      "path": ".insightface/models/buffalo_l/2d106det.onnx",
+      "bytes": 5030888,
+      "sha256": "f001b856447c413801ef5c42091ed0cd516fcd21f2d6b79635b1e733a7109dbf"
+    },
+    {
+      "path": ".insightface/models/buffalo_l/det_10g.onnx",
+      "bytes": 16923827,
+      "sha256": "5838f7fe053675b1c7a08b633df49e7af5495cee0493c7dcf6697200b85b5b91"
+    },
+    {
+      "path": ".insightface/models/buffalo_l/genderage.onnx",
+      "bytes": 1322532,
+      "sha256": "4fde69b1c810857b88c64a335084f1c3fe8f01246c9a191b48c7bb756d6652fb"
+    },
+    {
+      "path": ".insightface/models/buffalo_l/w600k_r50.onnx",
+      "bytes": 174383860,
+      "sha256": "4c06341c33c2ca1f86781dab0e829f88ad5b64be9fba56e56bc9ebdefc619e43"
+    }
+  ],
+  "huggingface": [
+    {
+      "repo": "timm/resnet50.a1_in1k",
+      "revision": "767268603ca0cb0bfe326fa87277f19c419566ef",
+      "filename": "model.safetensors",
+      "bytes": 102469840,
+      "sha256": "773525d5821de224f8f30c33377b7a795d7863e08522698200d3217d3f2a41bb"
+    },
+    {
+      "repo": "timm/vit_base_patch8_224.augreg2_in21k_ft_in1k",
+      "revision": "907a22023d1c918aae6d7f340275616a25f7f2ff",
+      "filename": "model.safetensors",
+      "bytes": 346321582,
+      "sha256": "45333d3cd3366ed0f57e94b93655eeb8895b4610ddf2a5a7ca7b2410874ea0c9"
+    }
+  ]
+}

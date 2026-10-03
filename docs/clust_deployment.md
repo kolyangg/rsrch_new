@@ -94,7 +94,9 @@ cd /home/nasilaev/rsrch_new
 source /opt/software/python/miniconda/latest/etc/profile.d/conda.sh
 conda create -n rsrch_new --override-channels -c conda-forge python=3.11.13 git pip
 source scripts/activate_clust_env.sh
-bash scripts/setup_clust_v100.sh --download-weights
+# Download/install on login with one build worker; no model imports/inference.
+UV_CONCURRENT_BUILDS=1 UV_CONCURRENT_INSTALLS=1 bash scripts/setup_clust_v100.sh --prepare-only
+python scripts/prepare_clust_metric_weights.py
 bash scripts/run_clust_v100.sh --run runs/flux4b_clust_preview --dry-run
 ```
 
@@ -166,3 +168,13 @@ Transformers/CLIP dependency conflicts; all training uses the activated FLUX env
 Job4372995 failed during the uv download after its site TMPDIR disappeared;
 job4373014 failed before preparation because git was absent. Neither executed
 optimizer updates. Job4372978 was held while the environment was corrected.
+
+Job4373031 activated the new Conda env successfully but timed out connecting to
+download.pytorch.org from cn-025. Download/install preparation therefore runs
+on login with one build worker and skips model imports/checks; GPU admission
+remains in Slurm. The 16.148GB pinned backbone/text/VAE files were downloaded
+and verified successfully. A separate lightweight downloader verifies original
+metric weights against SHA256 values from the local experiment. Compute jobs
+use HF_HUB_OFFLINE=1 and cached files. No prepared-package or file check is a
+pretrained GPU result. The held, never-started job4372978 was cancelled and
+replaced by4373033 after the site's release command denied the hold release.

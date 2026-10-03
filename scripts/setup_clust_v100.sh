@@ -6,7 +6,7 @@ source scripts/activate_clust_env.sh
 export BA_ROOT="$PWD"
 export BA_ENVS_DIR="${BA_ENVS_DIR:-$BA_ROOT/envs/clust-v100}"
 export PATH="$HOME/.local/bin:$PATH"
-[[ $# -eq 0 || ( $# -eq 1 && "$1" == --download-weights ) ]] || exit 2
+[[ $# -eq 0 || ( $# -eq 1 && ( "$1" == --download-weights || "$1" == --prepare-only ) ) ]] || exit 2
 command -v uv >/dev/null || { echo 'Install uv, then rerun this script.' >&2; exit 1; }
 # Git is installed in rsrch_new because compute images omit the system binary.
 git --version
@@ -26,10 +26,12 @@ uv pip install --python "$python_bin" -c locks/flux-v100-constraints.txt \
 uv pip check --python "$python_bin"
 mkdir -p scratch/clust-v100
 uv pip freeze --python "$python_bin" > scratch/clust-v100/installed.txt
-CUDA_VISIBLE_DEVICES='' "$python_bin" scripts/check_invariants.py flux
+if [[ "${1:-}" != --prepare-only ]]; then
+  CUDA_VISIBLE_DEVICES='' "$python_bin" scripts/check_invariants.py flux
+fi
 bash scripts/setup_metrics.sh
 bash scripts/setup_face_quality.sh
-if [[ "${1:-}" == --download-weights ]]; then
+if [[ "${1:-}" == --download-weights || "${1:-}" == --prepare-only ]]; then
   "$python_bin" scripts/weights_manifest.py download --lock locks/weights-flux48.json --weights-dir weights
   "$python_bin" - <<'PY'
 import json, os, sys
@@ -39,6 +41,7 @@ Path('scratch/clust-v100/setup-complete.json').write_text(json.dumps({
     'python': sys.executable, 'conda_prefix': os.environ['CONDA_PREFIX'],
     'completed_utc': datetime.now(timezone.utc).isoformat(),
     'weights_lock': 'locks/weights-flux48.json',
+    'gpu_admission': 'not run; execute the Slurm smoke/admission checks',
 }, indent=2)+'\n')
 PY
 fi
