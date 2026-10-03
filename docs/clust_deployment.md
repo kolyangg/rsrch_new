@@ -90,6 +90,10 @@ private `.env` or environment, never in Git or sbatch directives:
 
 ```bash
 cd /home/nasilaev/rsrch_new
+# One-time lightweight creation on login; heavy imports/checks run under Slurm.
+source /opt/software/python/miniconda/latest/etc/profile.d/conda.sh
+conda create -n rsrch_new --override-channels -c conda-forge python=3.11.13 git pip
+source scripts/activate_clust_env.sh
 bash scripts/setup_clust_v100.sh --download-weights
 bash scripts/run_clust_v100.sh --run runs/flux4b_clust_preview --dry-run
 ```
@@ -151,3 +155,14 @@ The full run retains all47,341 training pairs and fixed96 at0/every2000 updates.
 Submission replies, exact source/config hashes and job IDs are recorded in
 `runs/clust_20k_submission/` on clust. Inspect live queue/logs for current status;
 no optimizer result was available when these jobs were submitted.
+
+The user subsequently requested explicit environment activation and approved a
+new environment after inspection found Python3.10 in the old PhotoMaker env.
+All cluster launchers now activate `/home/nasilaev/.conda/envs/rsrch_new` and
+disable user-site packages. The old environments stay unchanged. Git belongs to
+the new Conda environment because the compute-node system image omits it.
+Metrics retain their separate pinned project environments to avoid the known
+Transformers/CLIP dependency conflicts; all training uses the activated FLUX env.
+Job4372995 failed during the uv download after its site TMPDIR disappeared;
+job4373014 failed before preparation because git was absent. Neither executed
+optimizer updates. Job4372978 was held while the environment was corrected.

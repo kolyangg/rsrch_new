@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 cd "$(dirname "$0")/.."
+source scripts/activate_clust_env.sh
 export BA_ROOT="$PWD"
 export BA_ENVS_DIR="${BA_ENVS_DIR:-$BA_ROOT/envs/clust-v100}"
 export PYTHONPATH="$BA_ROOT${PYTHONPATH:+:$PYTHONPATH}"
 export PYTHONUNBUFFERED=1 TOKENIZERS_PARALLELISM=false COMET_DISPLAY_SUMMARY_LEVEL=0
 export OMP_NUM_THREADS=8 MKL_NUM_THREADS=8 CUBLAS_WORKSPACE_CONFIG=:4096:8
-python_bin="$BA_ENVS_DIR/flux-toolkit/bin/python"
+python_bin="$BA_FLUX_PYTHON"
 [[ -x "$python_bin" ]] || { echo 'Run scripts/setup_clust_v100.sh first.' >&2; exit 1; }
 if [[ " $* " != *' --dry-run '* ]]; then
   "$python_bin" -m scripts.check_clust_v100

@@ -13,6 +13,7 @@
 #SBATCH --output=/home/nasilaev/rsrch_new/logs/clust/%x-%j.out
 #SBATCH --error=/home/nasilaev/rsrch_new/logs/clust/%x-%j.err
 set -euo pipefail
+source scripts/activate_clust_env.sh
 export BA_ROOT="$PWD" BA_ENVS_DIR="$PWD/envs/clust-v100"
 export PYTHONPATH="$PWD${PYTHONPATH:+:$PYTHONPATH}"
 export PYTHONUNBUFFERED=1 OMP_NUM_THREADS=8 MKL_NUM_THREADS=8 TOKENIZERS_PARALLELISM=false
@@ -22,11 +23,11 @@ export TMPDIR="$PWD/scratch/tmp/${SLURM_JOB_ID}"
 mkdir -p "$TMPDIR"
 chmod 700 "$TMPDIR"
 # A clean machine can prepare inside this allocation before the short probe.
-if [[ ! -x "$BA_ENVS_DIR/flux-toolkit/bin/python" || ! -f weights/flux_vae/ae.safetensors ]]; then
+if [[ ! -f scratch/clust-v100/setup-complete.json ]]; then
   if ! command -v uv >/dev/null; then
     curl -fLsS --retry 2 --max-time 120 https://astral.sh/uv/0.11.12/install.sh -o scratch/install-uv.sh
     sh scratch/install-uv.sh
   fi
   bash scripts/setup_clust_v100.sh --download-weights
 fi
-exec "$BA_ENVS_DIR/flux-toolkit/bin/python" -m scripts.clust_v100_smoke
+exec "$BA_FLUX_PYTHON" -m scripts.clust_v100_smoke

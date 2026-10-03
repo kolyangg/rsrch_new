@@ -11,6 +11,7 @@
 #SBATCH --output=/home/nasilaev/rsrch_new/logs/clust/%x-%j.out
 #SBATCH --error=/home/nasilaev/rsrch_new/logs/clust/%x-%j.err
 set -euo pipefail
+source scripts/activate_clust_env.sh
 export PATH="$HOME/.local/bin:$PATH"
 export PYTHONPATH="$PWD${PYTHONPATH:+:$PYTHONPATH}"
 export OMP_NUM_THREADS=8 MKL_NUM_THREADS=8 PYTHONUNBUFFERED=1

@@ -349,3 +349,19 @@ project scratch directory per Slurm job and set TMPDIR there. The pinned
 uv0.11.12 executable is being transferred directly to avoid another installer
 download in the GPU allocation. This is one diagnosed retry; the20k job
 remains dependent on successful prerequisite completion.
+
+### 3 October — Dedicated activated Conda environment for clust
+
+Retry4373014 immediately received cn-025 but failed in one second with
+`git: command not found`, before environment preparation or model training.
+The user requested activating the cluster environment. Inspection of the old
+photomaker_NS environment found Python3.10.18 and missing FLUX dependencies;
+the user then explicitly approved creating a new environment. Created
+/home/nasilaev/.conda/envs/rsrch_new with Python3.11.13 and Git2.56.0 from
+conda-forge, and verified activation and both executable paths. Old PhotoMaker
+environments were not modified; their package inventory was saved under
+scratch/clust-existing-env. The training/setup launchers now activate rsrch_new
+and disable user-site packages. Separate pinned metric tools remain isolated
+under envs/clust-v100 because their CLIP/Transformers versions conflict with
+the training stack. Job4372978 was held pending corrected setup. No pretrained
+V100 result or optimizer update is claimed at this point.
