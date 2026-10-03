@@ -647,3 +647,24 @@ for pretrained GPU admission. Full-data native/off/zero-mask parity, finite
 updates/frozen weights, largest-layout memory and fresh-process exact replay
 run as mandatory gates in the cluster job before production. Unrelated
 workstation/Vast changes are preserved and excluded from the deployed commit.
+
+
+Production submission: Slurm `4373673`, `proj_1892/rocky`, 2 V100s, 8 CPUs,
+50-hour limit, submitted 2026-10-03 18:05 UTC. Source/config/lock audit passed
+for 64 files; initial implementation commit `3e10d35`, queued-Comet handoff
+commit `ff2829c` deployed and verified before allocation. Submission and
+source receipts are under local `scratch/clust-production` and remote
+`scratch/clust-v100`. Script: `jobs/flux4b_clust_2v100_amp.sbatch`.
+Run: `/home/nasilaev/rsrch_new/runs/flux4b_clust_2v100_amp_qkvo_r128_20k_20261003`.
+
+Registered immutable Comet key `5d31de48010446248639e65a65236cbe` while queued:
+https://www.comet.com/nikolay-2104/rsrch-new/5d31de48010446248639e65a65236cbe
+The compute controller verifies the reserved configuration hash and inherits
+this same key at startup. Login uploader PID374294 runs in the activated
+`rsrch_new` environment; its successful API heartbeat reports stage `queued`
+and Slurm `PENDING`. No production optimizer updates or pretrained admission
+have completed yet. Last scheduler estimate was 2026-10-03 21:53:42 MSK
+(19:53:42 London), node cn-005, reason Priority; estimates can change. The
+job automatically runs full admission and native/step-0 validation after
+allocation, before the 20k training sequence. No recurring notification
+or automatic job-resubmission workflow was created.
