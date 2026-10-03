@@ -723,3 +723,34 @@ needed. GPU resume `4374072` remains PENDING/Priority, estimated 21:33:10 UTC
 (22:33:10 London). Production progress remains 0/20,000 until initial validation
 and scoring finish after allocation. The detached login uploader (PID2091453,
 login-02) published this queued state to the existing Comet experiment.
+
+
+## 2026-10-03: Comet liveness and upload isolation
+
+At 22:03 UTC the user correctly reported Comet was no longer running. Direct
+Comet API metadata confirmed `running=false`, while Slurm training job
+`4374072` was RUNNING and generating step-0 fixed96 images. The detached login
+uploader PID2091453 no longer existed. Its last log showed a stalled 15.53 MiB
+asset upload followed by a timeout; the exact reason the parent process exited
+was not established. Earlier one-time running checks did not establish ongoing
+liveness. The old uploader also slept 30 seconds and blocked on uploads, whereas
+Comet actually returned a required heartbeat interval of 10,000 ms.
+
+`scripts/upload_clust_comet.py` now sends acknowledged heartbeats on a separate
+API connection/thread at half the server interval (at most five seconds),
+records acknowledgement timestamps, and polls archive uploads without blocking
+status/metrics. Upload subprocesses have a 180-second limit and retry backoff;
+unfinished archives remain intact and final pending uploads are recorded.
+Step-0 validation image counts and the genuine zero optimizer-step count are
+published as live metrics. API clients bypass metadata caching. The logger
+stops with the target job and records its final scheduler state.
+
+Added `jobs/clust_comet.sbatch` so the logger is managed by Slurm independently
+of SSH sessions (one CPU, zero GPUs, 50-hour upper bound). Submitted logger
+job `4374270` for existing training job `4374072`; its submission receipt is
+`scratch/clust-v100/comet-service-4374072.json` on cluster. The training process,
+its immutable source/config identity, checkpoint and Comet key are unchanged.
+Three focused tests passed locally and inside rsrch_new on cluster: expired-job
+accounting, nonblocking uploads, and server-paced heartbeat acknowledgements.
+Shell/Python syntax and Slurm submission validation passed. An allocated
+compute-node probe successfully reached Comet HTTPS and its authenticated API.
