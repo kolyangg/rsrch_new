@@ -59,6 +59,8 @@ def main():
             record = setup/'comet_experiment.json'
             if not record.exists():
                 record = args.run/'comet_experiment.json'
+            if not record.exists():
+                record = root/'scratch/clust-v100'/f'comet-registration-{args.job_id}'/'comet_experiment.json'
             if record.exists():
                 try:
                     if experiment is None:
@@ -73,7 +75,8 @@ def main():
                     stage_path = args.run/'status.json'
                     if not stage_path.exists():
                         stage_path = setup/'status.json'
-                    stage = json.loads(stage_path.read_text()) if stage_path.exists() else {}
+                    stage = (json.loads(stage_path.read_text()) if stage_path.exists() else
+                             {'stage':'queued' if job_state == 'PENDING' else 'starting'})
                     observed = {'job_id': args.job_id, 'slurm_state':job_state, **stage}
                     if observed != last_status:
                         experiment.log_other('cluster/slurm_state', job_state)

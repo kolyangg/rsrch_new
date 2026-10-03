@@ -148,6 +148,12 @@ def main(args):
     setup.mkdir(parents=True, exist_ok=True)
     if os.getenv('BA_COMET_OFFLINE') == '1' and config['logging']['enabled']:
         from ba_dit.logging import connect
+        registration = ROOT/'scratch/clust-v100'/f"comet-registration-{os.getenv('SLURM_JOB_ID')}"/'comet_experiment.json'
+        if registration.is_file() and not (setup/'comet_experiment.json').exists():
+            record = json.loads(registration.read_text())
+            if record.get('config_sha256') != digest(config):
+                raise ValueError('Queued Comet registration belongs to a different configuration')
+            write(setup/'comet_experiment.json', record)
         startup = connect(config, setup, name=run.name)
         startup.log_parameters({'cluster/job_id': os.getenv('SLURM_JOB_ID'),
                                 'cluster/cuda_allocator': os.getenv('PYTORCH_CUDA_ALLOC_CONF', 'default'),
