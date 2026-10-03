@@ -78,9 +78,8 @@ data:
   locations: configs/clust/training_sources.yaml
   preference: full_adjusted_Large_cross_view_identities
   train_manifest: data/train_pairs_large_clust.jsonl
-  readiness: requires_verified_transfer_receipt
+  readiness: verified_file_checksums_and_manifest_receipt
 blocking_work:
-- Finish and checksum-verify background Large transfer.
 - Prepare isolated cluster environment, pinned weights and private Comet credential.
 - User approval before GPU allocation.
 - Pass pretrained V100 parity/gradients/peak-memory/exact-resume admission before

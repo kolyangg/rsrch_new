@@ -50,7 +50,7 @@ the older cluster copies of prompts/embeddings differed and are not used.
 
 The historical paired Cosmic target tree under another user's home is inaccessible.
 No access bypass was attempted. With the user's authorization, the complete local
-adjusted Large dataset is being copied to
+adjusted Large dataset was copied and file-checksum verified at
 `/home/nasilaev/datasets/large_dataset_adj/large_dataset`:47,500 images,
 17,116,845,489 bytes. Metadata is verified at
 `/home/nasilaev/datasets/metadata/filtered_ids3_adj.json`.
@@ -62,12 +62,14 @@ manifest is `data/train_pairs_large_clust.jsonl`, SHA256
 The manifest and its audit are transferred as data, not committed.
 [Training locations](../configs/clust/training_sources.yaml) record exact roots.
 
-Four background rsync streams support partial-file continuation. Each finishes
-with a checksum dry run; a separate background publisher uploads
-`data/clust_large_transfer.json` only after all four verify without differences.
+Four background rsync streams completed with zero file checksum/size/attribute
+differences. Shared directory modification times differed during concurrent
+writes; only those directory timestamps were excluded from file verification.
+The verified manifest/audit and `data/clust_large_transfer.json` receipt are
+uploaded. All47,500 files (17,116,845,489 bytes) are present; transfer is complete.
 The launcher requires that receipt and the matching manifest hash before loading
 models. Local progress/logs are in ignored `scratch/clust-sync-20261003/`.
-Keep WSL and its VPN running while transfers are active.
+No transfer remains active.
 
 ## Environment and later approved submission
 

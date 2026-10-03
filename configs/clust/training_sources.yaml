@@ -1,12 +1,12 @@
-# Location inventory. Live readiness is recorded by the checksum receipt.
+# Verified Large dataset locations; Cosmic remains unavailable.
 schema_version: 1
 kind: cluster_training_locations
 checked_on: '2026-10-03'
 host: clust
 project_root: /home/nasilaev/rsrch_new
-ready: false
+ready: true
 large:
-  status: rsync_in_progress_checksum_receipt_required
+  status: verified_file_checksums_and_import
   metadata: /home/nasilaev/datasets/metadata/filtered_ids3_adj.json
   images_root: /home/nasilaev/datasets/large_dataset_adj/large_dataset
   expected_metadata_sha256: 0056f9647c6ca69079c3b7ae479ea5cdf9e642f076460249b160000eecb3ee50
@@ -20,6 +20,7 @@ large:
   - /home/nasilaev/rsrch/dataset_full/filtered_ids3_adj.json
   - /home/nasilaev/rsrch/dataset_full/large_dataset_adj/large_dataset
   - /home/nasilaev/datasets
+  manifest_sha256: fea6c505016c73c995d25a65ca02202d27a2b622e9a463ac3096f8b1586c6302
 cosmic_paired:
   status: historical_target_path_permission_denied_and_reference_bank_not_found
   metadata: null

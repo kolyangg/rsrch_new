@@ -302,3 +302,11 @@ The user authorized committing/pushing the cluster implementation but requested
 approval before training. Concurrent 9B/true-microbatch/Vast edits are excluded
 from this commit. Cluster dependency/weight provisioning and private Comet setup
 remain prerequisites. See docs/clust_deployment.md for exact commands and limits.
+
+Transfer completion: all four streams returned0 from checksum verification with
+zero file differences. The280 reported differences were exclusively shared
+directory modification times changed by concurrent streams; they do not affect
+file-content validation. The47,500-image dataset,47,341-pair manifest/audit and
+verified completion receipt were published to clust. Training-source readiness
+is now true for Large; paired Cosmic remains unavailable. No transfer remains
+active and no GPU job has been submitted.
