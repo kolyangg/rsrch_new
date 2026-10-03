@@ -511,3 +511,25 @@ Cancelled owned FP32 job4373291 during dataset verification on the user's
 speed/precision steering. Slurm confirmedCANCELLED at8m29s; no main metrics
 file or production optimizer update existed. Existing logs/data are preserved.
 The running GB10 pilot was inspected only and remains untouched.
+
+
+### 2026-10-03 — V100 50-hour configuration budget (measurement pending)
+
+The user now requires20k optimizer updates within50hours on2V100s, with
+4V100s also considered.50hours/20k gives9seconds/update including all
+overheads. The measured warmed2-rank FP32 batch8 update was72.7896seconds;
+reducing accumulation4to1 projects18.1974seconds/update (~101.1hours of
+training alone), not a measured batch2 result. Four data-parallel GPUs with
+one example/rank still perform one full forward/backward per update; they
+raise the effective batch to4 rather than inherently halving update latency.
+
+Prepared bounded scripts/benchmark_clust_budget.py and
+jobs/clust_v100_budget.sbatch. Named six-update/128-row timing probes put
+the frozen FP32 encoder onGPU1 and the denoiser/VAE onGPU0, retain fresh
+noise/timesteps, and compare768 and separately named512 resolution with
+checkpointing on/off. They record component times, native/off parity,
+finite gradients, updates to all64 branch tensors, per-device memory, and
+fixed96 generation estimates at0/every2000 through20k. They are not complete
+pretrained save/resume admission or scored image validation.
+Slurm job4373489 is submitted with2V100s/8CPUs and a reduced30-minute cap.
+No50-hour production configuration has yet been selected or launched.
