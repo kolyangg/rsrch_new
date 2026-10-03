@@ -714,3 +714,12 @@ respective isolated environments; native mask preparation then started normally.
 The Comet uploader successfully published `PENDING/queued` for resumed job
 `4374072` under the same experiment. Slurm estimated 2026-10-03 21:33:10 UTC
 (22:33:10 London) at the last queue check; this is a mutable scheduler estimate.
+
+CPU verification job `4374073` completed successfully (`0:0`, 7m35s): both
+metric environments imported, and the previously failing native mask pass
+prepared 96/96 usable masks with no review required. It used the unchanged
+native fixed96 images and metric definitions; no manual mask overrides were
+needed. GPU resume `4374072` remains PENDING/Priority, estimated 21:33:10 UTC
+(22:33:10 London). Production progress remains 0/20,000 until initial validation
+and scoring finish after allocation. The detached login uploader (PID2091453,
+login-02) published this queued state to the existing Comet experiment.
