@@ -1,0 +1,135 @@
+{
+  "job_id": 4373571,
+  "state": "COMPLETED",
+  "exit_code": "0:0",
+  "elapsed_seconds": 606,
+  "node": "cn-026",
+  "hardware": "2 x Tesla V100-SXM2-32GB",
+  "benchmark_sha256": "ec5e09691d59ccbbfeac6db071df7ad9fac920ab1038b576981ea65b2b3d9f8d",
+  "measurement": "Mixed precision with checkpointing: 100 online updates on a 128-row subset. Other accepted cases: six updates. Means exclude first update. Full-mask serial generation timing uses the same method as fp32_measurements.json.",
+  "scope": "Timing and initial numerical/memory checks, not full-data admission, save/resume, scored validation or a completed 20k run.",
+  "recommended_case_observed_stats": {
+    "steps": 100,
+    "warm_median_seconds": 3.6005406479816884,
+    "warm_max_seconds": 3.8584174951538444,
+    "loss_min": 0.6208027005195618,
+    "loss_max": 1.24863862991333,
+    "gradient_norm_max": 2.8515381813049316,
+    "native_precision_comparison": "Relative RMSE on one native prediction at sigma 0.5, zero target latent; not image quality or native/BA-off parity."
+  },
+  "results": [
+    {
+      "accepted": true,
+      "resolution": 768,
+      "checkpointing": true,
+      "dtype": "float32",
+      "effective_batch": 1,
+      "gpu_roles": [
+        "denoiser_and_vae",
+        "frozen_text_encoder"
+      ],
+      "compute_precision": "amp_fp16_fp32_residuals_and_branch",
+      "measured_updates": 100,
+      "native_amp_vs_fp32_relative_rmse": 0.002489799400791526,
+      "mean_warm_step_seconds": 3.6190783138941938,
+      "warm_stage_seconds": {
+        "encoder_seconds": 0.33554957837402594,
+        "vae_seconds": 0.3510315773086716,
+        "forward_seconds": 0.6232199232785426,
+        "backward_seconds": 2.2370138230775907,
+        "optimizer_seconds": 0.003280804031575569
+      },
+      "training_hours_20k": 20.10599063274552,
+      "native_seconds_per_image": 22.433778507014118,
+      "branch_full_mask_seconds_per_image": 27.309978120028973,
+      "serial_generation_hours_all_panels": 8.609161008728876,
+      "ideal_4way_generation_hours_not_implemented": 2.152290252182219,
+      "peak_reserved_gib": [
+        17.53125,
+        15.53125
+      ],
+      "native_off_exact": true,
+      "finite_gradients": true,
+      "all_64_adapters_updated": true,
+      "limitations": "128-row timing probe; no save/resume or scored panels; excludes startup/checkpoint/scoring; full-mask inference timing is conservative, not a hard bound."
+    },
+    {
+      "accepted": false,
+      "resolution": 768,
+      "checkpointing": false,
+      "compute_precision": "amp_fp16",
+      "reason": "memory",
+      "exit_code": 1
+    },
+    {
+      "accepted": true,
+      "resolution": 384,
+      "checkpointing": false,
+      "dtype": "float32",
+      "effective_batch": 1,
+      "gpu_roles": [
+        "denoiser_and_vae",
+        "frozen_text_encoder"
+      ],
+      "compute_precision": "float32",
+      "measured_updates": 6,
+      "native_amp_vs_fp32_relative_rmse": null,
+      "mean_warm_step_seconds": 4.36251390199177,
+      "warm_stage_seconds": {
+        "encoder_seconds": 0.3332151358015835,
+        "vae_seconds": 0.20531564159318805,
+        "forward_seconds": 1.131534845987335,
+        "backward_seconds": 2.643725956045091,
+        "optimizer_seconds": 0.003319623414427042
+      },
+      "training_hours_20k": 24.23618834439872,
+      "native_seconds_per_image": 44.30290036524336,
+      "branch_full_mask_seconds_per_image": 46.10440024019529,
+      "serial_generation_hours_all_panels": 14.705368080197108,
+      "ideal_4way_generation_hours_not_implemented": 3.676342020049277,
+      "peak_reserved_gib": [
+        25.052734375,
+        15.53125
+      ],
+      "native_off_exact": true,
+      "finite_gradients": true,
+      "all_64_adapters_updated": true,
+      "limitations": "128-row timing probe; no save/resume or scored panels; excludes startup/checkpoint/scoring; full-mask inference timing is conservative, not a hard bound."
+    },
+    {
+      "accepted": true,
+      "resolution": 384,
+      "checkpointing": true,
+      "dtype": "float32",
+      "effective_batch": 1,
+      "gpu_roles": [
+        "denoiser_and_vae",
+        "frozen_text_encoder"
+      ],
+      "compute_precision": "float32",
+      "measured_updates": 6,
+      "native_amp_vs_fp32_relative_rmse": null,
+      "mean_warm_step_seconds": 5.475657676160336,
+      "warm_stage_seconds": {
+        "encoder_seconds": 0.3405880984850228,
+        "vae_seconds": 0.20395925343036653,
+        "forward_seconds": 1.1388704345561564,
+        "backward_seconds": 3.7445696339476853,
+        "optimizer_seconds": 0.003366682259365916
+      },
+      "training_hours_20k": 30.420320423112976,
+      "native_seconds_per_image": 44.41137478065987,
+      "branch_full_mask_seconds_per_image": 46.2109246943146,
+      "serial_generation_hours_all_panels": 14.739507904483212,
+      "ideal_4way_generation_hours_not_implemented": 3.684876976120803,
+      "peak_reserved_gib": [
+        16.646484375,
+        15.53125
+      ],
+      "native_off_exact": true,
+      "finite_gradients": true,
+      "all_64_adapters_updated": true,
+      "limitations": "128-row timing probe; no save/resume or scored panels; excludes startup/checkpoint/scoring; full-mask inference timing is conservative, not a hard bound."
+    }
+  ]
+}

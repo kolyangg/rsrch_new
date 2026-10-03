@@ -533,3 +533,83 @@ fixed96 generation estimates at0/every2000 through20k. They are not complete
 pretrained save/resume admission or scored image validation.
 Slurm job4373489 is submitted with2V100s/8CPUs and a reduced30-minute cap.
 No50-hour production configuration has yet been selected or launched.
+
+
+### 2026-10-03 — Measured FP32 V100 budget and mixed-precision probe
+
+Completed job `4373489` on `cn-026` (2 x V100-SXM2-32GB, activated
+`rsrch_new`, exit 0:0, 10m20s). Each accepted case used six online updates
+on a 128-row timing subset, effective batch 1, GPU0 denoiser/VAE and GPU1
+frozen FP32 text encoder. Mean excludes the first update. No dataset cache
+or native loss change was introduced. Raw measurements and exclusions are
+in `reports/261003_clust_v100_budget/fp32_measurements.json`.
+
+| FP32 case | Seconds/update | 20k training hours | Serial generation hours | Peak training GPU GiB |
+| --- | ---: | ---: | ---: | ---: |
+| 768, checkpointing on | 12.3145 | 68.41 | 28.80 | 17.98 |
+| 768, checkpointing off | rejected at 90% memory ceiling | — | — | — |
+| 512, checkpointing on | 6.9371 | 38.54 | 17.78 | 17.02 |
+| 512, checkpointing off | 5.6179 | 31.21 | 17.78 | 27.17 |
+
+Generation estimates include 96 native images plus fixed96 at 0/every 2000
+through 20000 (1152 images total), 20 steps/CFG4. They use three warmed CFG
+pairs on the largest reference grid and a full target mask; this is a
+conservative workload estimate, not completed image validation or a hard
+upper bound. Startup, full-data reads, admission, checkpointing, decoding,
+and scoring are additional. Therefore even 512 without checkpointing has
+insufficient margin for a 50-hour end-to-end budget. All accepted FP32
+cases passed exact native/off parity, finite gradients and all 64 adapter
+tensor updates. These are timing probes, not full save/resume admission.
+
+Follow-up `4373563` tested FP16 autocast with FP32 residual inputs. Six
+updates had finite gradients at approximately 3.6 seconds/update, but the
+all-64-tensors-changed check failed. The candidate was rejected; the job
+exited 1:0 after 1m18s. The next probe (`4373571`) also keeps the entire
+trainable branch calculation in FP32, retains FP32 master weights and
+optimizer state, disables autocast weight caching, and uses gradient
+scaling. It tests 100 checkpointed 768px updates, a six-update comparison
+without checkpointing, and separately named 384px FP32 fallbacks. It does
+not modify the production backend or start a 20k run.
+
+
+Job `4373571` completed 0:0 in 10m06s. The revised mixed-precision 768px
+checkpointed case passed 100 updates through the full LR warmup: mean
+3.61908 seconds/update, finite gradients, all 64 adapter tensors changed,
+and exact native/BA-off parity under the same precision policy. Peak CUDA
+reserved memory was 17.53125 GiB on the training GPU (55.25%) and 15.53125
+GiB on the encoder GPU (48.94%). One native prediction differed from FP32
+by relative RMSE 0.002490; that is a numerical comparison, not image quality.
+
+The measured projection is 20.106 hours for 20k updates plus 8.609 hours
+for serial native/fixed96 image generation. Recommend a provisional
+40–45-hour total budget, allowing about 11–16 hours for full-data reads,
+admission, loading, checkpoints, decoding/scoring and variation. Those
+additional costs have not been measured end-to-end; queue wait is excluded.
+The same mixed-precision case without checkpointing exceeded the 90% memory
+ceiling and is rejected. FP32 384px without checkpointing measured 4.36251
+seconds/update (24.24 training hours plus 14.71 generation hours), but changes
+resolution and leaves substantially less overhead margin. It is not the
+preferred proposal. FP32 384px with checkpointing needs 30.42 + 14.74 hours
+before overheads. Complete results: `reports/261003_clust_v100_budget/mixed_measurements.json`.
+
+The concrete proposal is `reports/261003_clust_v100_budget/recommended_setup.json`:
+FLUX4B/768/reference512/QKVO rank128, one training worker, microbatch 1,
+accumulation 1, LR 5e-5, warmup 100, checkpointing on, fresh online
+conditioning, dedicated FP32 GPU encoder, and the original serial fixed96
+schedule at 0/every 2000. FP16 autocast is restricted to the frozen backbone;
+residuals, modulation inputs, trainable branch, master weights, optimizer,
+encoder and VAE stay FP32. Gradient scaling starts at 32. This processes
+20k examples rather than the original batch8 run's 160k. Four V100s could
+host two such replicas for effective batch 2, but that is an unimplemented,
+unbenchmarked extension and is not assumed to halve update time.
+
+Only benchmark files implement this precision policy so far. Before a long
+run, integrate it into the shared training/validation path, support explicit
+GPU1 encoder placement, pass full-data/largest-layout and fresh-process
+save/resume admission (including scaler and both CUDA RNG states), and
+regenerate/score the matching native masks and step-0 panel. Production has
+not started. Benchmark source hash was
+`ec5e09691d59ccbbfeac6db071df7ad9fac920ab1038b576981ea65b2b3d9f8d`;
+a copy is retained under remote `logs/clust/benchmark-4373571.py` and local
+`scratch/clust-v100/budgets/4373571`. Later script edits only clarify its
+docstring. All GPU work ran inside the activated cluster `rsrch_new` environment.

@@ -1,0 +1,126 @@
+{
+  "job_id": 4373489,
+  "state": "COMPLETED",
+  "exit_code": "0:0",
+  "elapsed_seconds": 620,
+  "node": "cn-026",
+  "hardware": "2 x Tesla V100-SXM2-32GB",
+  "benchmark_commit": "eab6682",
+  "benchmark_sha256": "1b2e9a58c5c2f9a303c7d5663d9bbd118cede355f864de6f0cb3158f8ae881f8",
+  "measurement": "Six online updates per accepted case, mean excludes first; 128-row timing subset, not the full dataset. Validation projection uses the largest reference grid and a full target mask, three warmed CFG-pair timings times 20 denoising steps.",
+  "generation_budget": "96 native images plus fixed96 at steps 0, 2000, ..., 20000, serially.",
+  "excluded_costs": [
+    "queue wait",
+    "model loading",
+    "full dataset verification",
+    "admission including save/resume",
+    "checkpoint writes",
+    "decoding",
+    "ID/CLIP and face-quality scoring"
+  ],
+  "results": [
+    {
+      "accepted": true,
+      "resolution": 768,
+      "checkpointing": true,
+      "dtype": "float32",
+      "effective_batch": 1,
+      "gpu_roles": [
+        "denoiser_and_vae",
+        "frozen_text_encoder"
+      ],
+      "mean_warm_step_seconds": 12.314481987198814,
+      "warm_stage_seconds": {
+        "encoder_seconds": 0.3410784993786365,
+        "vae_seconds": 0.34683158504776657,
+        "forward_seconds": 2.185520120104775,
+        "backward_seconds": 9.369400759227574,
+        "optimizer_seconds": 0.0033026690129190684
+      },
+      "training_hours_20k": 68.41378881777119,
+      "native_seconds_per_image": 85.60678410654268,
+      "branch_full_mask_seconds_per_image": 90.41295403304198,
+      "serial_generation_hours_all_panels": 28.80398075920012,
+      "ideal_4way_generation_hours_not_implemented": 7.20099518980003,
+      "peak_reserved_gib": [
+        17.98046875,
+        15.53125
+      ],
+      "native_off_exact": true,
+      "finite_gradients": true,
+      "all_64_adapters_updated": true,
+      "limitations": "128-row six-update timing probe; no save/resume or scored panels; excludes startup/checkpoint/scoring; full-mask inference timing is conservative, not a hard bound."
+    },
+    {
+      "accepted": false,
+      "resolution": 768,
+      "checkpointing": false,
+      "reason": "memory",
+      "exit_code": 1
+    },
+    {
+      "accepted": true,
+      "resolution": 512,
+      "checkpointing": true,
+      "dtype": "float32",
+      "effective_batch": 1,
+      "gpu_roles": [
+        "denoiser_and_vae",
+        "frozen_text_encoder"
+      ],
+      "mean_warm_step_seconds": 6.937084868969396,
+      "warm_stage_seconds": {
+        "encoder_seconds": 0.33354086400941013,
+        "vae_seconds": 0.24088873877190053,
+        "forward_seconds": 1.369094624230638,
+        "backward_seconds": 4.938664134219289,
+        "optimizer_seconds": 0.0033340994268655777
+      },
+      "training_hours_20k": 38.53936038316331,
+      "native_seconds_per_image": 53.301389260838434,
+      "branch_full_mask_seconds_per_image": 55.75931800995022,
+      "serial_generation_hours_all_panels": 17.77743699654109,
+      "ideal_4way_generation_hours_not_implemented": 4.444359249135273,
+      "peak_reserved_gib": [
+        17.01953125,
+        15.53125
+      ],
+      "native_off_exact": true,
+      "finite_gradients": true,
+      "all_64_adapters_updated": true,
+      "limitations": "128-row six-update timing probe; no save/resume or scored panels; excludes startup/checkpoint/scoring; full-mask inference timing is conservative, not a hard bound."
+    },
+    {
+      "accepted": true,
+      "resolution": 512,
+      "checkpointing": false,
+      "dtype": "float32",
+      "effective_batch": 1,
+      "gpu_roles": [
+        "denoiser_and_vae",
+        "frozen_text_encoder"
+      ],
+      "mean_warm_step_seconds": 5.6178630327340215,
+      "warm_stage_seconds": {
+        "encoder_seconds": 0.3335127033293247,
+        "vae_seconds": 0.23815526575781404,
+        "forward_seconds": 1.3626677739433943,
+        "backward_seconds": 3.6303498783614487,
+        "optimizer_seconds": 0.0033256477676331998
+      },
+      "training_hours_20k": 31.210350181855674,
+      "native_seconds_per_image": 53.303650853534535,
+      "branch_full_mask_seconds_per_image": 55.77184988651425,
+      "serial_generation_hours_all_panels": 17.7811733228051,
+      "ideal_4way_generation_hours_not_implemented": 4.445293330701275,
+      "peak_reserved_gib": [
+        27.16796875,
+        15.53125
+      ],
+      "native_off_exact": true,
+      "finite_gradients": true,
+      "all_64_adapters_updated": true,
+      "limitations": "128-row six-update timing probe; no save/resume or scored panels; excludes startup/checkpoint/scoring; full-mask inference timing is conservative, not a hard bound."
+    }
+  ]
+}

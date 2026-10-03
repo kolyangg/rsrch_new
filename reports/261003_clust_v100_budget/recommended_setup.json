@@ -1,0 +1,103 @@
+{
+  "status": "Timing-qualified proposal; production precision/device integration and full admission still required",
+  "name": "flux4b_clust_2v100_amp_fp16_fp32branch_qkvo_r128_20k_proposed",
+  "evidence_job": 4373571,
+  "resources": {
+    "gpu_count": 2,
+    "gpu": "Tesla V100-SXM2-32GB",
+    "nodes": 1,
+    "cpu_threads": 8,
+    "partition": "rocky",
+    "account": "proj_1892",
+    "environment": "/home/nasilaev/.conda/envs/rsrch_new",
+    "gpu0": "denoiser and VAE",
+    "gpu1": "frozen text encoder"
+  },
+  "model": {
+    "backbone": "FLUX.2-klein Base 4B",
+    "branch": "masked_face_qkvo",
+    "rank": 128,
+    "alpha": 128,
+    "target_size": [
+      768,
+      768
+    ],
+    "reference_size": 512
+  },
+  "precision": {
+    "frozen_backbone_linear_compute": "FP16 autocast",
+    "master_weights": "FP32",
+    "entire_trainable_branch": "FP32 outside autocast",
+    "text_encoder_and_vae": "FP32",
+    "optimizer_state": "FP32",
+    "gradient_scaling": true,
+    "initial_gradient_scale": 32,
+    "autocast_weight_cache": false,
+    "block_residuals_and_modulation_inputs": "FP32"
+  },
+  "training": {
+    "optimizer_updates": 20000,
+    "training_workers": 1,
+    "microbatch": 1,
+    "gradient_accumulation": 1,
+    "effective_batch": 1,
+    "examples_seen": 20000,
+    "learning_rate": 5e-05,
+    "warmup_updates": 100,
+    "gradient_checkpointing": true,
+    "gradient_clip": 1.0,
+    "checkpoint_every": 500,
+    "max_reserved_fraction": 0.9,
+    "fresh_noise_and_timesteps": true,
+    "conditioning": "online",
+    "dataset": "Full identity-disjoint adjusted Large manifest; benchmark used only 128 rows"
+  },
+  "validation": {
+    "panel": "original fixed96; unchanged order/prompts/seeds/reference images",
+    "updates": [
+      0,
+      2000,
+      4000,
+      6000,
+      8000,
+      10000,
+      12000,
+      14000,
+      16000,
+      18000,
+      20000
+    ],
+    "denoising_steps": 20,
+    "guidance": 4.0,
+    "serial": true,
+    "backend": "same patched backend and mixed-precision path as training",
+    "native_masks": "regenerate from native mixed-precision baseline; never reuse masks from a different precision baseline"
+  },
+  "budget": {
+    "measured_updates": 100,
+    "mean_warm_update_seconds": 3.6190783138941938,
+    "projected_20k_training_hours": 20.10599063274552,
+    "projected_serial_native_and_validation_generation_hours": 8.609161008728876,
+    "provisional_total_wall_hours": [
+      40,
+      45
+    ],
+    "included_allowance": "About 11-16 hours for full-data reads, admission, model loads, checkpoints, decoding/scoring and variation; not measured end-to-end",
+    "queue_wait_included": false,
+    "guaranteed_deadline": false
+  },
+  "remaining_before_long_run": [
+    "Integrate the benchmark precision policy and explicit GPU1 encoder placement into the shared production training/validation backend",
+    "Pass full-data and largest-layout admission, including exact fresh-process save/resume with gradient-scaler state and both CUDA RNG states",
+    "Generate and inspect the matching native baseline/masks; run step-0 fixed96 scoring",
+    "Register a fresh immutable Comet experiment at startup and verify live progress"
+  ],
+  "four_v100_option": {
+    "proposal": "Two data-parallel replicas, each with its own training GPU and frozen encoder GPU",
+    "effective_batch": 2,
+    "examples_seen_at_20k": 40000,
+    "measured": false,
+    "expected_effect": "More examples per optimizer update; no assumed reduction in per-update wall time",
+    "requires": "Production four-device placement and two-rank admission/benchmark"
+  }
+}

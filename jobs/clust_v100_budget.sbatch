@@ -20,4 +20,6 @@ export OMP_NUM_THREADS=8 MKL_NUM_THREADS=8 CUBLAS_WORKSPACE_CONFIG=:4096:8
 export PYTHONUNBUFFERED=1 TOKENIZERS_PARALLELISM=false
 export TMPDIR="$BA_ROOT/scratch/clust-v100/tmp-$SLURM_JOB_ID"
 mkdir -p "$TMPDIR"
-exec python -m scripts.benchmark_clust_budget --output "runs/clust_v100_budget_$SLURM_JOB_ID"
+cp scripts/benchmark_clust_budget.py "logs/clust/benchmark-$SLURM_JOB_ID.py"
+sha256sum scripts/benchmark_clust_budget.py > "logs/clust/benchmark-$SLURM_JOB_ID.sha256"
+exec python -m scripts.benchmark_clust_budget --output "runs/clust_v100_budget_$SLURM_JOB_ID" "$@"
