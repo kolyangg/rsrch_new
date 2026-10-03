@@ -14,7 +14,7 @@ That result does not establish multi-ID generalization or V100 performance.
 - Controller: `scripts/run_clust_v100.sh` → `scripts/run_multi_id_face_ba.py`.
 - Training: two DDP replicas, microbatch1 per GPU, accumulation4, **global batch8**.
 - LR5e-5, warmup100, 20,000 updates, checkpoint every500, fixed96 at0 and every2000 updates.
-- FP16 frozen denoiser, dynamic loss scaling, FP32 adapters/optimizer/loss,
+- FP32 frozen denoiser and adapters/optimizer/loss (FP16 native overflowed),
   FP32 frozen VAE on GPU and FP32 text encoder on CPU for each worker.
 - One node, two V10032GB, account `proj_1892`, partition `rocky`,16 CPUs,7 days.
   Slurm advertises `RealMemory=1`; omit `--mem` and `--mem-per-cpu`.
@@ -34,7 +34,7 @@ A fresh-process exact replay check must pass before long training.
 
 Training workers exit before each serial validation stage. Generation, native
 controls and validation use the same patched backend and explicit precision.
-FP16 native images/masks are regenerated under a distinct precision signature;
+FP32 native images/masks are regenerated under a distinct precision signature;
 old BF16 masks/caches cannot be silently reused. The original96 order, prompts,
 seeds, reference images and metric definitions remain fixed. Missing/ambiguous
 native face boxes stop initialization for review. No target-photo masks enter
@@ -120,10 +120,9 @@ memory and fresh-process two-rank replay admission. It then generates/scores the
 native panel, initializes the immutable run, validates step0 and trains. Failures
 retain logs and do not silently change dtype, backbone or resolution.
 
-CPU regression checks establish batching/checkpoint mechanics only. No V100 model
-fit, numerical stability, image quality or throughput has yet been measured, and
-no GPU job has been submitted. Cluster environment/weights and Comet availability
-must still be checked before the approved run.
+CPU regression checks establish batching/checkpoint mechanics only. The measured
+single-V100 result below establishes two-update FP32 fit/parity for the named
+smoke. Full-data two-rank admission and validation remain required in the long job.
 
 ## Preparation checks (3 October 2026)
 
@@ -178,3 +177,39 @@ metric weights against SHA256 values from the local experiment. Compute jobs
 use HF_HUB_OFFLINE=1 and cached files. No prepared-package or file check is a
 pretrained GPU result. The held, never-started job4372978 was cancelled and
 replaced by4373033 after the site's release command denied the hold release.
+
+## Measured V100 precision and training — 3 October 2026
+
+Job4373054 reached pretrained execution but failed native/BA-off equality before
+any updates. Diagnostic4373072 identified native FP16 text-stream overflow at
+double_blocks.4, then entirely nonfinite predictions. This was present before
+adapter installation. FP32 on the same pair produced finite predictions and
+exact repeat/native-off equality; its forward peak was18.0391GiB.
+
+The same job then passed a separately named FP32 two-update smoke on cn-001:
+all64 adapter tensors changed, gradients were finite, all frozen weights were
+bitwise unchanged, native/off and zero-mask parity were exact, and conditioning
+matched the independent cache without changing training RNG. Peak reserved was
+18.2421875GiB (57.4873%). Slurm completed0:0 in6m12s for both precision diagnoses
+and the smoke together; this is not a per-step training throughput measurement.
+No two-rank resume or full96 quality result is inferred from this check.
+
+The active20k configuration is now named
+`flux4b_clust_2v100_fp32_qkvo_r128_20k`; model/branch/768-ref512/globalbatch8 are
+unchanged. Its run directory uses fp32 in the name. The failed FP16 configuration
+remains reproducible from earlier commits and the failed runs' resolved configs.
+
+Compute-node Comet live uploads proved unreliable. Cluster launches now write
+offline archives using one persisted key and get_or_create semantics. Run the
+lightweight uploader from the activated login environment for the submitted job:
+
+```bash
+python scripts/upload_clust_comet.py \
+  --run runs/flux4b_clust_2v100_fp32_qkvo_r128_20k_20261003 --job-id JOB_ID
+```
+
+It uploads closed archives, records successes, and stops when that job leaves
+the queue. It does not submit/restart jobs or change the experiment key. A local
+two-session SDK check verified immutable-key/archive resume semantics. The old
+failed online smoke's forced archive recovery produced a separate Comet key;
+retain its upload receipt instead of treating that copy as the original key.

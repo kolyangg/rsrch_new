@@ -23,4 +23,4 @@
 # Cancel: scancel JOBID. Resume uses the last complete 500-update checkpoint.
 set -euo pipefail
 exec bash scripts/run_clust_v100.sh \
-  --run runs/flux4b_clust_2v100_fp16_qkvo_r128_20k_20261003 "$@"
+  --run runs/flux4b_clust_2v100_fp32_qkvo_r128_20k_20261003 "$@"

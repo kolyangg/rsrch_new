@@ -383,3 +383,35 @@ was denied. Cancelled that never-started job and submitted replacement4373033
 with the same two-V10020k configuration. Its prerequisite remains unmet until
 the corrected GPU probe passes. No optimizer update or GPU memory measurement
 is claimed from these failed preparation jobs.
+
+### 3 October — Measured FP16 overflow; FP32 V100 training passed
+
+Prepared one-V100 job4373054 passed software invariants and independent
+conditioning preparation but failed native/off equality before updates.
+Diagnostic4373072 on cn-001 located the first FP16 nonfinite values in the
+native text stream at double_blocks.4, before branch installation; all294,912
+output values became nonfinite. Its repeat/off comparison therefore failed.
+Same-pair FP32 predictions were finite and bitwise equal across repetition and
+BA-off, with forward peak18.0390625GiB. No branch architecture was changed.
+
+Job4373072 then completed the named FP32 two-update probe: finite gradients,
+all64 trainable tensors updated, all frozen parameters bitwise unchanged,
+exact native/off and zero-mask outputs, exact independent conditioning cache
+comparison and preserved RNG. Peak CUDA reserved18.2421875GiB, fraction
+0.5748731501463726; trained prediction mean-absolute change0.010671225376427174.
+Slurm COMPLETED0:0 in6m12s for both diagnostics plus the probe. This is not
+full-data throughput, two-rank save/resume, or fixed96 quality validation.
+Reports: runs/clust_v100_dtype_4373072/{float16,float32}.json and
+runs/clust_v100_two_update_smoke_4373072/native_checks.json. Successful smoke
+Comet key9394bd6cccc043908396037da41f3fa7; direct live uploads were unreliable,
+so the result was republished from login using that same existing key.
+
+The active two-V10020k config now uses FP32 and a distinct fp32 run name;
+Base4B/r128,768-ref512,globalbatch8,47,341 pairs,fixed96 and native loss remain.
+Its own full-data two-rank admission remains mandatory. Cluster logging now
+uses offline get_or_create archives with one persisted key and a login-side
+uploader. A two-session actual-SDK check passed key/metadata continuity, and
+the older pinned metrics SDK passed archive compatibility. The earlier failed
+online smoke7684368f8fbb4dd784fb2ba13afe1f31 was recovered by force-upload as
+61d7fe6c35264432b46b9e52a0bac3df; that copy is explicitly distinct, not a changed
+canonical run key. Future uploads deliberately never use force-upload.
