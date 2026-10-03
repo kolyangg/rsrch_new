@@ -17,7 +17,12 @@ def install(model, config, mode):
     branch = config["branch"]
     if mode in {"branch_only", "lora_plus_branch"}:
         options = dict(rank=branch["rank"], alpha=branch["alpha"], gamma=branch["gamma"], query_chunk=branch["query_chunk"])
-        if config["model"]["backend"] == "flux":
+        if branch.get('kind') == 'masked_face_qkvo':
+            if mode != 'branch_only':
+                raise ValueError('Masked one-ID Q/K/V/O trains only branch-local adapters')
+            from ba_dit.nn.masked_face_attention import install as install_face_attention
+            install_face_attention(model, config)
+        elif config["model"]["backend"] == "flux":
             from ba_dit.backends.flux2_native import install_reference_branch
             install_reference_branch(model, config["model"]["arch"], **options)
         else:

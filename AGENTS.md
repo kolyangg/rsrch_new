@@ -11,7 +11,8 @@ For Vast.ai GPU offer search, provisioning, SSH, stopping, and termination, foll
 - Preserve native backbone attention and conditioning exactly in the BA-off mode. Make target/reference token indices, Q/K/V projection points, masks, RoPE, branch gates, and trainable parameters explicit.
 - Keep training and validation on the same patched backend. Do not claim branch validation using an unpatched stock pipeline.
 - Keep the original fixed 96-item validation order, prompts, seeds, reference images, and metric definitions. A changed panel or resolution is a separate named experiment.
-- Never feed a generated-image face box or target face mask to inference. It is evaluation or training supervision only.
+- Default reference-only experiments never feed generated-image boxes or target-photo masks to inference. AICODE-NOTE: On 2026-10-01 the user explicitly requested a CL14-like spatial split using masks from native backbone generations. The separately named `masked_full_scene_face_flow_v1` experiment may use those frozen generated-image masks for inference; record image/mask provenance and preserve native backgrounds. Target-photo masks remain training supervision only.
+- AICODE-NOTE: On 2026-10-02 the user approved `flux4b_oneid_online_face_qkvo_r128_768`: full-denoiser BA-only training on local16GB with fresh noise/timesteps, the same generated-mask spatial contract, and a named fixed24 one-ID panel at 0/500/1000/2000. This is a separate experiment from the cached face heads.
 - Use separate Qwen and FLUX environments and pinned upstream checkouts. Record exact commits, weight revisions, resolved configs, and deviations.
 - Do not copy credentials into tracked files. `.env`, model weights, caches, generated images, and runs stay untracked.
 - Do not commit or push unless the user explicitly asks.

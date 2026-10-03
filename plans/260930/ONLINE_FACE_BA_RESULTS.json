@@ -1,0 +1,675 @@
+{
+  "run_name": "flux4b_oneid_online_face_qkvo_r128_768_20261002",
+  "comet_key": "c955799c57d94fd7a234dec331323e06",
+  "comet_url": "https://www.comet.com/nikolay-2104/rsrch-new/c955799c57d94fd7a234dec331323e06",
+  "completed_at_utc": "2026-10-02T23:40:58.894505+00:00",
+  "scope": "Same-identity diagnostic: 19 cross-view training pairs; 12 prompts x 2 seeds; no unseen-identity claim.",
+  "configuration": {
+    "schema_version": 2,
+    "name": "flux4b_oneid_online_face_qkvo_r128_768",
+    "model": {
+      "backend": "flux",
+      "arch": "flux2_klein_4b",
+      "weights": "${BA_ROOT}/weights/flux4b",
+      "encoder": "${BA_ROOT}/weights/flux4b_text",
+      "vae": "${BA_ROOT}/weights/flux_vae/ae.safetensors",
+      "revision_lock": "${BA_ROOT}/locks/weights-small.json"
+    },
+    "data": {
+      "train_manifest": "${BA_ROOT}/data/datasets/one_id/train.jsonl",
+      "train_limit": 19,
+      "validation_manifest": "${BA_ROOT}/data/datasets/one_id/validation_24_seeds01.jsonl",
+      "target_size": [
+        768,
+        768
+      ],
+      "reference_size": 512,
+      "cache_dir": "${BA_ROOT}/cache/conditioning"
+    },
+    "branch": {
+      "kind": "masked_face_qkvo",
+      "rank": 128,
+      "alpha": 128,
+      "gamma": 1.0,
+      "query_chunk": 128,
+      "max_reference_keys": 512,
+      "mask_feather_pixels": 16
+    },
+    "lora": {
+      "rank": 8,
+      "alpha": 8
+    },
+    "training": {
+      "steps": 2000,
+      "grad_accum": 4,
+      "lr": 5e-05,
+      "warmup": 100,
+      "checkpoint_every": 500,
+      "validation_every": 500,
+      "seed": 142,
+      "deterministic": true,
+      "gradient_checkpointing": true,
+      "weight_decay": 0.0,
+      "gradient_clip": 1.0,
+      "max_reserved_fraction": 0.9
+    },
+    "validation": {
+      "steps": 20,
+      "guidance": 4.0,
+      "limit": 24,
+      "batch_size": 1
+    },
+    "hardware": {
+      "min_vram_gb": 15
+    },
+    "logging": {
+      "comet_project": "rsrch_new",
+      "enabled": true
+    }
+  },
+  "model_identity": {
+    "backend": "flux",
+    "arch": "flux2_klein_4b",
+    "revisions": {
+      "flux4b": "a3b4f4849157f664bdbc776fd7453c2783562f4d",
+      "flux4b_text": "1cfa9a7208912126459214e8b04321603b3df60c",
+      "flux_vae": "3f679cf232e6d91d28396522d9502c31e8f7ccbe"
+    },
+    "source_commit": "ecee894ed2b1f3716d9d7326693061ec1a3105bb",
+    "source_patch_sha256": "2e8dfaba605694f1c76b87eb64e4d539da8a24992915a9df2ce95e3ef3ddb021",
+    "adapter_code_sha256": "a03b07d29a48df4addf441fad7d71ce8f693866b6f39657953e1a712cb73f060",
+    "branch": {
+      "kind": "masked_face_qkvo",
+      "rank": 128,
+      "alpha": 128,
+      "gamma": 1.0,
+      "query_chunk": 128,
+      "max_reference_keys": 512,
+      "mask_feather_pixels": 16
+    },
+    "lora": {
+      "rank": 8,
+      "alpha": 8
+    }
+  },
+  "source_sha256": {
+    "scripts/online_face_ba.py": "cc9fd02d45472a824db9b98674012091e714394dcb7519c2cdea4035cc65db0c",
+    "scripts/run_online_face_ba.py": "4efdc768cbf1269211f77d6a13ee1b951d4925b788270b4331a90349467263d2",
+    "ba_dit/nn/masked_face_attention.py": "f4ef6a8cd37cbf130333605c00d6b72cf3372b2d64f0dd4112251df351fba54e",
+    "ba_dit/nn/masked_face_flow.py": "c57b4ced830fc306bfc073299be9a9937eea06e579e8eb9c291a7a841bdf0596",
+    "ba_dit/backends/flux_runtime.py": "7a11043e59cde93639168a41387dfd2f376adfde8e98b2000ad7753fde1b5a14",
+    "ba_dit/backends/attention.py": "8a60ef1e945acdc8558597cdde542d29a0f7f4b5cf7cccd255eba429e39d4e0b",
+    "ba_dit/backends/flux2_native.py": "f57551036340f86bd5199b277e45d303c803cf06f7eac64d2023a3adc8aab7fa",
+    "ba_dit/nn/reference_read_delta.py": "d75c338d5b25a3cf2d6d7274ffe869684b585701803f3c2d2a74069b367ded23",
+    "ba_dit/adapters.py": "4d5a81b82efc67b91116f51e0b8fa7b9a5a7da1cede588c8c41114aff2f78da0",
+    "ba_dit/training.py": "80afb19ba64c769d6cda8354d16aa04613aa22f2cc5188ce269c50f49d58fce0",
+    "ba_dit/checkpoint.py": "8d8bd5ea6ca45001fe3fce9e50558b8793d1c200890ae988181a274ae7a8c86d",
+    "ba_dit/config.py": "e7e03eb4ca9d06dee6e44a9305847c15065335f2b9552be31f7b2278ff445d4b",
+    "ba_dit/runtime.py": "b0da405d950dcfdf629f6c9088dd172d8a2596187bd3df0657ffcd9e8067d4e9",
+    "ba_dit/logging.py": "b17c32c7230baab07c7f4325e2511256138e6da3e88cf8d2888a15cb1ff40a4c",
+    "ba_dit/progress.py": "f6ead107d337a2d3a60bad1c9fcce04a7fda580215b7f4b5940697d1e97e7b58",
+    "ba_dit/data/cache.py": "0871fe0c22780f91cccd20cfed96ab750a96d909a3c2950f62e2d76b81272b26",
+    "ba_dit/data/geometry.py": "0a24fea226e5a1a8a4344b2e8f534a4e2fbc6e425df835124693b0e83da799bd",
+    "ba_dit/data/manifest.py": "78c41864bd2a53e3258322ecb1ca55c433f2b5d78b813a8eca1ba3b36da441ae",
+    "ba_dit/metrics.py": "a0fa9c6c1613176a962ac5afcf9073d94670ea1fd4e7a6777ce8338dab8528f9",
+    "patches/flux2_reference_branch_and_offload.patch": "2e8dfaba605694f1c76b87eb64e4d539da8a24992915a9df2ce95e3ef3ddb021"
+  },
+  "train_manifest_sha256": "fca34ce7041276fa7c45edc6102f7f2560019884c8cb940f0eb6b75f4e0a3262",
+  "validation_manifest_sha256": "508e72d74861f2ae26414352c1291eef9d46fa9d18b9c7c088481a8f384bf98c",
+  "routing_masks_sha256": "92a2e571ffb10da0f91cb19ae4a8c24d74f8e4354a2441ca2fb7f50ccbc26628",
+  "metrics": {
+    "500": {
+      "id_sim_legacy_best": 0.36576633527874947,
+      "id_sim_face_count": 4.125,
+      "id_sim_no_face": 0.0,
+      "id_sim": 0.36576633527874947,
+      "id_sim_mask_iou": 0.88026483804396,
+      "id_sim_unowned": 0.0,
+      "output_mask_missing": 0.0,
+      "id_sim_ambiguous": 0.0,
+      "text_sim": 27.249032497406006
+    },
+    "2000": {
+      "id_sim_legacy_best": 0.419023413831989,
+      "id_sim_face_count": 4.125,
+      "id_sim_no_face": 0.0,
+      "id_sim": 0.419023413831989,
+      "id_sim_mask_iou": 0.8449044446387862,
+      "id_sim_unowned": 0.0,
+      "output_mask_missing": 0.0,
+      "id_sim_ambiguous": 0.0,
+      "text_sim": 27.321863253911335
+    },
+    "1000": {
+      "id_sim_legacy_best": 0.43025404773652554,
+      "id_sim_face_count": 4.125,
+      "id_sim_no_face": 0.0,
+      "id_sim": 0.43025404773652554,
+      "id_sim_mask_iou": 0.8946862377163161,
+      "id_sim_unowned": 0.0,
+      "output_mask_missing": 0.0,
+      "id_sim_ambiguous": 0.0,
+      "text_sim": 26.967033227284748
+    },
+    "0": {
+      "id_sim_legacy_best": 0.1460638454494377,
+      "id_sim_face_count": 4.125,
+      "id_sim_no_face": 0.0,
+      "id_sim": 0.14602376443023482,
+      "id_sim_mask_iou": 0.7418571939003576,
+      "id_sim_unowned": 0.0,
+      "output_mask_missing": 0.0,
+      "id_sim_ambiguous": 0.0,
+      "text_sim": 27.702707211176556
+    }
+  },
+  "native_panel_id_sim": 0.3313986754,
+  "best_scored_step": 1000,
+  "checkpoint_adapters_sha256": {
+    "0": "df2869336585fccec9a23501b16647f5c586375e338f7d6defd45d4e4fe7a611",
+    "500": "d570773197eef4a6598ab7503b8b60f8e0b5a00c1dd68491715770d2032d33d6",
+    "1000": "379408b6122082919783ccaecaf3d8d80d3ecac479d2216ce1e27d1519ec8890",
+    "1500": "a936686e550476cf24dba79a9aae8cc5b6d32eeeed3d56be1dea84a45d21ca79",
+    "2000": "a1ae72e041fe8969f8b333bffb6d60e998145c028a0fc4530ad211318f459b6c"
+  },
+  "training_audit": {
+    "updates": 2000,
+    "unique_steps": 2000,
+    "finite_loss_and_gradients": true,
+    "peak_reserved_gib": 9.859375
+  },
+  "admission_native_checks": {
+    "sample": "oneid_train_46",
+    "trainable_parameters": 25165824,
+    "native_off_exact": true,
+    "zero_mask_exact": true,
+    "all_frozen_parameters_exact": true,
+    "frozen_sha256": "8928292c32bd1e868e62c694a04b666d7d46cb120a42ed0cbfbc9b9ea9541b18",
+    "trainable_tensors": 64,
+    "first_two_gradients": [
+      {
+        "double_blocks.1.reference_branch.q_delta.a": 0.0,
+        "double_blocks.1.reference_branch.q_delta.b": 0.014885058626532555,
+        "double_blocks.1.reference_branch.k_delta.a": 0.0,
+        "double_blocks.1.reference_branch.k_delta.b": 0.011071139015257359,
+        "double_blocks.1.reference_branch.v_delta.a": 0.0,
+        "double_blocks.1.reference_branch.v_delta.b": 0.07739953696727753,
+        "double_blocks.1.reference_branch.o_delta.a": 0.0,
+        "double_blocks.1.reference_branch.o_delta.b": 0.06590191274881363,
+        "double_blocks.2.reference_branch.q_delta.a": 0.0,
+        "double_blocks.2.reference_branch.q_delta.b": 0.02366841584444046,
+        "double_blocks.2.reference_branch.k_delta.a": 0.0,
+        "double_blocks.2.reference_branch.k_delta.b": 0.020690543577075005,
+        "double_blocks.2.reference_branch.v_delta.a": 0.0,
+        "double_blocks.2.reference_branch.v_delta.b": 0.0777285024523735,
+        "double_blocks.2.reference_branch.o_delta.a": 0.0,
+        "double_blocks.2.reference_branch.o_delta.b": 0.07338161021471024,
+        "double_blocks.3.reference_branch.q_delta.a": 0.0,
+        "double_blocks.3.reference_branch.q_delta.b": 0.0333155132830143,
+        "double_blocks.3.reference_branch.k_delta.a": 0.0,
+        "double_blocks.3.reference_branch.k_delta.b": 0.022298088297247887,
+        "double_blocks.3.reference_branch.v_delta.a": 0.0,
+        "double_blocks.3.reference_branch.v_delta.b": 0.08564744889736176,
+        "double_blocks.3.reference_branch.o_delta.a": 0.0,
+        "double_blocks.3.reference_branch.o_delta.b": 0.06384626775979996,
+        "double_blocks.4.reference_branch.q_delta.a": 0.0,
+        "double_blocks.4.reference_branch.q_delta.b": 0.03646983206272125,
+        "double_blocks.4.reference_branch.k_delta.a": 0.0,
+        "double_blocks.4.reference_branch.k_delta.b": 0.038198139518499374,
+        "double_blocks.4.reference_branch.v_delta.a": 0.0,
+        "double_blocks.4.reference_branch.v_delta.b": 0.08173331618309021,
+        "double_blocks.4.reference_branch.o_delta.a": 0.0,
+        "double_blocks.4.reference_branch.o_delta.b": 0.07379046827554703,
+        "single_blocks.3.reference_branch.q_delta.a": 0.0,
+        "single_blocks.3.reference_branch.q_delta.b": 0.011727510951459408,
+        "single_blocks.3.reference_branch.k_delta.a": 0.0,
+        "single_blocks.3.reference_branch.k_delta.b": 0.019903451204299927,
+        "single_blocks.3.reference_branch.v_delta.a": 0.0,
+        "single_blocks.3.reference_branch.v_delta.b": 0.0534994937479496,
+        "single_blocks.3.reference_branch.o_delta.a": 0.0,
+        "single_blocks.3.reference_branch.o_delta.b": 0.046471282839775085,
+        "single_blocks.8.reference_branch.q_delta.a": 0.0,
+        "single_blocks.8.reference_branch.q_delta.b": 0.0544586218893528,
+        "single_blocks.8.reference_branch.k_delta.a": 0.0,
+        "single_blocks.8.reference_branch.k_delta.b": 0.039167825132608414,
+        "single_blocks.8.reference_branch.v_delta.a": 0.0,
+        "single_blocks.8.reference_branch.v_delta.b": 0.06603847444057465,
+        "single_blocks.8.reference_branch.o_delta.a": 0.0,
+        "single_blocks.8.reference_branch.o_delta.b": 0.047400183975696564,
+        "single_blocks.13.reference_branch.q_delta.a": 0.0,
+        "single_blocks.13.reference_branch.q_delta.b": 0.021839270368218422,
+        "single_blocks.13.reference_branch.k_delta.a": 0.0,
+        "single_blocks.13.reference_branch.k_delta.b": 0.025497863069176674,
+        "single_blocks.13.reference_branch.v_delta.a": 0.0,
+        "single_blocks.13.reference_branch.v_delta.b": 0.10419727861881256,
+        "single_blocks.13.reference_branch.o_delta.a": 0.0,
+        "single_blocks.13.reference_branch.o_delta.b": 0.08311522752046585,
+        "single_blocks.18.reference_branch.q_delta.a": 0.0,
+        "single_blocks.18.reference_branch.q_delta.b": 0.04866621643304825,
+        "single_blocks.18.reference_branch.k_delta.a": 0.0,
+        "single_blocks.18.reference_branch.k_delta.b": 0.05170220881700516,
+        "single_blocks.18.reference_branch.v_delta.a": 0.0,
+        "single_blocks.18.reference_branch.v_delta.b": 0.08813674002885818,
+        "single_blocks.18.reference_branch.o_delta.a": 0.0,
+        "single_blocks.18.reference_branch.o_delta.b": 0.06133274734020233
+      },
+      {
+        "double_blocks.1.reference_branch.q_delta.a": 0.00010194988135481253,
+        "double_blocks.1.reference_branch.q_delta.b": 0.003485717112198472,
+        "double_blocks.1.reference_branch.k_delta.a": 8.405468543060124e-05,
+        "double_blocks.1.reference_branch.k_delta.b": 0.003172079334035516,
+        "double_blocks.1.reference_branch.v_delta.a": 0.00098798715043813,
+        "double_blocks.1.reference_branch.v_delta.b": 0.021978575736284256,
+        "double_blocks.1.reference_branch.o_delta.a": 0.0008979105623438954,
+        "double_blocks.1.reference_branch.o_delta.b": 0.016778338700532913,
+        "double_blocks.2.reference_branch.q_delta.a": 0.00013169762678444386,
+        "double_blocks.2.reference_branch.q_delta.b": 0.0036993848625570536,
+        "double_blocks.2.reference_branch.k_delta.a": 0.0001063829695340246,
+        "double_blocks.2.reference_branch.k_delta.b": 0.003826081519946456,
+        "double_blocks.2.reference_branch.v_delta.a": 0.0009198865736834705,
+        "double_blocks.2.reference_branch.v_delta.b": 0.018342256546020508,
+        "double_blocks.2.reference_branch.o_delta.a": 0.0008654840639792383,
+        "double_blocks.2.reference_branch.o_delta.b": 0.01785697415471077,
+        "double_blocks.3.reference_branch.q_delta.a": 0.00019178820366505533,
+        "double_blocks.3.reference_branch.q_delta.b": 0.005284211598336697,
+        "double_blocks.3.reference_branch.k_delta.a": 0.00013408630911726505,
+        "double_blocks.3.reference_branch.k_delta.b": 0.004572212230414152,
+        "double_blocks.3.reference_branch.v_delta.a": 0.0008335490711033344,
+        "double_blocks.3.reference_branch.v_delta.b": 0.01833142153918743,
+        "double_blocks.3.reference_branch.o_delta.a": 0.0008279014728032053,
+        "double_blocks.3.reference_branch.o_delta.b": 0.014540879055857658,
+        "double_blocks.4.reference_branch.q_delta.a": 0.0002130995417246595,
+        "double_blocks.4.reference_branch.q_delta.b": 0.008284145034849644,
+        "double_blocks.4.reference_branch.k_delta.a": 0.0002573406381998211,
+        "double_blocks.4.reference_branch.k_delta.b": 0.010097223334014416,
+        "double_blocks.4.reference_branch.v_delta.a": 0.0009506072965450585,
+        "double_blocks.4.reference_branch.v_delta.b": 0.019708827137947083,
+        "double_blocks.4.reference_branch.o_delta.a": 0.0011903583072125912,
+        "double_blocks.4.reference_branch.o_delta.b": 0.020149068906903267,
+        "single_blocks.3.reference_branch.q_delta.a": 0.0002454435743857175,
+        "single_blocks.3.reference_branch.q_delta.b": 0.006237698253244162,
+        "single_blocks.3.reference_branch.k_delta.a": 0.00030297270859591663,
+        "single_blocks.3.reference_branch.k_delta.b": 0.01203883532434702,
+        "single_blocks.3.reference_branch.v_delta.a": 0.0017913184128701687,
+        "single_blocks.3.reference_branch.v_delta.b": 0.030210483819246292,
+        "single_blocks.3.reference_branch.o_delta.a": 0.0017439842922613025,
+        "single_blocks.3.reference_branch.o_delta.b": 0.027398422360420227,
+        "single_blocks.8.reference_branch.q_delta.a": 0.0007801246247254312,
+        "single_blocks.8.reference_branch.q_delta.b": 0.015321855433285236,
+        "single_blocks.8.reference_branch.k_delta.a": 0.0004358335863798857,
+        "single_blocks.8.reference_branch.k_delta.b": 0.012633711099624634,
+        "single_blocks.8.reference_branch.v_delta.a": 0.0032533593475818634,
+        "single_blocks.8.reference_branch.v_delta.b": 0.03886327147483826,
+        "single_blocks.8.reference_branch.o_delta.a": 0.002347866538912058,
+        "single_blocks.8.reference_branch.o_delta.b": 0.029721146449446678,
+        "single_blocks.13.reference_branch.q_delta.a": 0.0003689339791890234,
+        "single_blocks.13.reference_branch.q_delta.b": 0.01047656312584877,
+        "single_blocks.13.reference_branch.k_delta.a": 0.0003089965903200209,
+        "single_blocks.13.reference_branch.k_delta.b": 0.014117453247308731,
+        "single_blocks.13.reference_branch.v_delta.a": 0.004596200305968523,
+        "single_blocks.13.reference_branch.v_delta.b": 0.04502100870013237,
+        "single_blocks.13.reference_branch.o_delta.a": 0.003410693723708391,
+        "single_blocks.13.reference_branch.o_delta.b": 0.03579137101769447,
+        "single_blocks.18.reference_branch.q_delta.a": 0.00074590282747522,
+        "single_blocks.18.reference_branch.q_delta.b": 0.0092646274715662,
+        "single_blocks.18.reference_branch.k_delta.a": 0.0006541366456076503,
+        "single_blocks.18.reference_branch.k_delta.b": 0.020910795778036118,
+        "single_blocks.18.reference_branch.v_delta.a": 0.005659793503582478,
+        "single_blocks.18.reference_branch.v_delta.b": 0.04583069309592247,
+        "single_blocks.18.reference_branch.o_delta.a": 0.003840956836938858,
+        "single_blocks.18.reference_branch.o_delta.b": 0.026468174532055855
+      }
+    ],
+    "parameter_changes": {
+      "double_blocks.1.reference_branch.q_delta.a": 0.017261631786823273,
+      "double_blocks.1.reference_branch.q_delta.b": 0.050888415426015854,
+      "double_blocks.1.reference_branch.k_delta.a": 0.01763325184583664,
+      "double_blocks.1.reference_branch.k_delta.b": 0.05080652981996536,
+      "double_blocks.1.reference_branch.v_delta.a": 0.022121498361229897,
+      "double_blocks.1.reference_branch.v_delta.b": 0.05141226947307587,
+      "double_blocks.1.reference_branch.o_delta.a": 0.022304710000753403,
+      "double_blocks.1.reference_branch.o_delta.b": 0.051038991659879684,
+      "double_blocks.2.reference_branch.q_delta.a": 0.018762733787298203,
+      "double_blocks.2.reference_branch.q_delta.b": 0.05119030922651291,
+      "double_blocks.2.reference_branch.k_delta.a": 0.018686600029468536,
+      "double_blocks.2.reference_branch.k_delta.b": 0.05124573037028313,
+      "double_blocks.2.reference_branch.v_delta.a": 0.022100187838077545,
+      "double_blocks.2.reference_branch.v_delta.b": 0.05150590091943741,
+      "double_blocks.2.reference_branch.o_delta.a": 0.022322354838252068,
+      "double_blocks.2.reference_branch.o_delta.b": 0.05145188421010971,
+      "double_blocks.3.reference_branch.q_delta.a": 0.019986584782600403,
+      "double_blocks.3.reference_branch.q_delta.b": 0.05150710046291351,
+      "double_blocks.3.reference_branch.k_delta.a": 0.019234057515859604,
+      "double_blocks.3.reference_branch.k_delta.b": 0.05134425684809685,
+      "double_blocks.3.reference_branch.v_delta.a": 0.022047145292162895,
+      "double_blocks.3.reference_branch.v_delta.b": 0.05148757994174957,
+      "double_blocks.3.reference_branch.o_delta.a": 0.02234567329287529,
+      "double_blocks.3.reference_branch.o_delta.b": 0.05149564519524574,
+      "double_blocks.4.reference_branch.q_delta.a": 0.019948797300457954,
+      "double_blocks.4.reference_branch.q_delta.b": 0.051256295293569565,
+      "double_blocks.4.reference_branch.k_delta.a": 0.02042541466653347,
+      "double_blocks.4.reference_branch.k_delta.b": 0.05126018077135086,
+      "double_blocks.4.reference_branch.v_delta.a": 0.022147424519062042,
+      "double_blocks.4.reference_branch.v_delta.b": 0.05158431828022003,
+      "double_blocks.4.reference_branch.o_delta.a": 0.022582700476050377,
+      "double_blocks.4.reference_branch.o_delta.b": 0.05159567669034004,
+      "single_blocks.3.reference_branch.q_delta.a": 0.020526373758912086,
+      "single_blocks.3.reference_branch.q_delta.b": 0.05064796283841133,
+      "single_blocks.3.reference_branch.k_delta.a": 0.021269774064421654,
+      "single_blocks.3.reference_branch.k_delta.b": 0.050971273332834244,
+      "single_blocks.3.reference_branch.v_delta.a": 0.02272922359406948,
+      "single_blocks.3.reference_branch.v_delta.b": 0.05103801190853119,
+      "single_blocks.3.reference_branch.o_delta.a": 0.02269827201962471,
+      "single_blocks.3.reference_branch.o_delta.b": 0.05088220536708832,
+      "single_blocks.8.reference_branch.q_delta.a": 0.02204332873225212,
+      "single_blocks.8.reference_branch.q_delta.b": 0.05081484839320183,
+      "single_blocks.8.reference_branch.k_delta.a": 0.021828990429639816,
+      "single_blocks.8.reference_branch.k_delta.b": 0.05123370885848999,
+      "single_blocks.8.reference_branch.v_delta.a": 0.022938145324587822,
+      "single_blocks.8.reference_branch.v_delta.b": 0.050986554473638535,
+      "single_blocks.8.reference_branch.o_delta.a": 0.022847266867756844,
+      "single_blocks.8.reference_branch.o_delta.b": 0.05115237087011337,
+      "single_blocks.13.reference_branch.q_delta.a": 0.02139979414641857,
+      "single_blocks.13.reference_branch.q_delta.b": 0.05050425976514816,
+      "single_blocks.13.reference_branch.k_delta.a": 0.02147870510816574,
+      "single_blocks.13.reference_branch.k_delta.b": 0.05033324286341667,
+      "single_blocks.13.reference_branch.v_delta.a": 0.02306487038731575,
+      "single_blocks.13.reference_branch.v_delta.b": 0.05181414633989334,
+      "single_blocks.13.reference_branch.o_delta.a": 0.022976668551564217,
+      "single_blocks.13.reference_branch.o_delta.b": 0.051259130239486694,
+      "single_blocks.18.reference_branch.q_delta.a": 0.022086232900619507,
+      "single_blocks.18.reference_branch.q_delta.b": 0.05107990279793739,
+      "single_blocks.18.reference_branch.k_delta.a": 0.022239692509174347,
+      "single_blocks.18.reference_branch.k_delta.b": 0.05163346230983734,
+      "single_blocks.18.reference_branch.v_delta.a": 0.023069052025675774,
+      "single_blocks.18.reference_branch.v_delta.b": 0.05246887356042862,
+      "single_blocks.18.reference_branch.o_delta.a": 0.02303623966872692,
+      "single_blocks.18.reference_branch.o_delta.b": 0.052613064646720886
+    },
+    "branch_on_off_mean_abs": 0.27558979392051697,
+    "trained_prediction_change": 0.009203027002513409,
+    "peak_reserved_gib": 9.57421875,
+    "reserved_fraction": 0.5986992763579738,
+    "inventory": {
+      "double_blocks.1.reference_branch.q_delta.a": [
+        128,
+        3072
+      ],
+      "double_blocks.1.reference_branch.q_delta.b": [
+        3072,
+        128
+      ],
+      "double_blocks.1.reference_branch.k_delta.a": [
+        128,
+        3072
+      ],
+      "double_blocks.1.reference_branch.k_delta.b": [
+        3072,
+        128
+      ],
+      "double_blocks.1.reference_branch.v_delta.a": [
+        128,
+        3072
+      ],
+      "double_blocks.1.reference_branch.v_delta.b": [
+        3072,
+        128
+      ],
+      "double_blocks.1.reference_branch.o_delta.a": [
+        128,
+        3072
+      ],
+      "double_blocks.1.reference_branch.o_delta.b": [
+        3072,
+        128
+      ],
+      "double_blocks.2.reference_branch.q_delta.a": [
+        128,
+        3072
+      ],
+      "double_blocks.2.reference_branch.q_delta.b": [
+        3072,
+        128
+      ],
+      "double_blocks.2.reference_branch.k_delta.a": [
+        128,
+        3072
+      ],
+      "double_blocks.2.reference_branch.k_delta.b": [
+        3072,
+        128
+      ],
+      "double_blocks.2.reference_branch.v_delta.a": [
+        128,
+        3072
+      ],
+      "double_blocks.2.reference_branch.v_delta.b": [
+        3072,
+        128
+      ],
+      "double_blocks.2.reference_branch.o_delta.a": [
+        128,
+        3072
+      ],
+      "double_blocks.2.reference_branch.o_delta.b": [
+        3072,
+        128
+      ],
+      "double_blocks.3.reference_branch.q_delta.a": [
+        128,
+        3072
+      ],
+      "double_blocks.3.reference_branch.q_delta.b": [
+        3072,
+        128
+      ],
+      "double_blocks.3.reference_branch.k_delta.a": [
+        128,
+        3072
+      ],
+      "double_blocks.3.reference_branch.k_delta.b": [
+        3072,
+        128
+      ],
+      "double_blocks.3.reference_branch.v_delta.a": [
+        128,
+        3072
+      ],
+      "double_blocks.3.reference_branch.v_delta.b": [
+        3072,
+        128
+      ],
+      "double_blocks.3.reference_branch.o_delta.a": [
+        128,
+        3072
+      ],
+      "double_blocks.3.reference_branch.o_delta.b": [
+        3072,
+        128
+      ],
+      "double_blocks.4.reference_branch.q_delta.a": [
+        128,
+        3072
+      ],
+      "double_blocks.4.reference_branch.q_delta.b": [
+        3072,
+        128
+      ],
+      "double_blocks.4.reference_branch.k_delta.a": [
+        128,
+        3072
+      ],
+      "double_blocks.4.reference_branch.k_delta.b": [
+        3072,
+        128
+      ],
+      "double_blocks.4.reference_branch.v_delta.a": [
+        128,
+        3072
+      ],
+      "double_blocks.4.reference_branch.v_delta.b": [
+        3072,
+        128
+      ],
+      "double_blocks.4.reference_branch.o_delta.a": [
+        128,
+        3072
+      ],
+      "double_blocks.4.reference_branch.o_delta.b": [
+        3072,
+        128
+      ],
+      "single_blocks.3.reference_branch.q_delta.a": [
+        128,
+        3072
+      ],
+      "single_blocks.3.reference_branch.q_delta.b": [
+        3072,
+        128
+      ],
+      "single_blocks.3.reference_branch.k_delta.a": [
+        128,
+        3072
+      ],
+      "single_blocks.3.reference_branch.k_delta.b": [
+        3072,
+        128
+      ],
+      "single_blocks.3.reference_branch.v_delta.a": [
+        128,
+        3072
+      ],
+      "single_blocks.3.reference_branch.v_delta.b": [
+        3072,
+        128
+      ],
+      "single_blocks.3.reference_branch.o_delta.a": [
+        128,
+        3072
+      ],
+      "single_blocks.3.reference_branch.o_delta.b": [
+        3072,
+        128
+      ],
+      "single_blocks.8.reference_branch.q_delta.a": [
+        128,
+        3072
+      ],
+      "single_blocks.8.reference_branch.q_delta.b": [
+        3072,
+        128
+      ],
+      "single_blocks.8.reference_branch.k_delta.a": [
+        128,
+        3072
+      ],
+      "single_blocks.8.reference_branch.k_delta.b": [
+        3072,
+        128
+      ],
+      "single_blocks.8.reference_branch.v_delta.a": [
+        128,
+        3072
+      ],
+      "single_blocks.8.reference_branch.v_delta.b": [
+        3072,
+        128
+      ],
+      "single_blocks.8.reference_branch.o_delta.a": [
+        128,
+        3072
+      ],
+      "single_blocks.8.reference_branch.o_delta.b": [
+        3072,
+        128
+      ],
+      "single_blocks.13.reference_branch.q_delta.a": [
+        128,
+        3072
+      ],
+      "single_blocks.13.reference_branch.q_delta.b": [
+        3072,
+        128
+      ],
+      "single_blocks.13.reference_branch.k_delta.a": [
+        128,
+        3072
+      ],
+      "single_blocks.13.reference_branch.k_delta.b": [
+        3072,
+        128
+      ],
+      "single_blocks.13.reference_branch.v_delta.a": [
+        128,
+        3072
+      ],
+      "single_blocks.13.reference_branch.v_delta.b": [
+        3072,
+        128
+      ],
+      "single_blocks.13.reference_branch.o_delta.a": [
+        128,
+        3072
+      ],
+      "single_blocks.13.reference_branch.o_delta.b": [
+        3072,
+        128
+      ],
+      "single_blocks.18.reference_branch.q_delta.a": [
+        128,
+        3072
+      ],
+      "single_blocks.18.reference_branch.q_delta.b": [
+        3072,
+        128
+      ],
+      "single_blocks.18.reference_branch.k_delta.a": [
+        128,
+        3072
+      ],
+      "single_blocks.18.reference_branch.k_delta.b": [
+        3072,
+        128
+      ],
+      "single_blocks.18.reference_branch.v_delta.a": [
+        128,
+        3072
+      ],
+      "single_blocks.18.reference_branch.v_delta.b": [
+        3072,
+        128
+      ],
+      "single_blocks.18.reference_branch.o_delta.a": [
+        128,
+        3072
+      ],
+      "single_blocks.18.reference_branch.o_delta.b": [
+        3072,
+        128
+      ]
+    }
+  },
+  "admission_resume_checks": {
+    "exact_parameters": true,
+    "exact_optimizer_scheduler_rng_cursor": true,
+    "optimizer_updates": 2,
+    "microbatch": 1,
+    "gradient_accumulation": 4
+  },
+  "final_inference_audit": {
+    "checkpoint_sha256": "a1ae72e041fe8969f8b333bffb6d60e998145c028a0fc4530ad211318f459b6c",
+    "samples": 24,
+    "full_denoiser": true,
+    "target_photos_loaded": false,
+    "exact_latent_exterior": true,
+    "peak_reserved_gib": 8.525390625,
+    "reserved_fraction": 0.5331134927177796
+  },
+  "final_exterior_max_abs": 0.0,
+  "paired_id_improvement_counts": {
+    "2000_vs_0": 22,
+    "2000_vs_500": 17,
+    "2000_vs_1000": 14,
+    "total": 24
+  }
+}

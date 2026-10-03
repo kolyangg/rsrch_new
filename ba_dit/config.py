@@ -54,7 +54,8 @@ def load_config(path: str | Path) -> dict:
     if set(config) != expected or config["schema_version"] != 2:
         raise ValueError(f"Expected schema 2 and fields {sorted(expected)}")
     for section, fields in FIELDS.items():
-        allowed = fields | ({"batch_size"} if section == "validation" else set())
+        optional = {"validation": {"batch_size"}, "branch": {"kind", "mask_feather_pixels"}}
+        allowed = fields | optional.get(section, set())
         if not fields <= set(config[section]) or set(config[section]) - allowed:
             raise ValueError(f"Invalid {section} fields: missing={fields-set(config[section])}, unknown={set(config[section])-allowed}")
     if config["model"]["backend"] not in {"flux", "qwen"}:
@@ -75,6 +76,11 @@ def load_config(path: str | Path) -> dict:
         raise ValueError("Invalid memory gate or branch scale")
     if config["validation"].get("batch_size", 1) <= 0:
         raise ValueError("Validation batch size must be positive")
+    if config['branch'].get('kind', 'reference_delta') not in {'reference_delta', 'masked_face_qkvo'}:
+        raise ValueError('Unknown branch kind')
+    if config['branch'].get('kind') == 'masked_face_qkvo':
+        if config['model']['arch'] != 'flux2_klein_4b' or config['branch'].get('mask_feather_pixels', -1) < 0:
+            raise ValueError('Masked Q/K/V/O requires FLUX4B and an explicit nonnegative mask feather')
     return config
 
 
@@ -94,6 +100,8 @@ def adapter_identity(config: dict) -> dict:
 
     implementation = ["adapters.py", "nn/reference_read_delta.py", "nn/sliced_native_lora.py", "backends/attention.py",
                       "backends/flux2_native.py", "backends/qwen21.py"]
+    if config['branch'].get('kind') == 'masked_face_qkvo':
+        implementation += ['nn/masked_face_attention.py', 'nn/masked_face_flow.py']
     code = hashlib.sha256(b"".join((ROOT / "ba_dit" / name).read_bytes() for name in implementation)).hexdigest()
     patch_name = "flux2_reference_branch_and_offload.patch" if config["model"]["backend"] == "flux" else "qwen21_local_pairs_comet.patch"
     return {"backend": config["model"]["backend"], "arch": config["model"]["arch"],

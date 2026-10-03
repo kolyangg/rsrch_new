@@ -1,8 +1,8 @@
 diff --git a/extensions_built_in/diffusion_models/flux2/src/model.py b/extensions_built_in/diffusion_models/flux2/src/model.py
-index ee7dd58..8c3f290 100644
+index ee7dd58..cceb5bb 100644
 --- a/extensions_built_in/diffusion_models/flux2/src/model.py
 +++ b/extensions_built_in/diffusion_models/flux2/src/model.py
-@@ -50,6 +50,13 @@ class Klein4BParams:
+@@ -50,6 +50,14 @@ class Klein4BParams:
      use_guidance_embed: bool = False
  
  
@@ -11,18 +11,20 @@ index ee7dd58..8c3f290 100644
 +    target_tokens: int
 +    reference_indices: Tensor  # absolute positions in the image stream
 +    text_tokens: int
++    target_mask: Tensor | None = None
 +
 +
  class FakeConfig:
      # for diffusers compatability
      def __init__(self):
-@@ -155,8 +162,25 @@ class Flux2(nn.Module, OstrisModelMixin):
+@@ -155,8 +163,27 @@ class Flux2(nn.Module, OstrisModelMixin):
          ctx: Tensor,
          ctx_ids: Tensor,
          guidance: Tensor | None,
 +        branch_reference_mask: Tensor | None = None,
 +        branch_target_tokens: int | None = None,
 +        branch_max_reference_keys: int = 512,
++        branch_target_mask: Tensor | None = None,
      ):
          num_txt_tokens = ctx.shape[1]
 +        branch_context = None
@@ -38,11 +40,12 @@ index ee7dd58..8c3f290 100644
 +                target_tokens=branch_target_tokens,
 +                reference_indices=branch_target_tokens + selected,
 +                text_tokens=num_txt_tokens,
++                target_mask=branch_target_mask,
 +            )
  
          timestep_emb = timestep_embedding(timesteps, 256)
          vec = self.time_in(timestep_emb)
-@@ -184,6 +208,7 @@ class Flux2(nn.Module, OstrisModelMixin):
+@@ -184,6 +211,7 @@ class Flux2(nn.Module, OstrisModelMixin):
                      pe_ctx,
                      double_block_mod_img,
                      double_block_mod_txt,
@@ -50,7 +53,7 @@ index ee7dd58..8c3f290 100644
                      use_reentrant=False,
                  )
              else:
-@@ -194,6 +219,7 @@ class Flux2(nn.Module, OstrisModelMixin):
+@@ -194,6 +222,7 @@ class Flux2(nn.Module, OstrisModelMixin):
                      pe_ctx,
                      double_block_mod_img,
                      double_block_mod_txt,
@@ -58,7 +61,7 @@ index ee7dd58..8c3f290 100644
                  )
  
          img = torch.cat((txt, img), dim=1)
-@@ -206,6 +232,7 @@ class Flux2(nn.Module, OstrisModelMixin):
+@@ -206,6 +235,7 @@ class Flux2(nn.Module, OstrisModelMixin):
                      img,
                      pe,
                      single_block_mod,
@@ -66,7 +69,7 @@ index ee7dd58..8c3f290 100644
                      use_reentrant=False,
                  )
              else:
-@@ -213,6 +240,7 @@ class Flux2(nn.Module, OstrisModelMixin):
+@@ -213,6 +243,7 @@ class Flux2(nn.Module, OstrisModelMixin):
                      img,
                      pe,
                      single_block_mod,
@@ -74,7 +77,7 @@ index ee7dd58..8c3f290 100644
                  )
  
          img = img[:, num_txt_tokens:, ...]
-@@ -323,6 +351,7 @@ class SingleStreamBlock(nn.Module):
+@@ -323,6 +354,7 @@ class SingleStreamBlock(nn.Module):
          x: Tensor,
          pe: Tensor,
          mod: tuple[Tensor, Tensor],
@@ -82,18 +85,27 @@ index ee7dd58..8c3f290 100644
      ) -> Tensor:
          mod_shift, mod_scale, mod_gate = mod
          x_mod = (1 + mod_scale) * self.pre_norm(x) + mod_shift
-@@ -337,6 +366,10 @@ class SingleStreamBlock(nn.Module):
+@@ -337,9 +369,19 @@ class SingleStreamBlock(nn.Module):
          q, k = self.norm(q, k, v)
  
          attn = attention(q, k, v, pe)
++        branch_output = None
 +        if branch_context is not None and hasattr(self, "reference_branch"):
-+            from ba_dit.backends.attention import flux_reference_delta
-+
-+            attn = attn + flux_reference_delta(self, x_mod, qkv, q, v, pe, branch_context, single=True)
++            if hasattr(self.reference_branch, 'route_attention'):
++                attn, branch_output = self.reference_branch.route_attention(
++                    self, x_mod, qkv, attn, pe, branch_context, single=True)
++            else:
++                from ba_dit.backends.attention import flux_reference_delta
++                attn = attn + flux_reference_delta(self, x_mod, qkv, q, v, pe, branch_context, single=True)
  
          # compute activation in mlp stream, cat again and run second linear layer
          output = self.linear2(torch.cat((attn, self.mlp_act(mlp)), 2))
-@@ -398,6 +431,7 @@ class DoubleStreamBlock(nn.Module):
++        if branch_output is not None:
++            output = output + branch_output
+         return x + mod_gate * output
+ 
+ 
+@@ -398,6 +440,7 @@ class DoubleStreamBlock(nn.Module):
          pe_ctx: Tensor,
          mod_img: tuple[Tensor, Tensor],
          mod_txt: tuple[Tensor, Tensor],
@@ -101,20 +113,32 @@ index ee7dd58..8c3f290 100644
      ) -> tuple[Tensor, Tensor]:
          img_mod1, img_mod2 = mod_img
          txt_mod1, txt_mod2 = mod_txt
-@@ -434,6 +468,13 @@ class DoubleStreamBlock(nn.Module):
+@@ -434,9 +477,24 @@ class DoubleStreamBlock(nn.Module):
          pe = torch.cat((pe_ctx, pe), dim=2)
          attn = attention(q, k, v, pe)
          txt_attn, img_attn = attn[:, : txt_q.shape[2]], attn[:, txt_q.shape[2] :]
++        branch_output = None
 +        if branch_context is not None and hasattr(self, "reference_branch"):
-+            from ba_dit.backends.attention import flux_reference_delta
-+
-+            img_attn = img_attn + flux_reference_delta(
-+                self, img_modulated, img_qkv, img_q, img_v,
-+                pe[:, :, txt_q.shape[2]:], branch_context, single=False,
-+            )
++            if hasattr(self.reference_branch, 'route_attention'):
++                img_attn, branch_output = self.reference_branch.route_attention(
++                    self, img_modulated, img_qkv, img_attn,
++                    pe[:, :, txt_q.shape[2]:], branch_context, single=False)
++            else:
++                from ba_dit.backends.attention import flux_reference_delta
++                img_attn = img_attn + flux_reference_delta(
++                    self, img_modulated, img_qkv, img_q, img_v,
++                    pe[:, :, txt_q.shape[2]:], branch_context, single=False,
++                )
  
          # calculate the img blocks
-         img = img + img_mod1_gate * self.img_attn.proj(img_attn)
+-        img = img + img_mod1_gate * self.img_attn.proj(img_attn)
++        projected = self.img_attn.proj(img_attn)
++        if branch_output is not None:
++            projected = projected + branch_output
++        img = img + img_mod1_gate * projected
+         img = img + img_mod2_gate * self.img_mlp(
+             (1 + img_mod2_scale) * (self.img_norm2(img)) + img_mod2_shift
+         )
 diff --git a/extensions_built_in/diffusion_models/flux2/src/pipeline.py b/extensions_built_in/diffusion_models/flux2/src/pipeline.py
 index fd7e619..aecbe93 100644
 --- a/extensions_built_in/diffusion_models/flux2/src/pipeline.py

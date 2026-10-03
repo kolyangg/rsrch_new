@@ -110,3 +110,26 @@ Both pretrained backbones available locally passed branch initialization parity,
 The complete native panels at 768 pixels contain 96 images and 96 usable output masks per backbone. All 96 corresponding FLUX/Qwen pixel masks differ, and both mask sets were used in identity scoring. Qwen's expanded 1024-pixel profile has the initial one-item mask; its full panel remains for the larger host. The FLUX 9B site layout passes structural/gradient checks, but its pretrained weights exceed this 16 GB GPU, so its image and training admission tests also need the larger host.
 
 Measured results, Comet links, full-panel mask coverage and outstanding hardware checks are recorded in [implementation notes](plans/260930/IMPLEMENTATION_NOTES.md). These are engineering checks, not evidence of a trained identity-quality gain. The original [implementation plan](plans/260930/CL39_Qwen_FLUX_48GB_80GB_Implementation_Plan.md) remains unchanged.
+
+## Current one-ID setting: BA inside the full denoiser
+
+The approved replacement for the cached face heads trains rank128 branch-local
+Q/K/V/output LoRA at eight FLUX Base4B sites, with the complete frozen denoiser
+in the gradient path and fresh noise/timesteps every microbatch. Only25.17M BA
+parameters train. At768px/ref512, accumulation4 uses under10GiB in the bounded
+local16GB admission checks. The fixed24 prompted panel runs serially at
+0/500/1000/2000, using reviewed native-generated masks and exact exterior
+composition. It stops after2000 and final scoring.
+
+```bash
+bash scripts/run_online_face_ba.sh runs/NEW_NAME runs/PASSED_ADMISSION_NAME
+```
+
+The completed run scored ID_sim 0.1460 / 0.3658 / 0.4303 / 0.4190 at
+0 / 500 / 1000 / 2000 updates; the native baseline was 0.3314. The best scored
+checkpoint is step1000. This is a same-identity diagnostic; performance on
+unseen people has not been measured.
+
+The launcher requires the prepared one-ID data, conditioning caches and frozen
+native image/mask bundle. These private/generated artifacts are not in Git.
+See [architecture, artifact prerequisites, results and proposed 48GB experiment](plans/260930/ONLINE_FACE_BA.md).

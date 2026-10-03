@@ -183,3 +183,74 @@ remain untracked. The 16-page PDF was uploaded with verified Dropbox content
 hash to `Apps/temp/rsrch_new/2026-10-01/flux4b_branched_attention_architecture.pdf`.
 The Dropbox helper was copied from EMDR and configured for API root
 `/rsrch_new` inside `Apps/temp`; credentials are in ignored `.env` with mode 0600.
+
+## 2 October 2026 — Approved online masked Q/K/V/O implemented and launched
+
+Implemented the16GB setting requested after the critical review: native-initialized
+face attention inside eight FLUX4B blocks, rank128 Q/K/V/output LoRA only
+(25,165,824 parameters), fresh native noise/timesteps, full denoiser autograd,
+masked native flow MSE, microbatch1/accumulation4 and LR5e-5. The original19
+distinct same-ID target/reference pairs are used. Fixed24 validation uses the
+reviewed native-generated masks,20 steps and CFG4 at0/500/1000/2000.
+
+Pretrained checks passed: exact native BA-off/zero-mask parity, all64 trainable
+tensors updated with finite gradients, every frozen tensor hash unchanged, and
+bit-exact fresh-process replay including Adam/scheduler/RNG/cursor. The production
+accumulation4 checks peaked at9.682GiB reserved and took7.97–9.13s/update. Focused
+mask locality, original FLUX branch seam and composition tests pass. These are
+admission results, not identity-quality improvements.
+
+New run: `runs/flux4b_oneid_online_face_qkvo_r128_768_20261002`, Comet key
+`c955799c57d94fd7a234dec331323e06`. The controller was launched and entered
+step-zero generation before training. Details and commands are in
+[ONLINE_FACE_BA.md](ONLINE_FACE_BA.md). Old runs/checkpoints remain preserved;
+the recorded source patch has a new optional masked-branch path, so old runs
+must use their source snapshots if replayed. No remote GPU operation was made.
+
+At15:21 UTC, step-zero validation/scoring was complete and the main training
+worker had completed six optimizer updates from checkpoint0. All32 B matrices
+updated at step1; finite gradients,9.641GiB peak reserved,92% sampled GPU use,
+10.10s/update mean. Early remaining-training ETA5.6h excludes three validation
+panels. The24-image baseline scored ID_sim0.146024 versus native0.331399;
+paired crops show substantial untrained face distortion. Exterior pixels are
+exactly preserved. No trained quality improvement is claimed yet. Evidence is
+in the run's `startup_confirmation.json`, validation0 metrics and paired sheets.
+Startup monitoring ended; the serial controller continues to2k and final scoring.
+
+### 2 October — Step1000 validation and continuation confirmed
+
+The user reported an apparent stop at1k. Inspection found the original controller
+and inference worker still active; validation generation was19/24 complete.
+No restart was necessary. All24 images then completed generation, decoding and
+scoring, followed by the automatic `--step 2000 --resume 1000` training worker.
+The full checkpoint has finite adapter/Adam tensors, optimizer/scheduler step1000,
+cursor4000 and RNG states; immutable code/config/data/mask checks passed.
+Updates1001–1005 were observed with finite gradients and the correct continued
+data cursor/LR. Peak reserved9.859GiB remains below90%.
+
+Fixed24 ID_sim is0.146024 /0.365766 /0.430254 at0/500/1000; CLIP is27.702707 /
+27.249032 /26.967033. Comet's read API independently confirms these points in
+the same experiment. Step1000 improves ID_sim on22/24 cases versus500. All24
+paired face crops were inspected, with clear removal of much of the initial
+distortion and residual quality limitations. Pixel exterior remains exact.
+Evidence: the run's `comet_metrics_1000_verified.json` and
+`resume_1000_confirmation.json`. The existing serial controller continues to2k
+and final scoring; no model or training code was changed for this check.
+
+### 3 October — Completed online one-ID run and source preservation
+
+All2000 updates and0/500/1000/2000 fixed24 generation/decoding/scoring completed;
+the controller finished at2026-10-02 23:40:58 UTC. ID_sim is0.146024 /0.365766 /
+0.430254 /0.419023; best1000 remains preserved. CLIP at2000 is27.321863 versus
+26.967033 at1000. All2000 logged losses/gradients are finite, peak reserved is
+9.859GiB and the final24 exteriors are pixel-exact. Final paired faces were
+reviewed: clear gains from untrained BA, with residual softness/accessory and
+lighting changes. These are one-ID fitting results, not unseen-ID evidence.
+
+All20 immutable run sources match the setup being committed at the user's
+request. [ONLINE_FACE_BA.md](ONLINE_FACE_BA.md) records completed results,
+artifact prerequisites and the recommended next48GB experiment: fresh4B BA on
+multi-ID data with identity-disjoint fixed96 validation before a9B comparison.
+The one-ID runner's19/24 assumptions and private native bundle are documented;
+the multi-ID/9B settings are proposals, not launch-ready claims. No new GPU run
+or machine operation was requested or started during this commit/review.

@@ -83,6 +83,7 @@ def predict(model, tensors, noisy, sigma, config, branch=True, negative=False):
         branch_reference_mask=tensors["reference_mask"] if branch else None,
         branch_target_tokens=packed.shape[1] if branch else None,
         branch_max_reference_keys=config["branch"]["max_reference_keys"],
+        branch_target_mask=tensors.get('target_face_mask') if branch else None,
     )[:, :packed.shape[1]]
     return prediction.transpose(1, 2).reshape_as(noisy)
 
@@ -98,7 +99,13 @@ def training_loss(model, tensors, config, branch=True):
     noisy = noise_schedule.add_noise(target, noise, timestep).to(target.dtype)
     # Toolkit casts to the backbone dtype before dividing; BF16 rounding order matters.
     prediction = predict(model, tensors, noisy, timestep.to(target.dtype) / 1000, config, branch)
-    return (prediction.float() - (noise - target).float()).square().mean()
+    error = (prediction.float() - (noise - target).float()).square()
+    if config['branch'].get('kind') == 'masked_face_qkvo':
+        mask = tensors['target_face_mask'].reshape(target.shape[0], 1, *target.shape[-2:])
+        if not mask.sum() > 0:
+            raise ValueError('Empty face supervision')
+        return (error * mask).sum() / (mask.sum() * target.shape[1])
+    return error.mean()
 
 
 @torch.no_grad()

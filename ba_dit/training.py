@@ -68,6 +68,10 @@ def train_segment(config, mode, run_dir, until, resume=None, init_adapter=None, 
     experiment = connect(config, run_dir)
     trainable = trainable_parameters(model)
     branch_enabled = mode in {"branch_only", "lora_plus_branch"}
+    face_masks = {}
+    if config['branch'].get('kind') == 'masked_face_qkvo':
+        from ba_dit.nn.masked_face_attention import training_mask
+        face_masks = {row['sample_id']: training_mask(row, config) for row in rows}
     print(json.dumps({"cuda_modules": [type(model).__name__], "frozen_encoder_loaded": False, "vae_loaded": False,
                       "trainable_parameters": sum(parameter.numel() for parameter in trainable.values()), "mode": mode}), flush=True)
     model.train()
@@ -80,6 +84,8 @@ def train_segment(config, mode, run_dir, until, resume=None, init_adapter=None, 
             for _ in range(config["training"]["grad_accum"]):
                 row = sample_at(rows, cursor, config["training"]["seed"])
                 tensors, metadata = load_pair(config, row, device="cuda")
+                if face_masks:
+                    tensors['target_face_mask'] = face_masks[row['sample_id']].to('cuda')
                 loss = backend.training_loss(model, tensors, config, branch_enabled)
                 if not torch.isfinite(loss):
                     raise RuntimeError(f"Nonfinite loss at sample {row['sample_id']}")
