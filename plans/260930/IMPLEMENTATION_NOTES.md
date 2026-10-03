@@ -254,3 +254,51 @@ multi-ID data with identity-disjoint fixed96 validation before a9B comparison.
 The one-ID runner's19/24 assumptions and private native bundle are documented;
 the multi-ID/9B settings are proposals, not launch-ready claims. No new GPU run
 or machine operation was requested or started during this commit/review.
+
+### 3 October — Prepared HSE two-V100 FP16/DDP experiment (not submitted)
+
+Prepared configs/clust/flux4b_2v100.yaml and jobs/flux4b_clust_2v100.sbatch for
+clust:/home/nasilaev/rsrch_new, account proj_1892, rocky, one node, two V10032GB,
+16 CPUs and24 hours. FLUX.2-klein Base4B, eight masked Q/K/V/output branch sites,
+rank128,768px targets/ref512, fresh adapters, LR5e-5, microbatch1 per rank and
+accumulation4 give globalbatch8. Initial2000 updates, checkpoints500 and unchanged
+fixed96 at0/2000; training workers exit before serial patched validation.
+
+This is a separately named FP16 experiment, not a BF16-equivalent result. Denoiser
+FP16 uses dynamic loss scaling; adapters/optimizer/loss are FP32. Online frozen
+text encoding is FP32 on CPU per rank; the VAE is FP32 on GPU. Precision participates
+in adapter/cache/native-mask identity. New native images/masks are required.
+Distributed checkpoints preserve the global sample cursor, per-rank RNG and scaler.
+Pretrained native/off equality, frozen equality, branch gradients/updates, exact
+fresh-process two-rank resume, and reserved memory below90% per GPU are enforced
+before long training. Runtime fit, throughput and FP16 pretrained stability remain
+unmeasured. No V100 allocation or training was started.
+
+Software verification: isolated Python3.11.13/PyTorch2.7.1+cu126/torchvision0.22.1
+with pinned Transformer/Diffusers dependencies installed and passed dependency
+validation. Compiled architecture flags include sm_70. On the selected source
+snapshot, seven existing FLUX invariant checks, masked attention/background checks,
+and a real two-process CPU/Gloo test passed. The latter compares averaged DDP
+gradients against a serial global batch and exact adapters/Adam/scheduler/scaler/
+per-rank RNG after a fresh-process restart. CPU tests are not pretrained admission.
+The initial local dependency smoke omitted torchvision; installing the same
+explicit torchvision pin already present in setup_clust_v100.sh resolved the
+import failure. No GPU memory measurements were made. Remote bash syntax and
+sbatch --test-only accepted the exact resource request; squeue remained empty.
+
+The existing cluster validation references matched all eight original SHA256s;
+current prompts, boxes and metric embeddings were synchronized. Historical Cosmic
+paths were missing/inaccessible. User-authorized background rsync is transferring
+47,500 local adjusted-Large images (17,116,845,489 bytes) into nasilaev/datasets.
+The verified metadata/import yields47,341 eligible cross-view pairs,110 excluded
+pairs,49 duplicate-content pairs and zero validation-image overlap. Cluster-path
+manifest SHA256:fea6c505016c73c995d25a65ca02202d27a2b622e9a463ac3096f8b1586c6302.
+A transfer publisher writes data/clust_large_transfer.json only after all four
+checksum dry runs pass; the launcher requires this receipt. Several first-pass
+SSH streams stalled near92%; they were restarted resumably with120s rsync timeout
+and30s SSH keepalives. Dataset transfer logs/receipts remain ignored.
+
+The user authorized committing/pushing the cluster implementation but requested
+approval before training. Concurrent 9B/true-microbatch/Vast edits are excluded
+from this commit. Cluster dependency/weight provisioning and private Comet setup
+remain prerequisites. See docs/clust_deployment.md for exact commands and limits.

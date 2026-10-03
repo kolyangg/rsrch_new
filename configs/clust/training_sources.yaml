@@ -1,0 +1,42 @@
+# Location inventory. Live readiness is recorded by the checksum receipt.
+schema_version: 1
+kind: cluster_training_locations
+checked_on: '2026-10-03'
+host: clust
+project_root: /home/nasilaev/rsrch_new
+ready: false
+large:
+  status: rsync_in_progress_checksum_receipt_required
+  metadata: /home/nasilaev/datasets/metadata/filtered_ids3_adj.json
+  images_root: /home/nasilaev/datasets/large_dataset_adj/large_dataset
+  expected_metadata_sha256: 0056f9647c6ca69079c3b7ae479ea5cdf9e642f076460249b160000eecb3ee50
+  intended_manifest: /home/nasilaev/rsrch_new/data/train_pairs_large_clust.jsonl
+  identity_aliases: /home/nasilaev/rsrch_new/data/validation/large_dataset_identity_aliases.json
+  source_files: 47500
+  source_bytes: 17116845489
+  imported_pairs: 47341
+  transfer_receipt: /home/nasilaev/rsrch_new/data/clust_large_transfer.json
+  historical_missing_candidates:
+  - /home/nasilaev/rsrch/dataset_full/filtered_ids3_adj.json
+  - /home/nasilaev/rsrch/dataset_full/large_dataset_adj/large_dataset
+  - /home/nasilaev/datasets
+cosmic_paired:
+  status: historical_target_path_permission_denied_and_reference_bank_not_found
+  metadata: null
+  images_root: null
+  reference_root: null
+  expected_metadata_sha256: 8ba369ef2fdc0496a0d3d55afb5c7923c1aa299343a676ac6bc0d94f3a3a0196
+  intended_manifest: /home/nasilaev/rsrch_new/data/train_pairs_cosmic_clust.jsonl
+  historical_paths:
+    metadata: /home/nasilaev/datasets/gathered_data_cosmic_large_filtered.json
+    reference_images: /home/nasilaev/datasets/LAION-5B-Filtered-Large-Faces/laion1B-nolang
+    target_images: /home/aalanov/Bobkov_Denis/datasets/CosmicManHQ-1.0/LAION-5B-Filtered-Large/laion1B-nolang
+  metadata_status: parent_directory_missing
+  reference_status: parent_directory_missing
+  target_status: permission_denied_at_owner_home
+  legacy_source: /home/kolyangg/rsrch/diffusion_template/src/configs/datasets/all_datasets.yaml
+  legacy_section: train.cosmic_large_clust
+existing_unpaired_metadata:
+- /home/nasilaev/rsrch/dataset_full/cosmic_gathered.json
+- /home/nasilaev/rsrch/dataset_full/cosmic_large_alldata.json
+- /home/nasilaev/rsrch/dataset_full/all_texts_cosmic_large_by_qween3_trigger_word.json

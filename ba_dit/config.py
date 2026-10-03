@@ -54,12 +54,30 @@ def load_config(path: str | Path) -> dict:
     if set(config) != expected or config["schema_version"] != 2:
         raise ValueError(f"Expected schema 2 and fields {sorted(expected)}")
     for section, fields in FIELDS.items():
-        optional = {"validation": {"batch_size"}, "branch": {"kind", "mask_feather_pixels"}}
+        optional = {"validation": {"batch_size"}, "branch": {"kind", "mask_feather_pixels"},
+                    "data": {"conditioning", "encoder_device"},
+                    "model": {"dtype", "conditioning_dtype"}, "training": {"world_size"}}
         allowed = fields | optional.get(section, set())
         if not fields <= set(config[section]) or set(config[section]) - allowed:
             raise ValueError(f"Invalid {section} fields: missing={fields-set(config[section])}, unknown={set(config[section])-allowed}")
     if config["model"]["backend"] not in {"flux", "qwen"}:
         raise ValueError("Unsupported backend")
+    if config['data'].get('conditioning', 'cached') not in {'cached','online'}:
+        raise ValueError('Unknown training conditioning mode')
+    if config['data'].get('conditioning') == 'online' and config['model']['backend'] != 'flux':
+        raise ValueError('Online conditioning is currently implemented for FLUX only')
+    for field in ('dtype', 'conditioning_dtype'):
+        if config['model'].get(field, 'bfloat16') not in {'bfloat16', 'float16', 'float32'}:
+            raise ValueError(f'Unsupported {field}')
+        if field in config['model'] and config['model']['backend'] != 'flux':
+            raise ValueError('Explicit precision currently requires FLUX')
+    if config['data'].get('encoder_device', 'cuda') not in {'cpu', 'cuda'}:
+        raise ValueError('encoder_device must be cpu or cuda')
+    world = config['training'].get('world_size', 1)
+    if type(world) is not int or world not in {1, 2}:
+        raise ValueError('Supported world_size is 1 or 2')
+    if world == 2 and (config['model']['backend'] != 'flux' or config['branch'].get('kind') != 'masked_face_qkvo'):
+        raise ValueError('Two-rank training requires masked FLUX Q/K/V/O')
     arches = {"flux": {"flux2_klein_4b", "flux2_klein_9b"}, "qwen": {"qwen_image_2_1"}}
     if config["model"]["arch"] not in arches[config["model"]["backend"]]:
         raise ValueError("Architecture does not belong to this backend")
@@ -104,8 +122,11 @@ def adapter_identity(config: dict) -> dict:
         implementation += ['nn/masked_face_attention.py', 'nn/masked_face_flow.py']
     code = hashlib.sha256(b"".join((ROOT / "ba_dit" / name).read_bytes() for name in implementation)).hexdigest()
     patch_name = "flux2_reference_branch_and_offload.patch" if config["model"]["backend"] == "flux" else "qwen21_local_pairs_comet.patch"
-    return {"backend": config["model"]["backend"], "arch": config["model"]["arch"],
+    identity = {"backend": config["model"]["backend"], "arch": config["model"]["arch"],
             "revisions": revisions(config), "source_commit": SOURCE_PINS[config["model"]["backend"]],
             "source_patch_sha256": hashlib.sha256((ROOT / "patches" / patch_name).read_bytes()).hexdigest(),
             "adapter_code_sha256": code,
             "branch": config["branch"], "lora": config["lora"]}
+    if 'dtype' in config['model'] or 'conditioning_dtype' in config['model']:
+        identity['precision'] = {k: config['model'].get(k, 'bfloat16') for k in ('dtype', 'conditioning_dtype')}
+    return identity

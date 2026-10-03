@@ -1,4 +1,4 @@
-"""Shared adapter-only optimizer loop over exact cached native model inputs."""
+"""Adapter-only optimizer loop over native cached or live-encoded inputs."""
 
 import json
 import os
@@ -12,7 +12,7 @@ import torch
 from ba_dit import adapters
 from ba_dit.checkpoint import load_adapters, restore_training, save_training, trainable_parameters
 from ba_dit.config import digest
-from ba_dit.data.cache import load_pair
+from ba_dit.data.conditioning import TrainingConditioner
 from ba_dit.data.manifest import assert_disjoint, read_manifest
 from ba_dit.logging import connect, log_metrics
 from ba_dit.runtime import backend_module
@@ -30,6 +30,9 @@ def sample_at(rows, cursor, seed):
 
 
 def train_segment(config, mode, run_dir, until, resume=None, init_adapter=None, allow_small_gpu=False, limit=None):
+    if config['training'].get('world_size', 1) > 1:
+        from ba_dit.distributed_training import train_segment as distributed_segment
+        return distributed_segment(config, mode, run_dir, until, resume, init_adapter, limit)
     if mode == "native":
         raise ValueError("Native mode has no optimizer; use infer")
     run_dir = Path(run_dir)
@@ -55,6 +58,7 @@ def train_segment(config, mode, run_dir, until, resume=None, init_adapter=None, 
                                  weight_decay=config["training"]["weight_decay"])
     warmup = config["training"]["warmup"]
     schedule = torch.optim.lr_scheduler.LambdaLR(optimizer, lambda step: min(1.0, (step + 1) / max(1, warmup)))
+    conditioner = TrainingConditioner(config, backend)
     # Adapter modes consume different initialization draws. Match training noise
     # and timestep draws across the LoRA/branch controls after registration.
     torch.manual_seed(config["training"]["seed"])
@@ -72,7 +76,8 @@ def train_segment(config, mode, run_dir, until, resume=None, init_adapter=None, 
     if config['branch'].get('kind') == 'masked_face_qkvo':
         from ba_dit.nn.masked_face_attention import training_mask
         face_masks = {row['sample_id']: training_mask(row, config) for row in rows}
-    print(json.dumps({"cuda_modules": [type(model).__name__], "frozen_encoder_loaded": False, "vae_loaded": False,
+    print(json.dumps({"cuda_modules": [type(model).__name__], "frozen_encoder_loaded": conditioner.online,
+                      "vae_loaded": conditioner.online, "conditioning":config['data'].get('conditioning','cached'),
                       "trainable_parameters": sum(parameter.numel() for parameter in trainable.values()), "mode": mode}), flush=True)
     model.train()
     torch.cuda.reset_peak_memory_stats()
@@ -83,7 +88,7 @@ def train_segment(config, mode, run_dir, until, resume=None, init_adapter=None, 
             losses = []
             for _ in range(config["training"]["grad_accum"]):
                 row = sample_at(rows, cursor, config["training"]["seed"])
-                tensors, metadata = load_pair(config, row, device="cuda")
+                tensors, metadata = conditioner(row)
                 if face_masks:
                     tensors['target_face_mask'] = face_masks[row['sample_id']].to('cuda')
                 loss = backend.training_loss(model, tensors, config, branch_enabled)

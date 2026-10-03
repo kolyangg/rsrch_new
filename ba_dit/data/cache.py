@@ -18,6 +18,9 @@ def cache_spec(config: dict, row: dict, stage: str) -> dict:
     backend = config["model"]["backend"]
     spec = {"schema": CACHE_SCHEMA, "backend": backend, "arch": config["model"]["arch"],
             "revisions": revisions(config), "source_commit": SOURCE_PINS[backend], "stage": stage, "dtype": "bfloat16"}
+    spec['dtype'] = config['model'].get('conditioning_dtype', 'bfloat16')
+    if stage == 'encoder' and 'encoder_device' in config['data']:
+        spec['encoder_device'] = config['data']['encoder_device']
     if stage == "encoder":
         spec["prompt"] = row["prompt"]
     if stage == "vae" or backend == "qwen":

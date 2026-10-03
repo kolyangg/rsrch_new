@@ -1,0 +1,54 @@
+schema_version: 2
+name: flux4b_48_multi_id_large_qkvo_r128
+model:
+  backend: flux
+  arch: flux2_klein_4b
+  weights: ${BA_ROOT}/weights/flux4b
+  encoder: ${BA_ROOT}/weights/flux4b_text
+  vae: ${BA_ROOT}/weights/flux_vae/ae.safetensors
+  revision_lock: ${BA_ROOT}/locks/weights-small.json
+data:
+  conditioning: online
+  # Full adjusted Large Dataset, imported with held-out identity aliases.
+  train_manifest: ${BA_ROOT}/data/train_pairs_large.jsonl
+  train_limit: null
+  validation_manifest: ${BA_ROOT}/data/validation/manual_val_96.jsonl
+  target_size: [768, 768]
+  reference_size: 512
+  cache_dir: ${BA_ROOT}/cache/conditioning
+branch:
+  kind: masked_face_qkvo
+  rank: 128
+  alpha: 128
+  gamma: 1.0
+  query_chunk: 128
+  max_reference_keys: 512
+  mask_feather_pixels: 16
+# Generic backbone LoRA stays disabled in branch_only mode.
+lora:
+  rank: 8
+  alpha: 8
+training:
+  steps: 10000
+  # The supported trainer uses microbatch 1: effective batch = 1 x 8.
+  grad_accum: 8
+  lr: 0.00005
+  warmup: 100
+  checkpoint_every: 500
+  validation_every: 2000
+  seed: 142
+  deterministic: true
+  gradient_checkpointing: true
+  weight_decay: 0.0
+  gradient_clip: 1.0
+  max_reserved_fraction: 0.9
+validation:
+  steps: 20
+  guidance: 4.0
+  limit: 96
+  batch_size: 1
+hardware:
+  min_vram_gb: 45
+logging:
+  comet_project: rsrch_new
+  enabled: true

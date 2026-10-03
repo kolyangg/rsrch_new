@@ -1,0 +1,24 @@
+# Dataset-location inventory, not a ba_dit schema-2 training config.
+schema_version: 1
+kind: cluster_validation_locations
+verified_on: '2026-10-03'
+host: clust
+project_root: /home/nasilaev/rsrch_new
+status: verified
+manifest: /home/nasilaev/rsrch_new/data/validation/manual_val_96.jsonl
+manifest_sha256: d769406704ddbcdf0bb09d408ad4929b302aaa84a12e295872618e3df9f09a65
+items: 96
+unique_references: 8
+references: /home/nasilaev/rsrch/dataset_full/val_dataset/references
+project_reference_symlink: /home/nasilaev/rsrch_new/data/validation/references
+prompts: /home/nasilaev/rsrch_new/data/validation/prompts_10.txt
+reference_boxes: /home/nasilaev/rsrch_new/data/validation/ref_bboxes.json
+identity_embeddings: /home/nasilaev/rsrch_new/data/validation/id_embeds_manual_val_subject_v2.pth
+identity_embeddings_sha256: e0d36212ad350db8252c4805acf46aa4c90289603d460584dc7692066712b465
+legacy_identity_embeddings: /home/nasilaev/rsrch_new/data/validation/id_embeds_manual_val.pth
+legacy_identity_embeddings_sha256: 23ae97075e967f2bcb790c5094ef350b316249c7023df67a68f735bfebb747c6
+# The old cluster prompts and embedding file differ from current project files.
+# Reuse only byte-verified reference images; retain current prompts/order/seeds,
+# boxes, subject-v2 embeddings and separately named legacy metric embeddings.
+verification: all_eight_reference_sha256_values_match_fixed96_manifest
+native_generation_masks: regenerate_for_the_approved_v100_precision_experiment

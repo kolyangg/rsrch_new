@@ -21,10 +21,15 @@ def training_code_digest(config):
     import hashlib
     from ba_dit.config import ROOT
     files = ["training.py", f"backends/{config['model']['backend']}_runtime.py", "data/cache.py", "data/geometry.py"]
+    if config['data'].get('conditioning') == 'online':
+        files.append('data/conditioning.py')
+    if config['training'].get('world_size', 1) > 1:
+        files += ['distributed_training.py', 'checkpoint.py']
     return hashlib.sha256(b"".join((ROOT / "ba_dit" / name).read_bytes() for name in files)).hexdigest()
 
 
-def save_training(model, optimizer, scheduler, config, mode, run_dir, step, cursor, data_digest=None):
+def save_training(model, optimizer, scheduler, config, mode, run_dir, step, cursor, data_digest=None,
+                  distributed_state=None):
     from ba_dit.config import adapter_identity, config_digest, portable_config
     import yaml
 
@@ -43,9 +48,13 @@ def save_training(model, optimizer, scheduler, config, mode, run_dir, step, curs
         (temporary / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
         (temporary / "resolved_config.yaml").write_text(yaml.safe_dump(config, sort_keys=False))
         (temporary / "resume_config.yaml").write_text(yaml.safe_dump(portable_config(config), sort_keys=False))
-        torch.save({"optimizer": optimizer.state_dict(), "scheduler": scheduler.state_dict(), "cursor": cursor,
-                    "torch_rng": torch.get_rng_state(), "cuda_rng": torch.cuda.get_rng_state_all() if torch.cuda.is_available() else [],
-                    "python_rng": random.getstate()}, temporary / "training_state.pt")
+        state = {"optimizer": optimizer.state_dict(), "scheduler": scheduler.state_dict(), "cursor": cursor,
+                 "torch_rng": torch.get_rng_state(),
+                 "cuda_rng": torch.cuda.get_rng_state_all() if torch.cuda.is_available() and distributed_state is None else [],
+                 "python_rng": random.getstate()}
+        if distributed_state is not None:
+            state['distributed'] = distributed_state
+        torch.save(state, temporary / "training_state.pt")
         temporary.rename(destination)
     finally:
         if temporary.exists():
@@ -73,7 +82,7 @@ def load_adapters(model, checkpoint, config, mode):
     return manifest
 
 
-def restore_training(optimizer, scheduler, checkpoint, config, data_digest=None):
+def restore_training(optimizer, scheduler, checkpoint, config, data_digest=None, rank=None, scaler=None):
     from ba_dit.config import config_digest
 
     checkpoint = Path(checkpoint)
@@ -87,6 +96,28 @@ def restore_training(optimizer, scheduler, checkpoint, config, data_digest=None)
     state = torch.load(checkpoint / "training_state.pt", map_location="cpu", weights_only=True)
     optimizer.load_state_dict(state["optimizer"])
     scheduler.load_state_dict(state["scheduler"])
+    distributed = state.get('distributed')
+    if rank is not None:
+        world = config['training']['world_size']
+        if distributed is None:
+            if manifest['step'] != 0 or state['cursor'] != 0:
+                raise ValueError('Nonzero DDP checkpoint is missing per-rank RNG/scaler state')
+            # A serially initialized checkpoint0 precedes independent rank streams.
+            torch.manual_seed(config['training']['seed'] + rank)
+            random.seed(config['training']['seed'] + rank)
+            return 0, 0
+        if distributed['world_size'] != world or len(distributed['ranks']) != world:
+            raise ValueError('Checkpoint world size differs from the configured DDP run')
+        if scaler is not None:
+            scaler.load_state_dict(distributed['scaler'])
+        local = distributed['ranks'][rank]
+        torch.set_rng_state(local['torch_rng'])
+        random.setstate(local['python_rng'])
+        if local['cuda_rng'] is not None:
+            torch.cuda.set_rng_state(local['cuda_rng'])
+        return manifest['step'], state['cursor']
+    if distributed is not None:
+        raise ValueError('Distributed checkpoint requires an explicit rank on resume')
     torch.set_rng_state(state["torch_rng"])
     if torch.cuda.is_available():
         torch.cuda.set_rng_state_all(state["cuda_rng"])

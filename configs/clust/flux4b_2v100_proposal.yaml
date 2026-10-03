@@ -1,0 +1,89 @@
+# Review summary; executable schema-2 config is linked below.
+schema_version: 1
+kind: training_proposal
+status: scripts_prepared_gpu_run_awaiting_user_approval
+experiment: flux4b_clust_2v100_multiid_face_qkvo_r128_768_fp16
+model: black-forest-labs/FLUX.2-klein-base-4B
+initialization: fresh_native_initialized_ba_not_one_id_checkpoint
+architecture:
+  branch: masked_face_qkvo
+  rank: 128
+  alpha: 128
+  gamma: 1.0
+  dual_blocks:
+  - 1
+  - 2
+  - 3
+  - 4
+  single_blocks:
+  - 3
+  - 8
+  - 13
+  - 18
+  trainable_parameters: 25165824
+  target_size:
+  - 768
+  - 768
+  reference_size: 512
+  mask_feather_pixels: 16
+  loss: face_mask_normalized_native_flow_velocity_mse
+scheduler:
+  host: clust
+  account: proj_1892
+  partition: rocky
+  nodes: 1
+  gpus: v100:2
+  tasks: 1
+  cpus_per_task: 16
+  time: '24:00:00'
+  requeue: false
+training:
+  strategy: two_ddp_workers_one_per_gpu
+  microbatch_per_gpu: 1
+  gradient_accumulation_per_worker: 4
+  effective_global_batch: 8
+  initial_optimizer_updates: 2000
+  lr: 5.0e-05
+  warmup_updates: 100
+  weight_decay: 0.0
+  gradient_clip: 1.0
+  checkpoint_every: 500
+  seed: 142
+  gradient_checkpointing: true
+  max_reserved_fraction_per_gpu: 0.9
+  conditioning: online_without_full_training_cache
+precision:
+  proposed_denoiser: fp16_with_dynamic_loss_scaling
+  adapter_parameters_and_optimizer: fp32
+  reductions_norms_and_loss: fp32
+  text_encoder_and_vae: fp32_CPU_text_encoder_per_rank_and_GPU_VAE
+  status: requires_real_finite_forward_backward_checks
+environment:
+  python: 3.11.13
+  cuda: 12.6 with sm_70 required
+  torch: 2.7.1+cu126
+  constraints: locks/flux-v100-constraints.txt
+validation:
+  locations: configs/clust/validation.yaml
+  manifest: data/validation/manual_val_96.jsonl
+  at_updates:
+  - 0
+  - 2000
+  denoising_steps: 20
+  guidance: 4.0
+  batch_size: 1
+  execution: training_workers_exit_before_serial_validation
+  masks: native_generated_for_this_named_precision_experiment
+data:
+  locations: configs/clust/training_sources.yaml
+  preference: full_adjusted_Large_cross_view_identities
+  train_manifest: data/train_pairs_large_clust.jsonl
+  readiness: requires_verified_transfer_receipt
+blocking_work:
+- Finish and checksum-verify background Large transfer.
+- Prepare isolated cluster environment, pinned weights and private Comet credential.
+- User approval before GPU allocation.
+- Pass pretrained V100 parity/gradients/peak-memory/exact-resume admission before
+  long training.
+executable_config: configs/clust/flux4b_2v100.yaml
+sbatch: jobs/flux4b_clust_2v100.sbatch

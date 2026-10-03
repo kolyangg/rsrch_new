@@ -14,6 +14,7 @@ from safetensors.torch import load_file
 from ba_dit import adapters
 from ba_dit.config import ROOT, load_config
 from ba_dit.data.cache import load_pair
+from ba_dit.data.conditioning import TrainingConditioner
 from ba_dit.data.manifest import read_manifest
 from ba_dit.nn.masked_face_attention import training_mask
 from ba_dit.runtime import backend_module
@@ -42,7 +43,20 @@ def parity(config, out):
     rows = read_manifest(config['data']['train_manifest'], training=True)
     # Include the largest face support to qualify the worst routing workload.
     row = max(rows, key=lambda r: float(training_mask(r, config).sum()))
-    tensors, _ = load_pair(config, row, 'cuda')
+    conditioner = TrainingConditioner(config, backend)
+    live_check = {}
+    if conditioner.online:
+        # Compare against an independently prepared validation cache, not a
+        # serialization of this call. No training cache is created for this test.
+        probe = read_manifest(config['data']['validation_manifest'])[0]
+        cached, _ = load_pair(config, probe, 'cuda')
+        cpu_rng = torch.get_rng_state(); cuda_rng = torch.cuda.get_rng_state()
+        live, _ = conditioner(probe)
+        assert cached.keys() == live.keys() and all(torch.equal(value,live[name]) for name,value in cached.items())
+        assert torch.equal(cpu_rng,torch.get_rng_state()) and torch.equal(cuda_rng,torch.cuda.get_rng_state())
+        live_check = {'live_cached_conditioning_exact':True,'conditioning_preserves_training_rng':True}
+        del cached, live
+    tensors, _ = conditioner(row)
     tensors['target_face_mask'] = training_mask(row, config).cuda()
     noisy = torch.randn_like(tensors['target_latent'])
     sigma = torch.tensor([.5], device='cuda', dtype=noisy.dtype)
@@ -62,20 +76,24 @@ def parity(config, out):
         assert torch.equal(native, empty)
         initial = backend.predict(model, tensors, noisy, sigma, config, True)
         assert torch.isfinite(initial).all() and not torch.equal(native, initial)
-    model.enable_gradient_checkpointing()
+    if config['training']['gradient_checkpointing']:
+        model.enable_gradient_checkpointing()
     model.train()
     optimizer = torch.optim.AdamW(adapters.groups(model, config['training']['lr']), weight_decay=0.)
+    scaler = torch.amp.GradScaler('cuda', enabled=config['model'].get('dtype') == 'float16', init_scale=32.)
     torch.cuda.reset_peak_memory_stats()
     gradients = []
     for _ in range(2):
         optimizer.zero_grad(set_to_none=True)
         loss = backend.training_loss(model, tensors, config, True)
-        loss.backward()
+        scaler.scale(loss).backward()
+        scaler.unscale_(optimizer)
         assert torch.isfinite(loss)
         assert all(p.grad is not None and torch.isfinite(p.grad).all() for p in params.values())
         gradients.append({n:float(p.grad.norm()) for n,p in params.items()})
         torch.nn.utils.clip_grad_norm_(list(params.values()), 1., error_if_nonfinite=True)
-        optimizer.step()
+        scaler.step(optimizer)
+        scaler.update()
     assert all(v > 0 for n,v in gradients[0].items() if n.endswith('.b'))
     assert all(v > 0 for v in gradients[1].values())
     assert all(p.grad is None for p in model.parameters() if not p.requires_grad)
@@ -94,7 +112,7 @@ def parity(config, out):
         'parameter_changes':changes, 'branch_on_off_mean_abs':float((initial-native).abs().float().mean()),
         'trained_prediction_change':float((trained-initial).abs().float().mean()),
         'peak_reserved_gib':torch.cuda.max_memory_reserved()/2**30, 'reserved_fraction':fraction,
-        'inventory':inventory})
+        'inventory':inventory, **live_check})
     print('Pretrained parity, gradients, frozen equality and memory passed', flush=True)
 
 
@@ -116,6 +134,9 @@ def main(args):
         (folder/'resolved_config.yaml').write_text(yaml.safe_dump(config, sort_keys=False))
         command = [sys.executable, '-m', 'ba_dit.cli', '_train-worker', '--config', str(path),
                    '--mode','branch_only','--output-dir',str(folder),'--until',str(until)]
+        if config['training'].get('world_size', 1) > 1:
+            command = [sys.executable, '-m', 'torch.distributed.run', '--standalone',
+                       '--nproc-per-node=2', *command[1:]]
         if resume: command += ['--resume',str(folder/resume)]
         commands.append(command)
     for command in commands:
@@ -133,7 +154,9 @@ def main(args):
         return x==y
     assert same(a,b)
     write(out/'resume_parity.json', {'exact_parameters':True,'exact_optimizer_scheduler_rng_cursor':True,
-                                   'optimizer_updates':2,'microbatch':1,'gradient_accumulation':4})
+                                   'optimizer_updates':2,'microbatch':1,
+                                   'world_size':config['training'].get('world_size', 1),
+                                   'gradient_accumulation':config['training']['grad_accum']})
     print('Fresh-process optimizer/RNG replay passed', flush=True)
 
 

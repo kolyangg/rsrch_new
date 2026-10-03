@@ -12,16 +12,23 @@ from ba_dit.data.manifest import file_hash
 
 
 def signature(config):
-    return {"arch": config["model"]["arch"], "revisions": revisions(config),
+    result = {"arch": config["model"]["arch"], "revisions": revisions(config),
             "target_size": config["data"]["target_size"], "reference_size": config["data"]["reference_size"],
             "steps": config["validation"]["steps"], "guidance": config["validation"]["guidance"],
             "panel_sha256": file_hash(config["data"]["validation_manifest"])}
+    if 'dtype' in config['model']:
+        result['precision'] = {k: config['model'].get(k, 'bfloat16') for k in ('dtype', 'conditioning_dtype')}
+        result['encoder_device'] = config['data'].get('encoder_device', 'cuda')
+    return result
 
 
 def mask_directory(config):
     height, width = config["data"]["target_size"]
     geometry = f"{height}x{width}_ref{config['data']['reference_size']}_steps{config['validation']['steps']}_cfg{config['validation']['guidance']:g}"
     directory = ROOT / "data/validation/output_masks" / config["model"]["arch"] / geometry
+    if 'dtype' in config['model']:
+        from ba_dit.config import digest
+        directory /= 'precision-' + digest({k: v for k, v in signature(config).items() if k in {'precision', 'encoder_device'}})[:12]
     panel_hash = file_hash(config["data"]["validation_manifest"])
     if panel_hash != file_hash(ROOT / "data/validation/manual_val_96.jsonl"):
         directory /= f"panel-{panel_hash[:12]}"

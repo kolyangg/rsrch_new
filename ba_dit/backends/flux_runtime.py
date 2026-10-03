@@ -18,13 +18,17 @@ def scheduler():
                                                  max_shift=1.15, num_train_timesteps=1000, shift=3.0, use_dynamic_shifting=True)
 
 
+def model_dtype(config, conditioning=False):
+    return getattr(torch, config['model'].get('conditioning_dtype' if conditioning else 'dtype', 'bfloat16'))
+
+
 def load_transformer(config, device="cuda"):
     from safetensors.torch import load_file
 
     is4 = config["model"]["arch"] == "flux2_klein_4b"
     filename = f"flux-2-klein-base-{'4b' if is4 else '9b'}.safetensors"
     weights = load_file(str(Path(config["model"]["weights"]) / filename), device="cpu")
-    model = Flux2.load_from_state_dict(weights, dtype=torch.bfloat16, config=Klein4BParams() if is4 else Klein9BParams())
+    model = Flux2.load_from_state_dict(weights, dtype=model_dtype(config), config=Klein4BParams() if is4 else Klein9BParams())
     del weights
     return model.requires_grad_(False).to(device).eval()
 
@@ -34,7 +38,8 @@ def load_encoder(config):
 
     path = config["model"]["encoder"]
     device = "cpu" if config["model"]["arch"].endswith("9b") and torch.cuda.get_device_properties(0).total_memory < 24 * 2**30 else "cuda"
-    encoder = Qwen3ForCausalLM.from_pretrained(path, dtype=torch.bfloat16, local_files_only=True).eval().requires_grad_(False).to(device)
+    device = config['data'].get('encoder_device', device)
+    encoder = Qwen3ForCausalLM.from_pretrained(path, dtype=model_dtype(config, conditioning=True), local_files_only=True).eval().requires_grad_(False).to(device)
     tokenizer = Qwen2Tokenizer.from_pretrained(path, local_files_only=True)
     return Flux2Pipeline(scheduler=None, vae=None, text_encoder=encoder, tokenizer=tokenizer, transformer=None,
                          text_encoder_type="qwen", is_guidance_distilled=False)
@@ -48,7 +53,7 @@ def encode_text(pipe, config, row):
 
 
 def load_vae(config, device="cuda"):
-    return AutoEncoder.load_model(config["model"]["vae"], dtype=torch.bfloat16).requires_grad_(False).eval().to(device)
+    return AutoEncoder.load_model(config["model"]["vae"], dtype=model_dtype(config, conditioning=True)).requires_grad_(False).eval().to(device)
 
 
 @torch.no_grad()
@@ -73,6 +78,10 @@ def encode_images(vae, config, row):
 
 
 def predict(model, tensors, noisy, sigma, config, branch=True, negative=False):
+    if 'dtype' in config['model']:
+        noisy = noisy.to(model_dtype(config))
+        tensors = {k: v.to(model_dtype(config)) if k in {'reference_tokens', 'prompt_embeds', 'negative_prompt_embeds'} else v
+                   for k, v in tensors.items()}
     packed, _ = batched_prc_img(noisy)
     prefix = "negative_" if negative else ""
     prediction = model(
@@ -90,6 +99,8 @@ def predict(model, tensors, noisy, sigma, config, branch=True, negative=False):
 
 def training_loss(model, tensors, config, branch=True):
     target = tensors["target_latent"]
+    if 'dtype' in config['model']:
+        target = target.to(model_dtype(config))
     noise = torch.randn_like(target)
     noise_schedule = scheduler()
     # Pinned Toolkit defaults: sigmoid timesteps, balanced index sampling, MSE velocity target.
@@ -117,7 +128,7 @@ def sample(model, tensors, config, seed, branch=True, callback=None):
 def sample_batch(model, tensors, config, seeds, branch=True, callback=None):
     height, width = config["data"]["target_size"]
     latent = torch.cat([torch.randn((1, 128, height // 16, width // 16), generator=torch.Generator().manual_seed(seed),
-                                    dtype=torch.bfloat16) for seed in seeds]).to(model.device)
+                                    dtype=model_dtype(config)) for seed in seeds]).to(model.device)
     times = get_schedule(config["validation"]["steps"], latent.shape[-2] * latent.shape[-1])
     guidance = config["validation"]["guidance"]
     for index, (current, following) in enumerate(zip(times[:-1], times[1:])):

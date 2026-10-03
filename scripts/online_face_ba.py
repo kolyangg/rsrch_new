@@ -1,4 +1,4 @@
-"""Full-denoiser one-ID Q/K/V/O training and fixed24 masked scene validation."""
+"""Full-denoiser Q/K/V/O BA with frozen native masks: named one-ID24 or multi-ID96."""
 import argparse
 import json
 import os
@@ -17,7 +17,7 @@ from safetensors.torch import load_file, save_file
 from ba_dit import adapters
 from ba_dit.checkpoint import load_adapters, save_training, trainable_parameters
 from ba_dit.config import ROOT, adapter_identity, digest, load_config, revisions
-from ba_dit.data.cache import load_pair
+from ba_dit.data.cache import cache_path, cache_spec, load_pair
 from ba_dit.data.manifest import assert_disjoint, file_hash, read_manifest
 from ba_dit.logging import connect
 from ba_dit.nn.masked_face_attention import training_mask
@@ -56,13 +56,23 @@ def experiment(config, run):
         'trainable_scope':'branch Q/K/V/output LoRA only', 'trainable_parameters':25165824,
         'native_lora_enabled':False, 'full_denoiser_each_microbatch':True,
         'fresh_noise_and_timesteps':True, 'cached_target_hidden_states':False,
-        'training/microbatch':1, 'training/effective_batch':config['training']['grad_accum'],
+        'training/microbatch':1, 'training/world_size':config['training'].get('world_size', 1),
+        'training/effective_batch':config['training']['grad_accum']*config['training'].get('world_size', 1),
         'loss':'face-mask-normalized native flow MSE; no ArcFace auxiliary',
-        'validation/images':24, 'validation/checkpoints':[0,500,1000,2000],
+        'validation/images':config['validation']['limit'],
+        'validation/checkpoints':validation_steps(config),
         'validation/task':'prompt/reference generation; native background composed explicitly',
         'validation/face_cfg':config['validation']['guidance'],
         'validation/masks':'frozen native-generated masks; no target photos'})
     return exp
+
+
+def validation_steps(config):
+    if config['name'].startswith('flux4b_oneid_online_'):
+        return [0, 500, 1000, 2000]
+    total = config['training']['steps']
+    return sorted({0, total, *range(config['training']['validation_every'], total,
+                                   config['training']['validation_every'])})
 
 
 def verify(run):
@@ -79,22 +89,42 @@ def verify(run):
     return config, identity
 
 
-def initialize(run, config_path, admission):
+def initialize(run, config_path, admission, native_source=None):
     config = load_config(config_path)
     native_check = json.loads((admission/'native_checks.json').read_text())
     resume_check = json.loads((admission/'resume_parity.json').read_text())
     assert native_check['all_frozen_parameters_exact'] and native_check['reserved_fraction'] < .9
     assert resume_check['exact_parameters'] and resume_check['exact_optimizer_scheduler_rng_cursor']
+    assert resume_check.get('world_size', 1) == config['training'].get('world_size', 1)
+    if config['data'].get('conditioning') == 'online':
+        assert native_check['live_cached_conditioning_exact'] and native_check['conditioning_preserves_training_rng']
     rows = read_manifest(config['data']['validation_manifest'])
     train_rows = read_manifest(config['data']['train_manifest'], training=True)
     assert_disjoint(train_rows, rows)
-    assert len(rows)==24 and len(train_rows)==19 and not any('target' in row for row in rows)
-    # Reuse only immutable input latents/text and the existing reviewed native panel.
-    for row in train_rows+rows:
-        tensors,_=load_pair(config,row,negative=row in rows)
-        if row in rows: assert 'target_latent' not in tensors
-    masks=json.loads((NATIVE_SOURCE/'routing_masks.json').read_text())
+    assert len(rows)==config['validation']['limit'] and not any('target' in row for row in rows)
+    multi_id = native_source is not None
+    if multi_id:
+        assert len({r['identity_id'] for r in train_rows}) > 1
+        assert not any(r.get('split_policy') == 'one_id_diagnostic' for r in train_rows+rows)
+        assert resume_check['gradient_accumulation'] == config['training']['grad_accum']
+    else:
+        assert len(rows)==24 and len(train_rows)==19
+    native_source = Path(native_source or NATIVE_SOURCE)
+    # Verify cache headers without rereading hundreds of GB of training tensors.
+    cached_train = [] if config['data'].get('conditioning') == 'online' else train_rows
+    for split_rows, validation in ((cached_train,False),(rows,True)):
+        for row in split_rows:
+            entries=[(row,'encoder'),(row,'vae')]
+            if validation: entries.append(({**row,'prompt':''},'encoder'))
+            for item,stage in entries:
+                with safe_open(cache_path(config,item,stage),framework='pt') as cache:
+                    assert json.loads(cache.metadata()['record'])['key']==digest(cache_spec(config,item,stage))
+                    if validation: assert 'target_latent' not in cache.keys()
+    masks=json.loads((native_source/'routing_masks.json').read_text())
     signature=masks['source_signature']
+    if 'dtype' in config['model']:
+        from ba_dit.validation_masks import signature as mask_signature
+        assert signature == mask_signature(config)
     assert signature['panel_sha256']==file_hash(config['data']['validation_manifest'])
     assert signature['revisions']==revisions(config)
     assert signature['target_size']==config['data']['target_size'] and signature['reference_size']==config['data']['reference_size']
@@ -107,23 +137,31 @@ def initialize(run, config_path, admission):
         key=row['sample_id']; record=masks['samples'][key]
         assert record['face_bbox'] and all(record[k]==row[k] for k in ('prompt','seed','identity_id'))
         for suffix,field in (('.png','baseline_image_sha256'),('.safetensors','latent_sha256')):
-            source=NATIVE_SOURCE/'native'/f'{key}{suffix}'
+            source=native_source/'native'/f'{key}{suffix}'
             assert file_hash(source)==record[field]
             shutil.copyfile(source,run/'native'/source.name)
     for name in ('routing_masks.json','ownership_boxes.json','mask_overlays.png'):
-        shutil.copyfile(NATIVE_SOURCE/name,run/name)
+        shutil.copyfile(native_source/name,run/name)
+    native_quality=native_source/'quality_summary.json'
+    if multi_id and not native_quality.is_file(): raise FileNotFoundError(native_quality)
+    if native_quality.is_file(): shutil.copyfile(native_quality,run/'native/quality_summary.json')
     for name in ('native_checks.json','resume_parity.json'):
         shutil.copyfile(admission/name,run/name)
-    for source in SOURCES:
+    sources=SOURCES + (('scripts/run_multi_id_face_ba.py','scripts/run_flux4b_multi_id.sh',
+        'scripts/check_online_face_ba.py','ba_dit/validation_masks.py','ba_dit/data/conditioning.py') if multi_id else ())
+    if config['training'].get('world_size', 1) > 1:
+        sources += ('ba_dit/distributed_training.py', 'scripts/run_clust_v100.sh')
+    for source in sources:
         target=run/'source_snapshot'/source
         target.parent.mkdir(parents=True,exist_ok=True)
         shutil.copyfile(ROOT/source,target)
     identity={'variant':'online_masked_qkvo_v1','base':adapter_identity(config),
-        'config_sha256':digest(config),'source_sha256':{p:file_hash(ROOT/p) for p in SOURCES},
+        'config_sha256':digest(config),'source_sha256':{p:file_hash(ROOT/p) for p in sources},
         'train_manifest_sha256':file_hash(config['data']['train_manifest']),
         'validation_manifest_sha256':file_hash(config['data']['validation_manifest']),
         'routing_masks_sha256':file_hash(run/'routing_masks.json'),
-        'native_source':str(NATIVE_SOURCE), 'admission':str(admission),
+        'native_source':str(native_source), 'admission':str(admission),
+        'split_policy':'identity_disjoint' if multi_id else 'one_id_diagnostic',
         'trainable_parameters':25165824,'trainable_tensors':64,
         'loss':'mask-normalized flow MSE, fresh native noise and sigma',
         'validation_targets':False,'mask_feather_pixels':16,
@@ -201,8 +239,8 @@ def infer(run,config,step):
         write(folder/'validation.json',{'backend':config['model']['arch'],'mode':'branch_only',
             'variant':'online_masked_qkvo_v1','checkpoint':str(checkpoint),'checkpoint_sha256':sha,
             'panel_sha256':file_hash(config['data']['validation_manifest']),'samples':samples})
-        print(f'Validation {step}: {len(samples)}/24; {time.monotonic()-started:.0f}s',flush=True)
-    write(run/f'inference_audit_{step}.json',{'checkpoint_sha256':sha,'samples':24,
+        print(f'Validation {step}: {len(samples)}/{len(rows)}; {time.monotonic()-started:.0f}s',flush=True)
+    write(run/f'inference_audit_{step}.json',{'checkpoint_sha256':sha,'samples':len(rows),
         'full_denoiser':True,'target_photos_loaded':False,'exact_latent_exterior':True,**memory()})
 
 
@@ -227,9 +265,9 @@ def decode(run,config,step):
             image=preserve_background(image,native,alpha);image.save(folder/f'{key}.png')
             difference=np.abs(np.asarray(image).astype(float)-np.asarray(native).astype(float))
             support=alpha.squeeze().numpy()>0
-            audit.append({'sample_id':key,'background_max_abs':float(difference[~support].max()),
+            audit.append({'sample_id':key,'background_max_abs':float(difference[~support].max()) if (~support).any() else 0.,
                           'face_mean_abs':float(difference[support].mean())})
-            exp.log_image(image,name=f'fixed24/{key}',step=step,metadata={'prompt':row['prompt'],'seed':row['seed']})
+            exp.log_image(image,name=f"fixed{config['validation']['limit']}/{key}",step=step,metadata={'prompt':row['prompt'],'seed':row['seed']})
         write(run/f'background_audit_{step}.json',audit)
         exp.log_asset(str(folder/'validation.json'),file_name=f'validation_{step:06d}.json')
     finally:exp.end()
@@ -244,15 +282,17 @@ def summarize(run,config,step):
     checkpoint=run/f'checkpoint-{best:06d}'
     write(run/'best_checkpoint.json',{'step':best,'id_sim':scores[best]['id_sim'],
           'directory':str(checkpoint),'sha256':file_hash(checkpoint/'adapters.safetensors')})
+    native_quality=run/'native/quality_summary.json'
+    native_score=json.loads(native_quality.read_text())['metrics']['id_sim'] if native_quality.exists() else .3313986754
     write(run/'comparison_summary.json',{'metrics':scores,'best_step':best,'latest_step':step,
-          'native_panel_id_sim':.3313986754,'step0_is_untrained_native_initialized_branch':True})
+          'native_panel_id_sim':native_score,'step0_is_untrained_native_initialized_branch':True})
     rows=read_manifest(config['data']['validation_manifest'])
     masks=json.loads((run/'routing_masks.json').read_text())['samples']
     columns=[('Native',run/'native'),('Untrained BA',run/'validation-000000')]
     if step:columns.append((f'BA {step}',folder))
     exp=experiment(config,run)
     try:
-        for page in range(3):
+        for page in range((len(rows)+7)//8):
             sheet=Image.new('RGB',(224*len(columns),8*234+32),'white');draw=ImageDraw.Draw(sheet)
             for col,(label,_) in enumerate(columns):draw.text((col*224+6,8),label,fill='black')
             for i,row in enumerate(rows[page*8:(page+1)*8]):
@@ -277,7 +317,7 @@ def main(args):
     torch.use_deterministic_algorithms(True)
     run=args.run.resolve()
     if args.action=='init':
-        initialize(run,args.config,args.admission.resolve());return
+        initialize(run,args.config,args.admission.resolve(),args.native_source);return
     config,_=verify(run)
     if args.action=='train':
         train_segment(config,'branch_only',run,args.step,resume=run/f'checkpoint-{args.resume:06d}')
@@ -292,6 +332,7 @@ if __name__=='__main__':
     p.add_argument('--run',type=Path,required=True)
     p.add_argument('--config',type=Path,default=ROOT/'configs/flux4b_oneid_online_face_qkvo_r128_768.yaml')
     p.add_argument('--admission',type=Path)
+    p.add_argument('--native-source',type=Path,help='Explicit frozen native bundle for an identity-disjoint multi-ID run')
     p.add_argument('--step',type=int,default=0)
     p.add_argument('--resume',type=int,default=0)
     main(p.parse_args())
