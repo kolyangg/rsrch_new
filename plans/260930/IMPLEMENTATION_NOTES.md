@@ -475,3 +475,12 @@ Measured FP32 updates took72.8–81.1seconds;20k updates project roughly
 17–19days before validation overhead. The replacement requests21days rather
 than the insufficient original7, within the partition's30-day maximum.
 This changes the scheduling ceiling, not the20k target or GPU count.
+
+Replacement job4373291 started oncn-026 at2026-10-03 15:22:18UTC from
+commit3d6e02d. Before submission,120 committed runtime/config/lock files
+were SHA256-verified remotely. At the startup check it was verifying the
+dataset with zero main updates. Its startup archive successfully uploaded
+to Comet key307b9627e32d4d38aed324c028f6eedf; the activated-environment
+login uploader PID2895963 reports state/stage and later live progress.
+Submission and source manifest are under remote/local
+scratch/clust-comet-recovery. Full-data admission and training remain pending.
