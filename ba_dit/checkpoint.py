@@ -25,11 +25,13 @@ def training_code_digest(config):
         files.append('data/conditioning.py')
     if config['training'].get('world_size', 1) > 1:
         files += ['distributed_training.py', 'checkpoint.py']
+    if 'compute_precision' in config['model']:
+        files += ['precision.py', 'checkpoint.py']
     return hashlib.sha256(b"".join((ROOT / "ba_dit" / name).read_bytes() for name in files)).hexdigest()
 
 
 def save_training(model, optimizer, scheduler, config, mode, run_dir, step, cursor, data_digest=None,
-                  distributed_state=None):
+                  distributed_state=None, scaler=None):
     from ba_dit.config import adapter_identity, config_digest, portable_config
     import yaml
 
@@ -52,6 +54,10 @@ def save_training(model, optimizer, scheduler, config, mode, run_dir, step, curs
                  "torch_rng": torch.get_rng_state(),
                  "cuda_rng": torch.cuda.get_rng_state_all() if torch.cuda.is_available() and distributed_state is None else [],
                  "python_rng": random.getstate()}
+        if config['model'].get('compute_precision') and (scaler is None or not scaler.is_enabled()):
+            raise ValueError('Mixed-precision checkpoints require gradient-scaler state')
+        if scaler is not None and scaler.is_enabled():
+            state['grad_scaler'] = scaler.state_dict()
         if distributed_state is not None:
             state['distributed'] = distributed_state
         torch.save(state, temporary / "training_state.pt")
@@ -118,6 +124,12 @@ def restore_training(optimizer, scheduler, checkpoint, config, data_digest=None,
         return manifest['step'], state['cursor']
     if distributed is not None:
         raise ValueError('Distributed checkpoint requires an explicit rank on resume')
+    if scaler is not None and scaler.is_enabled():
+        if 'grad_scaler' not in state:
+            raise ValueError('Mixed-precision checkpoint is missing gradient-scaler state')
+        scaler.load_state_dict(state['grad_scaler'])
+    elif 'grad_scaler' in state:
+        raise ValueError('Checkpoint requires an enabled gradient scaler')
     torch.set_rng_state(state["torch_rng"])
     if torch.cuda.is_available():
         torch.cuda.set_rng_state_all(state["cuda_rng"])

@@ -16,7 +16,7 @@ python_bin="$BA_FLUX_PYTHON"
 if [[ " $* " != *' --dry-run '* ]]; then
   "$python_bin" -m scripts.check_clust_v100
 fi
-# The controller creates two workers only during training; validation stays serial.
+# Worker count follows the config; validation stays serial.
 # It never overwrites CUDA_VISIBLE_DEVICES supplied by Slurm.
 exec "$python_bin" -m scripts.run_multi_id_face_ba \
-  --config configs/clust/flux4b_2v100.yaml "$@"
+  --config "${BA_CLUST_CONFIG:-configs/clust/flux4b_2v100.yaml}" "$@"

@@ -613,3 +613,37 @@ not started. Benchmark source hash was
 a copy is retained under remote `logs/clust/benchmark-4373571.py` and local
 `scratch/clust-v100/budgets/4373571`. Later script edits only clarify its
 docstring. All GPU work ran inside the activated cluster `rsrch_new` environment.
+
+
+### 2026-10-03 — Approved two-V100 mixed-precision production launch
+
+The user approved launching the measured 768px / rank128 / effective-batch1
+mixed-precision setup for 20k updates. Added the named production config
+`configs/clust/flux4b_2v100_amp.yaml` and `jobs/flux4b_clust_2v100_amp.sbatch`
+(2 V100s, one training worker plus dedicated GPU1 encoder, 8 CPUs, 50-hour
+wall limit, same serial fixed96 at 0/every 2000).
+
+`ba_dit/precision.py` applies the benchmark's FP16 autocast with FP32 block
+residual inputs and branch math to the shared native/BA training and inference
+backend. FP32 master weights, encoder, VAE and optimizer remain unchanged.
+Checkpoint and baseline-mask identities include the new precision policy.
+Training checkpoints include scaler state and both GPU RNG states; finite
+gradient overflow retries are bounded and replay the same data/RNG state at
+a reduced loss scale without counting a skipped optimizer update. Memory
+metrics include both GPUs. Native admission also stresses the largest real
+reference grid with full routing masks (a separately recorded memory probe).
+
+Adopted the existing geometry-only mask calculation and lazy mask construction
+for the cluster path to avoid eager full-image decoding/mask materialization
+before every segment. Target/reference image transforms and mask values are
+unchanged. Initialization records source face boxes and image hashes rather
+than eagerly computing all mask coverage summaries.
+
+Verification before submission: five focused CPU tests passed (including
+scaler/optimizer/RNG replay, precision identity/mask separation, and native
+branch ownership), configuration/dry-run checks passed, Python compiled and
+both shell launchers passed `bash -n`. These CPU checks do not substitute
+for pretrained GPU admission. Full-data native/off/zero-mask parity, finite
+updates/frozen weights, largest-layout memory and fresh-process exact replay
+run as mandatory gates in the cluster job before production. Unrelated
+workstation/Vast changes are preserved and excluded from the deployed commit.

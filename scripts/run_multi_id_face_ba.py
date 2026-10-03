@@ -131,9 +131,11 @@ def main(args):
     (ROOT/'runs').mkdir(exist_ok=True)
     lock = (ROOT/'runs/face_flow_gpu.lock').open('a')
     fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
-    minimum = config['hardware']['min_vram_gb'] if world > 1 else max(45,config['hardware']['min_vram_gb'])
-    if torch.cuda.device_count() < world or any(torch.cuda.get_device_properties(i).total_memory < minimum*10**9 for i in range(world)):
-        raise RuntimeError(f'Requires {world} visible GPU(s), each with at least {minimum} GB VRAM')
+    dedicated_encoder = config['data'].get('encoder_device') == 'cuda:1'
+    visible = 2 if dedicated_encoder else world
+    minimum = config['hardware']['min_vram_gb'] if world > 1 or dedicated_encoder else max(45,config['hardware']['min_vram_gb'])
+    if torch.cuda.device_count() < visible or any(torch.cuda.get_device_properties(i).total_memory < minimum*10**9 for i in range(visible)):
+        raise RuntimeError(f'Requires {visible} visible GPU(s), each with at least {minimum} GB VRAM')
     # A killed controller must not leave a child that a second controller can duplicate.
     os.set_inheritable(lock.fileno(), True)
     envs = Path(os.environ.get('BA_ENVS_DIR', ROOT/'envs')).resolve()

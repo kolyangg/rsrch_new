@@ -56,7 +56,7 @@ def load_config(path: str | Path) -> dict:
     for section, fields in FIELDS.items():
         optional = {"validation": {"batch_size"}, "branch": {"kind", "mask_feather_pixels"},
                     "data": {"conditioning", "encoder_device"},
-                    "model": {"dtype", "conditioning_dtype"}, "training": {"world_size"}}
+                    "model": {"dtype", "conditioning_dtype", "compute_precision"}, "training": {"world_size"}}
         allowed = fields | optional.get(section, set())
         if not fields <= set(config[section]) or set(config[section]) - allowed:
             raise ValueError(f"Invalid {section} fields: missing={fields-set(config[section])}, unknown={set(config[section])-allowed}")
@@ -71,13 +71,23 @@ def load_config(path: str | Path) -> dict:
             raise ValueError(f'Unsupported {field}')
         if field in config['model'] and config['model']['backend'] != 'flux':
             raise ValueError('Explicit precision currently requires FLUX')
-    if config['data'].get('encoder_device', 'cuda') not in {'cpu', 'cuda'}:
-        raise ValueError('encoder_device must be cpu or cuda')
+    if config['data'].get('encoder_device', 'cuda') not in {'cpu', 'cuda', 'cuda:1'}:
+        raise ValueError('encoder_device must be cpu, cuda or cuda:1')
     world = config['training'].get('world_size', 1)
     if type(world) is not int or world not in {1, 2}:
         raise ValueError('Supported world_size is 1 or 2')
     if world == 2 and (config['model']['backend'] != 'flux' or config['branch'].get('kind') != 'masked_face_qkvo'):
         raise ValueError('Two-rank training requires masked FLUX Q/K/V/O')
+    if config['data'].get('encoder_device') == 'cuda:1' and world != 1:
+        raise ValueError('A dedicated encoder GPU requires one training worker')
+    if 'compute_precision' in config['model']:
+        if (config['model']['compute_precision'] != 'amp_fp16_fp32_branch' or
+                config['model']['arch'] != 'flux2_klein_4b' or
+                config['model'].get('dtype') != 'float32' or
+                config['model'].get('conditioning_dtype') != 'float32' or
+                config['branch'].get('kind') != 'masked_face_qkvo' or
+                world != 1 or config['training'].get('microbatch_size', 1) != 1):
+            raise ValueError('Measured mixed precision requires single-worker FP32-master masked FLUX4B')
     arches = {"flux": {"flux2_klein_4b", "flux2_klein_9b"}, "qwen": {"qwen_image_2_1"}}
     if config["model"]["arch"] not in arches[config["model"]["backend"]]:
         raise ValueError("Architecture does not belong to this backend")
@@ -120,6 +130,8 @@ def adapter_identity(config: dict) -> dict:
                       "backends/flux2_native.py", "backends/qwen21.py"]
     if config['branch'].get('kind') == 'masked_face_qkvo':
         implementation += ['nn/masked_face_attention.py', 'nn/masked_face_flow.py']
+    if 'compute_precision' in config['model']:
+        implementation.append('precision.py')
     code = hashlib.sha256(b"".join((ROOT / "ba_dit" / name).read_bytes() for name in implementation)).hexdigest()
     patch_name = "flux2_reference_branch_and_offload.patch" if config["model"]["backend"] == "flux" else "qwen21_local_pairs_comet.patch"
     identity = {"backend": config["model"]["backend"], "arch": config["model"]["arch"],
@@ -129,4 +141,6 @@ def adapter_identity(config: dict) -> dict:
             "branch": config["branch"], "lora": config["lora"]}
     if 'dtype' in config['model'] or 'conditioning_dtype' in config['model']:
         identity['precision'] = {k: config['model'].get(k, 'bfloat16') for k in ('dtype', 'conditioning_dtype')}
+    if 'compute_precision' in config['model']:
+        identity['precision']['compute_precision'] = config['model']['compute_precision']
     return identity

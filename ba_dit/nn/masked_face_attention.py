@@ -85,7 +85,7 @@ def training_mask(row, config):
     from ba_dit.nn.masked_face_flow import face_alpha, token_alpha
 
     with Image.open(row['target']) as image:
-        _, geometry = target_geometry(image, config['data']['target_size'], row['target_box'])
+        _, geometry = target_geometry(image, config['data']['target_size'], row['target_box'], geometry_only=True)
     width, height = geometry['source_wh']
     rw, rh = geometry['resize_wh']
     left, top, _, _ = geometry['crop_xyxy']

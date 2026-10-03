@@ -18,6 +18,8 @@ def signature(config):
             "panel_sha256": file_hash(config["data"]["validation_manifest"])}
     if 'dtype' in config['model']:
         result['precision'] = {k: config['model'].get(k, 'bfloat16') for k in ('dtype', 'conditioning_dtype')}
+        if 'compute_precision' in config['model']:
+            result['precision']['compute_precision'] = config['model']['compute_precision']
         result['encoder_device'] = config['data'].get('encoder_device', 'cuda')
     return result
 

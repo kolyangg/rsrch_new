@@ -24,13 +24,14 @@ from ba_dit.nn.masked_face_attention import training_mask
 from ba_dit.nn.masked_face_flow import face_alpha, token_alpha, scene_latent, preserve_background
 from ba_dit.runtime import backend_module
 from ba_dit.training import train_segment
+from ba_dit.precision import make_scaler
 
 
 SOURCES = ('scripts/online_face_ba.py','scripts/run_online_face_ba.py',
     'ba_dit/nn/masked_face_attention.py','ba_dit/nn/masked_face_flow.py',
     'ba_dit/backends/flux_runtime.py','ba_dit/backends/attention.py','ba_dit/backends/flux2_native.py',
     'ba_dit/nn/reference_read_delta.py','ba_dit/adapters.py','ba_dit/training.py','ba_dit/checkpoint.py',
-    'ba_dit/config.py','ba_dit/runtime.py','ba_dit/logging.py','ba_dit/progress.py',
+    'ba_dit/precision.py','ba_dit/config.py','ba_dit/runtime.py','ba_dit/logging.py','ba_dit/progress.py',
     'ba_dit/data/cache.py','ba_dit/data/geometry.py','ba_dit/data/manifest.py','ba_dit/metrics.py',
     'patches/flux2_reference_branch_and_offload.patch')
 NATIVE_SOURCE = ROOT/'runs/flux4b_deep_identity1024_det_20261001'
@@ -166,7 +167,7 @@ def initialize(run, config_path, admission, native_source=None):
         'loss':'mask-normalized flow MSE, fresh native noise and sigma',
         'validation_targets':False,'mask_feather_pixels':16,
         'training_masks':{r['sample_id']:{'target_hash':r['target_hash'],
-             'token_coverage':float(training_mask(r,config).mean())} for r in train_rows}}
+             'source_face_box':r['target_box']} for r in train_rows}}
     write(run/'identity.json',identity)
     torch.manual_seed(config['training']['seed']);random.seed(config['training']['seed'])
     model=backend_module(config).load_transformer(config)
@@ -178,7 +179,7 @@ def initialize(run, config_path, admission, native_source=None):
     scheduler=torch.optim.lr_scheduler.LambdaLR(optimizer,lambda step:min(1.,(step+1)/max(1,warmup)))
     torch.manual_seed(config['training']['seed']);random.seed(config['training']['seed'])
     data_digest=digest([{k:v for k,v in row.items() if k not in {'reference','target'}} for row in train_rows])
-    save_training(model,optimizer,scheduler,config,'branch_only',run,0,0,data_digest)
+    save_training(model,optimizer,scheduler,config,'branch_only',run,0,0,data_digest,scaler=make_scaler(config))
     (run/'latest_checkpoint.txt').write_text(str(run/'checkpoint-000000')+'\n')
     exp=experiment(config,run)
     for name in ('identity.json','resolved_config.yaml','optimizer_inventory.json','native_checks.json','resume_parity.json','routing_masks.json'):

@@ -41,7 +41,7 @@ def reference_geometry(image: Image.Image, box: list[int], backend: str, size: i
                            "encoded_wh": image.size, "token_hw": list(tokens.shape)}
 
 
-def target_geometry(image: Image.Image, size: list[int], box: list[int] | None):
+def target_geometry(image: Image.Image, size: list[int], box: list[int] | None, *, geometry_only=False):
     height, width = size
     scale = max(width / image.width, height / image.height)
     resized = (round(image.width * scale), round(image.height * scale))
@@ -58,5 +58,5 @@ def target_geometry(image: Image.Image, size: list[int], box: list[int] | None):
                        box[2] * resized[0] / image.width - left, box[3] * resized[1] / image.height - top]
         if not (0 <= transformed[0] < transformed[2] <= width and 0 <= transformed[1] < transformed[3] <= height):
             raise ValueError("Target cover/crop would cut the supplied face; prepare an identity-preserving source crop")
-    output = image.resize(resized, Image.Resampling.LANCZOS).crop(crop)
-    return output, {"source_wh": image.size, "resize_wh": resized, "crop_xyxy": crop, "encoded_wh": output.size}
+    output = None if geometry_only else image.resize(resized, Image.Resampling.LANCZOS).crop(crop)
+    return output, {"source_wh": image.size, "resize_wh": resized, "crop_xyxy": crop, "encoded_wh": (width, height)}

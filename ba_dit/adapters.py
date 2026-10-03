@@ -54,6 +54,8 @@ def install(model, config, mode):
                 block = model.single_blocks[site]
                 wrap(block, "linear1", qkv)
                 wrap(block, "linear2", [(0, width, 0, width)])
+    from ba_dit.precision import configure_branches
+    configure_branches(model, config)
     inventory = {name: list(parameter.shape) for name, parameter in model.named_parameters() if parameter.requires_grad}
     if mode != "native" and not inventory:
         raise ValueError("No trainable adapters were registered")

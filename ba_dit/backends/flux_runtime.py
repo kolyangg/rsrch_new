@@ -30,7 +30,8 @@ def load_transformer(config, device="cuda"):
     weights = load_file(str(Path(config["model"]["weights"]) / filename), device="cpu")
     model = Flux2.load_from_state_dict(weights, dtype=model_dtype(config), config=Klein4BParams() if is4 else Klein9BParams())
     del weights
-    return model.requires_grad_(False).to(device).eval()
+    from ba_dit.precision import configure_residuals
+    return configure_residuals(model.requires_grad_(False).to(device).eval(), config)
 
 
 def load_encoder(config):
@@ -78,6 +79,12 @@ def encode_images(vae, config, row):
 
 
 def predict(model, tensors, noisy, sigma, config, branch=True, negative=False):
+    from ba_dit.precision import compute_context
+    with compute_context(config):
+        return _predict(model, tensors, noisy, sigma, config, branch, negative)
+
+
+def _predict(model, tensors, noisy, sigma, config, branch=True, negative=False):
     if 'dtype' in config['model']:
         noisy = noisy.to(model_dtype(config))
         tensors = {k: v.to(model_dtype(config)) if k in {'reference_tokens', 'prompt_embeds', 'negative_prompt_embeds'} else v
