@@ -754,3 +754,14 @@ Three focused tests passed locally and inside rsrch_new on cluster: expired-job
 accounting, nonblocking uploads, and server-paced heartbeat acknowledgements.
 Shell/Python syntax and Slurm submission validation passed. An allocated
 compute-node probe successfully reached Comet HTTPS and its authenticated API.
+
+
+Logger verification: companion job `4374270` started on cn-037 and remained
+RUNNING across an explicit SSH logout/reconnection. Acknowledged heartbeat
+count increased from 17 to 34 across that check, using the same PID and Slurm
+job; the latest acknowledgement was under five seconds old. Comet independently
+reported `running=true`, `hasCrashed=false`, `archived=false`, and live validation
+progress increased from 71 to 78 of 96. Production optimizer steps remain zero
+during step-0 validation. Large asset uploads still stall on the cluster route;
+those retries are now independent of heartbeat/status/progress publishing and
+archives remain queued. Logging fix committed and pushed as `7cf102c`.
