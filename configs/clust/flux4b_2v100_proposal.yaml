@@ -1,8 +1,8 @@
-# Review summary; executable schema-2 config is linked below.
+# Authorized run summary; executable schema-2 config is linked below.
 schema_version: 1
 kind: training_proposal
-status: scripts_prepared_gpu_run_awaiting_user_approval
-experiment: flux4b_clust_2v100_multiid_face_qkvo_r128_768_fp16
+status: authorized_20k_submitted
+experiment: flux4b_clust_2v100_fp16_qkvo_r128_20k
 model: black-forest-labs/FLUX.2-klein-base-4B
 initialization: fresh_native_initialized_ba_not_one_id_checkpoint
 architecture:
@@ -35,14 +35,14 @@ scheduler:
   gpus: v100:2
   tasks: 1
   cpus_per_task: 16
-  time: '24:00:00'
+  time: 7-00:00:00
   requeue: false
 training:
   strategy: two_ddp_workers_one_per_gpu
   microbatch_per_gpu: 1
   gradient_accumulation_per_worker: 4
   effective_global_batch: 8
-  initial_optimizer_updates: 2000
+  initial_optimizer_updates: 20000
   lr: 5.0e-05
   warmup_updates: 100
   weight_decay: 0.0
@@ -69,6 +69,15 @@ validation:
   at_updates:
   - 0
   - 2000
+  - 4000
+  - 6000
+  - 8000
+  - 10000
+  - 12000
+  - 14000
+  - 16000
+  - 18000
+  - 20000
   denoising_steps: 20
   guidance: 4.0
   batch_size: 1
@@ -81,7 +90,6 @@ data:
   readiness: verified_file_checksums_and_manifest_receipt
 blocking_work:
 - Prepare isolated cluster environment, pinned weights and private Comet credential.
-- User approval before GPU allocation.
 - Pass pretrained V100 parity/gradients/peak-memory/exact-resume admission before
   long training.
 executable_config: configs/clust/flux4b_2v100.yaml

@@ -8,7 +8,7 @@
 #SBATCH --ntasks=1
 #SBATCH --gpus=v100:2
 #SBATCH --cpus-per-task=16
-#SBATCH --time=24:00:00
+#SBATCH --time=7-00:00:00
 #SBATCH --no-requeue
 #SBATCH --chdir=/home/nasilaev/rsrch_new
 #SBATCH --output=/home/nasilaev/rsrch_new/logs/clust/%x-%j.out
@@ -23,4 +23,4 @@
 # Cancel: scancel JOBID. Resume uses the last complete 500-update checkpoint.
 set -euo pipefail
 exec bash scripts/run_clust_v100.sh \
-  --run runs/flux4b_clust_2v100_fp16_qkvo_r128_20261003 "$@"
+  --run runs/flux4b_clust_2v100_fp16_qkvo_r128_20k_20261003 "$@"

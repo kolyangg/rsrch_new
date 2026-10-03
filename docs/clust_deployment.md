@@ -13,17 +13,17 @@ That result does not establish multi-ID generalization or V100 performance.
 - Slurm script: `jobs/flux4b_clust_2v100.sbatch`.
 - Controller: `scripts/run_clust_v100.sh` → `scripts/run_multi_id_face_ba.py`.
 - Training: two DDP replicas, microbatch1 per GPU, accumulation4, **global batch8**.
-- LR5e-5, warmup100, initial2000 updates, checkpoint every500, fixed96 at0/2000.
+- LR5e-5, warmup100, 20,000 updates, checkpoint every500, fixed96 at0 and every2000 updates.
 - FP16 frozen denoiser, dynamic loss scaling, FP32 adapters/optimizer/loss,
   FP32 frozen VAE on GPU and FP32 text encoder on CPU for each worker.
-- One node, two V10032GB, account `proj_1892`, partition `rocky`,16 CPUs,24 hours.
+- One node, two V10032GB, account `proj_1892`, partition `rocky`,16 CPUs,7 days.
   Slurm advertises `RealMemory=1`; omit `--mem` and `--mem-per-cpu`.
 
 Each GPU holds its own denoiser. This is an initial conservative batch choice,
 not a measured maximum; two32GB GPUs do not create a64GB model device. CPU text
 encoding preserves VRAM but may limit throughput. Allow approximately64GiB of
 free host RAM for two encoder replicas and temporary loads; the allocation must
-be inspected before a run. The24-hour limit is an envelope, not a completion ETA.
+be inspected before a run. The7-day limit is an envelope, not a completion ETA.
 
 Workers interleave a single deterministic shuffled data stream, average gradients,
 and write checkpoints/Comet only on rank0. Checkpoints include the global cursor,
@@ -131,3 +131,23 @@ These are software checks, not pretrained V100 admission.
 On clust, `bash -n` and `sbatch --test-only` accepted the exact two-V100 script
 under proj_1892/rocky with16 CPUs on one node. Test-only returns a hypothetical
 schedule; it does not submit a job, reserve GPUs or guarantee that start time.
+
+## Authorized20k submission — 3 October 2026
+
+The user authorized20,000 optimizer updates on two V100s, then requested any
+available V100 for training sooner. Run:
+`runs/flux4b_clust_2v100_fp16_qkvo_r128_20k_20261003`.
+Training job4372978 requests two V100s/16 CPUs on rocky for up to7 days.
+
+The initial CPU setup job4372977 remained queued and was cancelled before it
+started. Its dry-run estimate of immediate availability was not realized.
+A named one-V10030-minute setup/two-update smoke job4372995 was submitted in
+test. It uses eight eligible training pairs and compares one original validation
+conditioning item, logs a separate Comet key, and checks real branch gradients,
+frozen/native parity and peak memory. It is not a quality/generalization run or
+a substitute for two-rank admission. Training4372978 now depends on its success.
+The full run retains all47,341 training pairs and fixed96 at0/every2000 updates.
+
+Submission replies, exact source/config hashes and job IDs are recorded in
+`runs/clust_20k_submission/` on clust. Inspect live queue/logs for current status;
+no optimizer result was available when these jobs were submitted.

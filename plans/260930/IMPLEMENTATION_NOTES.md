@@ -310,3 +310,30 @@ file-content validation. The47,500-image dataset,47,341-pair manifest/audit and
 verified completion receipt were published to clust. Training-source readiness
 is now true for Large; paired Cosmic remains unavailable. No transfer remains
 active and no GPU job has been submitted.
+
+### 3 October — Authorized20k HSE run and one-V100 immediate probe
+
+The user approved20,000 optimizer updates on two V100s, then asked for one
+available V100 to start some training sooner. Kept the approved4B/r128,
+768/ref512, effectivebatch8 scientific setup and fixed96 validation at0 and
+every2000 updates. Increased the Slurm envelope to7 days, retaining500-update
+atomic checkpoints. Runtime is unmeasured; this limit is not a completion ETA.
+
+Submitted training4372978 on rocky (two typed V100s,16 CPUs), initially gated
+on CPU setup4372977. CPU setup did not start: real scheduling estimates were
+hours later despite an immediate dry-run estimate. Cancelled4372977 while it
+was still pending. Submitted one-V100/8CPU30-minute test job4372995, with
+bootstrap plus a separately named two-update training probe on eight eligible
+pairs. At15:19MSK it was RUNNING on cn-025, in setup with no optimizer result yet.
+Training4372978 now has afterok:4372995 dependency. The probe checks native/off,
+actual branch gradients/updates, frozen weights, conditioning parity and GPU
+memory. It does not replace the full-data two-rank resume/admission gate or
+claim image quality. Each experiment uses its own Comet identity.
+
+Data receipt and47,341-pair manifest remain verified. Installed only the
+necessary Comet credential into a private remote0600 .env via SSH stdin;
+no credentials entered tracked files or logs. Exact submissions and source
+hashes are recorded remotely at runs/clust_20k_submission and mirrored under
+local ignored scratch/clust-start-20k/submission. The source is the committed
+cluster snapshot6156c31 plus explicitly recorded20k/smoke-launch changes;
+concurrent Vast/9B workspace edits were not synchronized to clust.
