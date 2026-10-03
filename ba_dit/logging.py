@@ -27,7 +27,10 @@ def connect(config, run_dir, name=None):
     record = run_dir / "comet_experiment.json"
     options = dict(auto_param_logging=False, auto_metric_logging=False, log_env_details=False, log_code=False,
                    log_git_metadata=False, log_git_patch=False)
-    key = json.loads(record.read_text())["experiment_key"] if record.exists() else None
+    # Cluster setup is visible before admission; training keeps that same key.
+    setup_record = run_dir.with_name(run_dir.name + '_setup') / record.name
+    identity_record = record if record.exists() else setup_record
+    key = json.loads(identity_record.read_text())["experiment_key"] if identity_record.exists() else None
     if os.getenv('BA_COMET_OFFLINE') == '1':
         # HSE compute-node uploads are unreliable. Closed archives are sent from
         # login; get_or_create preserves this key across workers and uploads.

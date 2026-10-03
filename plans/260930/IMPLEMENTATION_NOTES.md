@@ -434,3 +434,44 @@ stop when that job ends. Queue/log state, source hashes and submission replies
 are persisted in runs/clust_20k_submission and mirrored under local ignored
 scratch/clust-start-20k/evidence. Main Slurm logs are
 logs/clust/rsrch-new-4b-v100-4373118.{out,err}.
+
+
+### 2026-10-03 — cluster admission failure and Comet startup visibility
+
+Job4373118 failed after1h21m41s during two-rank admission, before the main
+20k run initialized. The one-rank native/branch checks passed at18.37695GiB
+reserved, but the first two-rank admission update reached28.90430GiB on
+rank0 and28.90234GiB on rank1 (91.0872% maximum). Loss0.957965 and gradients
+were finite;32 B matrices updated. The required90% memory gate saved the
+admission checkpoint and stopped the job. This was one diagnostic update,
+not a main training update. No main Comet record existed because registration
+was incorrectly delayed until after admission and native baseline preparation.
+
+Cluster startup now closes a Comet archive before dataset verification.
+Initialization inherits the setup experiment key. The login uploader retries
+failed uploads, reports Slurm/stage status, and publishes separate live loss,
+step and ETA curves without waiting for a complete2000-update segment.
+An actual offline-SDK check confirmed setup-to-training key preservation;
+the existing two-rank CPU gradient/replay regression also passed.
+
+Replacement experiment key307b9627e32d4d38aed324c028f6eedf was created and
+its name/parameters/status independently read through Comet's API:
+https://www.comet.com/nikolay-2104/rsrch-new/307b9627e32d4d38aed324c028f6eedf
+It is marked preparing, not training. The named run ends20261003_r2.
+A bounded two-V100 probe (job4373281,128-row smoke) is checking expandable
+allocator segments and release of temporary DDP broadcast buffers; it does
+not replace full pretrained admission or the fixed96 panel. Peak allocated
+as well as reserved memory is now recorded per rank. No precision, loss,
+batch, target resolution or memory-gate relaxation is introduced.
+
+The two-GPU probe4373281 completed0:0 in7m07s oncn-026. Both updates had
+finite loss/gradients; all32 B matrices changed. Maximum reserved memory
+was18.21484GiB (57.4011%), maximum allocated17.67429GiB. This is a128-row
+smoke result; the full-data two-rank save/resume admission still runs before
+production training. The startup/update heartbeat now also maintains Comet's
+actual running/finished/crashed state.
+
+Measured FP32 updates took72.8–81.1seconds;20k updates project roughly
+17–19days before validation overhead. The replacement requests21days rather
+than the insufficient original7, within the partition's30-day maximum.
+This changes the scheduling ceiling, not the20k target or GPU count.

@@ -8,13 +8,14 @@
 #SBATCH --ntasks=1
 #SBATCH --gpus=v100:2
 #SBATCH --cpus-per-task=16
-#SBATCH --time=7-00:00:00
+#SBATCH --time=21-00:00:00
 #SBATCH --no-requeue
 #SBATCH --chdir=/home/nasilaev/rsrch_new
 #SBATCH --output=/home/nasilaev/rsrch_new/logs/clust/%x-%j.out
 #SBATCH --error=/home/nasilaev/rsrch_new/logs/clust/%x-%j.err
 
 # This cluster advertises RealMemory=1: omit --mem/--mem-per-cpu.
+# FP32 admission measured ~49 updates/hour; 20k updates exceed seven days.
 # Launch only after user approval, data receipt and environment preparation:
 #   mkdir -p logs/clust
 #   sbatch jobs/flux4b_clust_2v100.sbatch
@@ -23,4 +24,4 @@
 # Cancel: scancel JOBID. Resume uses the last complete 500-update checkpoint.
 set -euo pipefail
 exec bash scripts/run_clust_v100.sh \
-  --run runs/flux4b_clust_2v100_fp32_qkvo_r128_20k_20261003 "$@"
+  --run runs/flux4b_clust_2v100_fp32_qkvo_r128_20k_20261003_r2 "$@"

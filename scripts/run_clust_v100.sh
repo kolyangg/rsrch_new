@@ -4,6 +4,8 @@ cd "$(dirname "$0")/.."
 source scripts/activate_clust_env.sh
 export HF_HUB_OFFLINE=1
 export BA_COMET_OFFLINE=1
+# Reduce fragmentation from variable reference shapes; retain the 90% memory gate.
+export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 export BA_ROOT="$PWD"
 export BA_ENVS_DIR="${BA_ENVS_DIR:-$BA_ROOT/envs/clust-v100}"
 export PYTHONPATH="$BA_ROOT${PYTHONPATH:+:$PYTHONPATH}"

@@ -144,6 +144,18 @@ def main(args):
     if (run.exists() or setup.exists()) and not args.resume:
         raise FileExistsError('Run/setup already exists; use --resume or a fresh --run')
     setup.mkdir(parents=True, exist_ok=True)
+    if os.getenv('BA_COMET_OFFLINE') == '1' and config['logging']['enabled']:
+        from ba_dit.logging import connect
+        startup = connect(config, setup, name=run.name)
+        startup.log_parameters({'cluster/job_id': os.getenv('SLURM_JOB_ID'),
+                                'cluster/cuda_allocator': os.getenv('PYTORCH_CUDA_ALLOC_CONF', 'default'),
+                                'training/effective_batch': world * config['training']['grad_accum'],
+                                'training/microbatch_per_gpu': 1})
+        startup.log_other('cluster/stage', 'dataset_verification')
+        startup.log_other('cluster/slurm_state', 'RUNNING')
+        startup.end()  # Close the startup archive immediately for the login uploader.
+        write(setup/'status.json', {'stage':'dataset_verification', 'status':'running',
+                                   'controller_pid':os.getpid()})
     if args.mask_overrides and (run/'comet_experiment.json').exists():
         raise ValueError('Masks are immutable after initialization; use a fresh run for changed masks')
     state_dir = setup

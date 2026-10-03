@@ -91,6 +91,7 @@ def train_segment(config, mode, run_dir, until, resume=None, init_adapter=None, 
                 experiment.log_parameters({'training/world_size': world, 'training/microbatch_per_gpu': 1,
                                            'training/effective_batch': world*config['training']['grad_accum']})
         ddp = DDP(model, device_ids=[local_rank], broadcast_buffers=False)
+        torch.cuda.empty_cache()  # Release temporary parameter-broadcast buffers.
         torch.manual_seed(config['training']['seed'] + rank)
         random.seed(config['training']['seed'] + rank)
         step, cursor = 0, 0
@@ -144,7 +145,8 @@ def train_segment(config, mode, run_dir, until, resume=None, init_adapter=None, 
             cursor += world * accumulation
             torch.cuda.synchronize(device)
             peak = torch.cuda.max_memory_reserved(device)
-            local_stats = [sum(losses)/accumulation, time.monotonic()-started, peak/2**30, peak/capacity]
+            local_stats = [sum(losses)/accumulation, time.monotonic()-started, peak/2**30, peak/capacity,
+                           torch.cuda.max_memory_allocated(device)/2**30]
             stats = [None] * world
             dist.all_gather_object(stats, local_stats)
             memory_failed = max(s[3] for s in stats) >= config['training']['max_reserved_fraction']
@@ -156,6 +158,7 @@ def train_segment(config, mode, run_dir, until, resume=None, init_adapter=None, 
                            'hardware/peak_reserved_gib': max(s[2] for s in stats),
                            'hardware/reserved_fraction': max(s[3] for s in stats)}
                 metrics.update({f'hardware/rank{i}_peak_reserved_gib': s[2] for i, s in enumerate(stats)})
+                metrics.update({f'hardware/rank{i}_peak_allocated_gib': s[4] for i, s in enumerate(stats)})
                 if step == 1:
                     metrics['train/updated_b_matrices'] = sum(int(p.count_nonzero() > 0) for n,p in parameters.items() if n.endswith('.b'))
                 log_metrics(experiment, run_dir, metrics, step)
