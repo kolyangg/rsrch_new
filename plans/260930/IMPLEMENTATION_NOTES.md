@@ -337,3 +337,15 @@ hashes are recorded remotely at runs/clust_20k_submission and mirrored under
 local ignored scratch/clust-start-20k/submission. The source is the committed
 cluster snapshot6156c31 plus explicitly recorded20k/smoke-launch changes;
 concurrent Vast/9B workspace edits were not synchronized to clust.
+
+### 3 October — HSE short-job bootstrap failure and repair
+
+The first one-V100 test allocation, job4372995, started immediately on cn-025
+at15:18:57MSK but failed at15:22:08MSK before Python environment preparation or
+any optimizer updates. The uv installer reported curl write failure and a
+missing site temporary directory /tmp/job-4372995. No GPU admission or
+training result is claimed. Both setup launchers now create a private
+project scratch directory per Slurm job and set TMPDIR there. The pinned
+uv0.11.12 executable is being transferred directly to avoid another installer
+download in the GPU allocation. This is one diagnosed retry; the20k job
+remains dependent on successful prerequisite completion.

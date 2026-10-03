@@ -14,6 +14,9 @@ set -euo pipefail
 export PATH="$HOME/.local/bin:$PATH"
 export PYTHONPATH="$PWD${PYTHONPATH:+:$PYTHONPATH}"
 export OMP_NUM_THREADS=8 MKL_NUM_THREADS=8 PYTHONUNBUFFERED=1
+export TMPDIR="$PWD/scratch/tmp/${SLURM_JOB_ID}"
+mkdir -p "$TMPDIR"
+chmod 700 "$TMPDIR"
 if ! command -v uv >/dev/null; then
   curl -fLsS --retry 2 --max-time 120 https://astral.sh/uv/0.11.12/install.sh -o scratch/install-uv.sh
   sh scratch/install-uv.sh

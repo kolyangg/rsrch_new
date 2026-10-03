@@ -18,6 +18,9 @@ export PYTHONPATH="$PWD${PYTHONPATH:+:$PYTHONPATH}"
 export PYTHONUNBUFFERED=1 OMP_NUM_THREADS=8 MKL_NUM_THREADS=8 TOKENIZERS_PARALLELISM=false
 export CUBLAS_WORKSPACE_CONFIG=:4096:8 COMET_DISPLAY_SUMMARY_LEVEL=0
 export PATH="$HOME/.local/bin:$PATH"
+export TMPDIR="$PWD/scratch/tmp/${SLURM_JOB_ID}"
+mkdir -p "$TMPDIR"
+chmod 700 "$TMPDIR"
 # A clean machine can prepare inside this allocation before the short probe.
 if [[ ! -x "$BA_ENVS_DIR/flux-toolkit/bin/python" || ! -f weights/flux_vae/ae.safetensors ]]; then
   if ! command -v uv >/dev/null; then
