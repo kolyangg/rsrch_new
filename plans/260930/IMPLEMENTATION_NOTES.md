@@ -484,3 +484,30 @@ to Comet key307b9627e32d4d38aed324c028f6eedf; the activated-environment
 login uploader PID2895963 reports state/stage and later live progress.
 Submission and source manifest are under remote/local
 scratch/clust-comet-recovery. Full-data admission and training remain pending.
+
+
+### 2026-10-03 — BF16 review against the live GB10 pilot
+
+The user rejected the long FP32 duration and requested the GB10-style approach.
+Read-only inspection of Vast53994096 found the9B fast pilot atupdate1430,
+mean5.28210seconds/update over the latest50, peak52.28516GiB. It uses native
+BF16, effectivebatch1, GPU text encoding, and no gradient checkpointing.
+V100/Volta has no native BF16 support (NVIDIA Tensor Core precision table:
+https://www.nvidia.com/en-eu/data-center/tensorcore/). The earlier native
+FP16 probe overflowed the text residual atdouble_blocks.4 before backward;
+loss scaling alone does not fix that forward overflow.
+
+Prepared, configuration-validated but NOT benchmarked/submitted:
+configs/clust/flux4b_bf16_fast_proposed.yaml. It retains FLUX4B/768/r128,
+20k updates and fixed96 validation; proposes one80GB BF16-capable GPU,
+batch1/accum1, GPU encoding and checkpointingOFF.20k updates then process
+20k examples instead of160k; this is not an equal-data speed comparison.
+A100 and H100 scheduler-only checks passed under proj_1892/gpu-ef-quick;
+live partition maximum remains3hours and preemption modeREQUEUE. Production
+use needs measured admission and robust checkpoint continuation. The user's
+GPU preference is pending; no A100/H100 allocation was submitted.
+
+Cancelled owned FP32 job4373291 during dataset verification on the user's
+speed/precision steering. Slurm confirmedCANCELLED at8m29s; no main metrics
+file or production optimizer update existed. Existing logs/data are preserved.
+The running GB10 pilot was inspected only and remains untouched.
