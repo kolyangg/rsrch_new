@@ -1,5 +1,6 @@
 """Publish one Slurm run's closed Comet archives from the networked login node."""
 import argparse
+import fcntl
 import json
 import os
 from pathlib import Path
@@ -16,6 +17,10 @@ def main():
     args.run = args.run.resolve()
     setup = args.run.with_name(args.run.name+'_setup')
     root = Path(__file__).resolve().parents[1]
+    lock_path = root/'scratch/clust-v100'/f'comet-upload-{args.job_id}.lock'
+    lock_path.parent.mkdir(parents=True, exist_ok=True)
+    lock = lock_path.open('a')
+    fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
     for line in (root/'.env').read_text().splitlines():
         if line.startswith('COMET_API_KEY='):
             os.environ['COMET_API_KEY'] = line.split('=', 1)[1].strip().strip('"\'')
@@ -46,16 +51,20 @@ def main():
                 state.parent.mkdir(parents=True, exist_ok=True)
                 state.write_text(json.dumps(sorted(uploaded), indent=2)+'\n')
             status = subprocess.run(['squeue', '-h', '-j', args.job_id, '-o', '%T'], text=True, capture_output=True)
-            if status.returncode:
-                print('Scheduler query failed; retrying.', flush=True)
-                time.sleep(30)
-                continue
-            active = bool(status.stdout.strip())
+            active = status.returncode == 0 and bool(status.stdout.strip())
             job_state = status.stdout.strip()
             if not active:
                 accounting = subprocess.run(['sacct', '-n', '-X', '-j', args.job_id,
                                              '--format=State', '-P'], text=True, capture_output=True)
-                job_state = accounting.stdout.strip() or 'UNKNOWN'
+                states = [line.strip().split('|')[0] for line in accounting.stdout.splitlines()
+                          if line.strip()]
+                if accounting.returncode or not states:
+                    print('Scheduler/accounting state unavailable; retrying.', flush=True)
+                    time.sleep(30)
+                    continue
+                job_state = states[0].split()[0]
+                active = job_state in {'PENDING', 'RUNNING', 'CONFIGURING', 'COMPLETING',
+                                       'SUSPENDED', 'REQUEUED', 'RESIZING', 'SIGNALING', 'STAGE_OUT'}
             record = setup/'comet_experiment.json'
             if not record.exists():
                 record = args.run/'comet_experiment.json'
@@ -77,6 +86,8 @@ def main():
                         stage_path = setup/'status.json'
                     stage = (json.loads(stage_path.read_text()) if stage_path.exists() else
                              {'stage':'queued' if job_state == 'PENDING' else 'starting'})
+                    if job_state == 'PENDING':
+                        stage = {'stage':'queued', 'status':'pending'}
                     observed = {'job_id': args.job_id, 'slurm_state':job_state, **stage}
                     if observed != last_status:
                         experiment.log_other('cluster/slurm_state', job_state)

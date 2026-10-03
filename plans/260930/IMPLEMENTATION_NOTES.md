@@ -668,3 +668,49 @@ have completed yet. Last scheduler estimate was 2026-10-03 21:53:42 MSK
 job automatically runs full admission and native/step-0 validation after
 allocation, before the 20k training sequence. No recurring notification
 or automatic job-resubmission workflow was created.
+
+
+## 2026-10-03: V100 startup failure and environment-only resume
+
+Status investigation found production Slurm job `4373673` failed at
+2026-10-03 19:54:53 UTC after 1:32:42 on cn-004. Production optimizer progress
+was still 0/20,000. It completed full pretrained admission and native fixed96
+generation, then `masks_auto` failed importing InsightFace: system
+`/lib64/libstdc++.so.6` lacked `GLIBCXX_3.4.32`. This was a metric-environment
+runtime failure, not a numerical or GPU-memory failure.
+
+Admission measured native/BA-off and zero-mask exact parity, unchanged frozen
+weights, finite gradients and changes in all 64 trainable tensors. Fresh-process
+checkpoint replay matched parameters, optimizer/scheduler/RNG/cursor and gradient
+scaler exactly (two CUDA RNG devices). The largest real reference grid with full
+routing masks passed finite gradients. Peak reserved memory was 17.96484375 GiB
+on GPU0 (56.61%) and 15.53125 GiB on GPU1 (48.94%). These are admission measurements,
+not evidence of completed production training.
+
+The existing rsrch_new Conda environment contains the required C++ runtime.
+`scripts/activate_clust_env.sh` now exports its library directory for both isolated
+metric environments, and disables Albumentations' online version check. Both
+InsightFace extensions resolve that environment's library with no missing symbols.
+No model/config/data/validation changes were made; all 25 immutable setup source
+hashes still match. `scripts/upload_clust_comet.py` now falls back to accounting
+when a completed job disappears from squeue, uses a single-uploader lock per job,
+and labels a pending resumed allocation as queued instead of displaying the old
+failed setup stage. The old job's FAILED/masks_auto state was successfully sent
+to its existing Comet experiment.
+
+Submitted an explicit resume as Slurm `4374072` at 20:33:20 UTC with the original
+2-V100/8-CPU/50-hour allocation, same run directory and immutable Comet key
+`5d31de48010446248639e65a65236cbe`. Completed admission/cache/native receipts are
+reused; the original failed logs remain. Submission receipt is
+`scratch/clust-production/amp_resume_submission.json` locally and
+`scratch/clust-v100/amp_resume_submission.json` remotely. A separate CPU-only
+20-minute test job `4374073` checks both metric environments and prepares the
+native masks while the GPU resume is queued. This is a targeted recovery, not
+an automatic resubmission loop.
+
+Verification: shell/Python syntax and whitespace checks passed. CPU job
+`4374073` successfully imported InsightFace/CLIP and InsightFace/PyIQA in their
+respective isolated environments; native mask preparation then started normally.
+The Comet uploader successfully published `PENDING/queued` for resumed job
+`4374072` under the same experiment. Slurm estimated 2026-10-03 21:33:10 UTC
+(22:33:10 London) at the last queue check; this is a mutable scheduler estimate.
