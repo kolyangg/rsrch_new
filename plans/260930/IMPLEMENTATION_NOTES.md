@@ -415,3 +415,22 @@ the older pinned metrics SDK passed archive compatibility. The earlier failed
 online smoke7684368f8fbb4dd784fb2ba13afe1f31 was recovered by force-upload as
 61d7fe6c35264432b46b9e52a0bac3df; that copy is explicitly distinct, not a changed
 canonical run key. Future uploads deliberately never use force-upload.
+
+### 3 October — FP32 two-V10020k allocation is running
+
+Submitted FP32 job4373118 from source569d65ad473563e7acab86dcc2c6bdde4ac205f1
+with the authorized20,000-update configuration. Slurm started it immediately
+at16:14:31MSK on cn-009 with two Tesla V100-SXM2-32GB devices
+(31.7325439453125GiB each). Runtime verified PyTorch2.7.1+cu126/CUDA12.6,
+sm_70 kernels, the completed dataset receipt and711.06GiB available host RAM.
+The old blocked FP16 job4373033 was cancelled before execution.
+
+Current run: runs/flux4b_clust_2v100_fp32_qkvo_r128_20k_20261003. At this record
+the controller is checking full-data identity before its fixed96 conditioning,
+two-rank admission and native validation stages; no main-run optimizer update
+is claimed. The separately named one-V100 two-update FP32 result above passed.
+A job-scoped login uploader (initial PID1823854) is running for4373118 and will
+stop when that job ends. Queue/log state, source hashes and submission replies
+are persisted in runs/clust_20k_submission and mirrored under local ignored
+scratch/clust-start-20k/evidence. Main Slurm logs are
+logs/clust/rsrch-new-4b-v100-4373118.{out,err}.
