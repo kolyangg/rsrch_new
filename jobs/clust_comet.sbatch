@@ -15,4 +15,6 @@ set -euo pipefail
 [[ $# == 2 ]] || { echo 'Expected TRAINING_JOB_ID RUN_DIRECTORY' >&2; exit 2; }
 source scripts/activate_clust_env.sh
 export PYTHONUNBUFFERED=1 COMET_DISPLAY_SUMMARY_LEVEL=0
-exec python -u -m scripts.upload_clust_comet --job-id "$1" --run "$2"
+extra=()
+if [[ "${BA_COMET_STATUS_ONLY:-0}" == 1 ]]; then extra+=(--status-only); fi
+exec python -u -m scripts.upload_clust_comet --job-id "$1" --run "$2" "${extra[@]}"

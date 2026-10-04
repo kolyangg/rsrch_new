@@ -7,12 +7,25 @@ import tempfile
 import threading
 from types import SimpleNamespace
 import unittest
+import zipfile
 from unittest.mock import Mock, patch
 
-from scripts.upload_clust_comet import ArchiveUploader, keep_alive, scheduler_state
+from scripts.upload_clust_comet import ArchiveUploader, complete_archive, keep_alive, scheduler_state
 
 
 class CometUploaderTest(unittest.TestCase):
+    def test_open_empty_archive_is_not_ready_for_upload(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory)/'open.zip'
+            with zipfile.ZipFile(path, 'w'):
+                pass
+            self.assertTrue(zipfile.is_zipfile(path))
+            self.assertFalse(complete_archive(path))
+            with zipfile.ZipFile(path, 'w') as archive:
+                archive.writestr('experiment.json', '{}')
+                archive.writestr('messages.json', '')
+            self.assertTrue(complete_archive(path))
+
     def test_expired_job_uses_accounting(self):
         with patch('scripts.upload_clust_comet.subprocess.run', side_effect=[
             subprocess.CompletedProcess([], 1, '', 'Invalid job id specified'),

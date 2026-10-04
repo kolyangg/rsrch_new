@@ -18,6 +18,15 @@ def write_json(path, value):
     temporary.replace(path)
 
 
+def complete_archive(path):
+    # OfflineExperiment can leave a valid but empty ZIP while training is open.
+    try:
+        with zipfile.ZipFile(path) as archive:
+            return {'experiment.json', 'messages.json'} <= set(archive.namelist())
+    except (OSError, zipfile.BadZipFile):
+        return False
+
+
 def scheduler_state(job_id):
     result = subprocess.run(['squeue', '-h', '-j', job_id, '-o', '%T'],
                             text=True, capture_output=True, timeout=15)
@@ -100,7 +109,7 @@ class ArchiveUploader:
                 self.retry_after[str(self.archive)] = time.monotonic()+300
             self.process = None
         for archive in self.pending():
-            if time.monotonic() < self.retry_after.get(str(archive), 0) or not zipfile.is_zipfile(archive):
+            if time.monotonic() < self.retry_after.get(str(archive), 0) or not complete_archive(archive):
                 continue
             self.archive = archive
             self.process = subprocess.Popen(['comet', 'upload', str(archive)], start_new_session=True)
@@ -129,6 +138,7 @@ def main():
     p = argparse.ArgumentParser()
     p.add_argument('--run', type=Path, required=True)
     p.add_argument('--job-id', required=True)
+    p.add_argument('--status-only', action='store_true', help='Publish live status; artifacts use the workstation relay')
     args = p.parse_args()
     args.run = args.run.resolve()
     setup = args.run.with_name(args.run.name+'_setup')
@@ -163,7 +173,11 @@ def main():
             else:
                 active_event.clear()
                 terminal_since = terminal_since or time.monotonic()
-            uploader.poll()
+            if args.run.is_dir():
+                write_json(args.run/'comet-live-status.json', {'job_id':args.job_id,
+                    'slurm_state':job_state, 'active':active, 'observed_unix_seconds':time.time()})
+            if not args.status_only:
+                uploader.poll()
             record = setup/'comet_experiment.json'
             if not record.exists():
                 record = args.run/'comet_experiment.json'
@@ -221,7 +235,7 @@ def main():
                     print(f'Live status retry pending: {type(error).__name__}', flush=True)
                     time.sleep(5)
                     continue
-            if not active and (not uploader.pending() or time.monotonic()-terminal_since >= 180):
+            if not active and (args.status_only or not uploader.pending() or time.monotonic()-terminal_since >= 180):
                 stop_event.set()
                 if heartbeat is not None:
                     heartbeat.join(timeout=30)

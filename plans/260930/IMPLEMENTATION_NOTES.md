@@ -765,3 +765,55 @@ progress increased from 71 to 78 of 96. Production optimizer steps remain zero
 during step-0 validation. Large asset uploads still stall on the cluster route;
 those retries are now independent of heartbeat/status/progress publishing and
 archives remain queued. Logging fix committed and pushed as `7cf102c`.
+
+
+## 2026-10-04: Recover Comet artifacts and record cluster cancellation
+
+The user reported missing outputs/metrics. Training job 4374072 was genuinely
+advancing (finite losses/gradients, about 3.67 seconds/update), but Comet only had
+live/* curves while canonical train/* history remained offline. Large asset
+uploads from the cluster repeatedly received HTTP 502. An open offline archive
+was also a valid empty ZIP without experiment.json/messages.json, so is_zipfile
+alone incorrectly accepted it for upload.
+
+Added scripts/sync_clust_comet.py: a workstation publisher selectively rsyncs
+completed fixed96 outputs and metrics through the existing Russia VPN/clust
+route, resumes the immutable Comet experiment, backfills canonical train/*
+metrics, and verifies server-side loss values and image assets before recording
+success. It excludes checkpoints, caches, raw images and credentials. Images
+retain panel step, prompt and seed; no training/scientific settings changed.
+The cluster logger supports --status-only and writes an atomic Slurm status
+receipt, leaving image delivery to the workstation. Archive readiness now
+requires both SDK metadata members. API summary.stepCurrent reflects latest
+arrival, not necessarily maximum optimizer step; verification checks the actual
+loss history rather than this summary field.
+
+Replaced CPU-only logger 4374270 with status-only logger 4374404. Training source
+identity remained unchanged (all 25 setup hashes matched). The workstation relay
+ran under transient systemd unit rsrch-clust-comet-4374072 and successfully
+verified consecutive cycles through steps 673, 694, 702. Comet API independently
+confirmed 702 contiguous finite train/loss values and 109 images: 96 fixed96
+step 0 generations, 12 paired comparison sheets and one mask overview. These
+are initial/untrained validation outputs; no trained2,000-step panel exists.
+The immutable experiment remains 5d31de48010446248639e65a65236cbe under
+nikolay-2104/rsrch-new. CUDA peak reserved was 17.9043 GiB (56.42%) for denoising
+and 15.53125 GiB (48.94%) for the encoder.
+
+During this verification Slurm cancelled training at 2026-10-04 00:03:17 UTC
+(01:03:17 London, 03:03:17 MSK), after 3h 01m 56s and 702 updates. sacct explicitly
+records CANCELLED by 0; scontrol supplies Reason=None. No Python exception or
+OOM appears in the training log. The administrative/system reason is unknown;
+cluster preemption is configured, but that does not establish this job's cause.
+Checkpoint 000500 is intact (adapters plus optimizer/scaler/RNG state); updates
+501–702 were logged but were not checkpointed. No automatic resubmission was
+performed after this root/system cancellation. Logger 4374404 completed and the
+local relay exited after publishing the terminal status. Comet API now reports
+running=false, hasCrashed=true, archived=false, accurately reflecting interruption.
+
+Verification: four focused uploader regressions, Python syntax, shell syntax,
+whitespace checks, real rsync/publication, and independent Comet API history and
+asset readback passed. The transient relay survives terminal closure while
+running but does not restart across a WSL reboot. For a future authorized
+resume, start a status logger and relay for the new Slurm job ID; retained Comet
+history beyond the checkpoint must be handled explicitly to avoid treating
+repeated optimizer-step numbers as new distinct updates.
