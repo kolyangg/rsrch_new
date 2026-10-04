@@ -57,7 +57,7 @@ if [[ "$backend" == flux ]]; then
 else
   uv pip install --python "$env_dir/bin/python" -c "$constraints" -r "$BA_ROOT/locks/qwen-requirements.txt" -e "$BA_ROOT/sources/diffusers-qwen" -e "$BA_ROOT"
 fi
-uv pip check --python "$env_dir/bin/python"
+"$env_dir/bin/python" "$BA_ROOT/scripts/check_environment.py"
 CUDA_VISIBLE_DEVICES='' "$env_dir/bin/python" "$BA_ROOT/scripts/check_invariants.py" "$backend"
 "$BA_ROOT/scripts/setup_metrics.sh"
 "$BA_ROOT/scripts/setup_face_quality.sh"

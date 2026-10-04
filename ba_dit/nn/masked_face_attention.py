@@ -12,6 +12,13 @@ from torch.nn import functional as F
 from ba_dit.nn.reference_read_delta import LowRankProjection
 
 
+def parameter_count(config):
+    from ba_dit.backends.flux2_native import SITES
+    arch = config['model']['arch']
+    width = {'flux2_klein_4b':3072, 'flux2_klein_9b':4096}[arch]
+    return sum(map(len, SITES[arch].values()))*8*width*config['branch']['rank']
+
+
 class MaskedFaceAttention(nn.Module):
     def __init__(self, width, heads, rank, alpha, query_chunk=128):
         super().__init__()
@@ -23,6 +30,10 @@ class MaskedFaceAttention(nn.Module):
 
     def route_attention(self, block, hidden, qkv, native_attention, pe, context, single):
         from extensions_built_in.diffusion_models.flux2.src.model import apply_rope
+        from ba_dit.nn.batched_face_attention import active_indices, route_rows
+
+        if hidden.shape[0] > 1 and active_indices() is not None:
+            return route_rows(self, block, hidden, qkv, native_attention, pe, context, single)
 
         mask = context.target_mask
         if mask is None or mask.shape != (hidden.shape[0], context.target_tokens):
@@ -65,10 +76,10 @@ class MaskedFaceAttention(nn.Module):
 def install(model, config):
     from ba_dit.backends.flux2_native import SITES
 
-    if config['model']['arch'] != 'flux2_klein_4b' or config['branch']['gamma'] != 1:
-        raise ValueError('This named experiment requires FLUX Base4B and full face routing')
+    if config['model']['arch'] not in SITES or config['branch']['gamma'] != 1:
+        raise ValueError('This experiment requires FLUX Klein Base and full face routing')
     model.requires_grad_(False)
-    for kind, sites in SITES['flux2_klein_4b'].items():
+    for kind, sites in SITES[config['model']['arch']].items():
         for index in sites:
             block = getattr(model, kind+'_blocks')[index]
             if hasattr(block, 'reference_branch'):

@@ -20,18 +20,17 @@ from ba_dit.config import ROOT, adapter_identity, digest, load_config, revisions
 from ba_dit.data.cache import cache_path, cache_spec, load_pair
 from ba_dit.data.manifest import assert_disjoint, file_hash, read_manifest
 from ba_dit.logging import connect
-from ba_dit.nn.masked_face_attention import training_mask
+from ba_dit.nn.masked_face_attention import training_mask, parameter_count
 from ba_dit.nn.masked_face_flow import face_alpha, token_alpha, scene_latent, preserve_background
 from ba_dit.runtime import backend_module
 from ba_dit.training import train_segment
-from ba_dit.precision import make_scaler
 
 
 SOURCES = ('scripts/online_face_ba.py','scripts/run_online_face_ba.py',
-    'ba_dit/nn/masked_face_attention.py','ba_dit/nn/masked_face_flow.py',
+    'ba_dit/nn/masked_face_attention.py','ba_dit/nn/masked_face_flow.py','ba_dit/nn/batched_face_attention.py',
     'ba_dit/backends/flux_runtime.py','ba_dit/backends/attention.py','ba_dit/backends/flux2_native.py',
     'ba_dit/nn/reference_read_delta.py','ba_dit/adapters.py','ba_dit/training.py','ba_dit/checkpoint.py',
-    'ba_dit/precision.py','ba_dit/config.py','ba_dit/runtime.py','ba_dit/logging.py','ba_dit/progress.py',
+    'ba_dit/config.py','ba_dit/runtime.py','ba_dit/logging.py','ba_dit/progress.py',
     'ba_dit/data/cache.py','ba_dit/data/geometry.py','ba_dit/data/manifest.py','ba_dit/metrics.py',
     'patches/flux2_reference_branch_and_offload.patch')
 NATIVE_SOURCE = ROOT/'runs/flux4b_deep_identity1024_det_20261001'
@@ -54,11 +53,11 @@ def memory():
 def experiment(config, run):
     exp = connect(config, run, name=run.name)
     exp.log_parameters({'experiment/variant':'online_masked_qkvo_v1',
-        'trainable_scope':'branch Q/K/V/output LoRA only', 'trainable_parameters':25165824,
+        'trainable_scope':'branch Q/K/V/output LoRA only', 'trainable_parameters':parameter_count(config),
         'native_lora_enabled':False, 'full_denoiser_each_microbatch':True,
         'fresh_noise_and_timesteps':True, 'cached_target_hidden_states':False,
-        'training/microbatch':1, 'training/world_size':config['training'].get('world_size', 1),
-        'training/effective_batch':config['training']['grad_accum']*config['training'].get('world_size', 1),
+        'training/microbatch':config['training'].get('microbatch_size',1), 'training/world_size':config['training'].get('world_size', 1),
+        'training/effective_batch':config['training']['grad_accum']*config['training'].get('world_size', 1)*config['training'].get('microbatch_size',1),
         'loss':'face-mask-normalized native flow MSE; no ArcFace auxiliary',
         'validation/images':config['validation']['limit'],
         'validation/checkpoints':validation_steps(config),
@@ -163,7 +162,7 @@ def initialize(run, config_path, admission, native_source=None):
         'routing_masks_sha256':file_hash(run/'routing_masks.json'),
         'native_source':str(native_source), 'admission':str(admission),
         'split_policy':'identity_disjoint' if multi_id else 'one_id_diagnostic',
-        'trainable_parameters':25165824,'trainable_tensors':64,
+        'trainable_parameters':parameter_count(config),'trainable_tensors':64,
         'loss':'mask-normalized flow MSE, fresh native noise and sigma',
         'validation_targets':False,'mask_feather_pixels':16,
         'training_masks':{r['sample_id']:{'target_hash':r['target_hash'],
@@ -179,7 +178,7 @@ def initialize(run, config_path, admission, native_source=None):
     scheduler=torch.optim.lr_scheduler.LambdaLR(optimizer,lambda step:min(1.,(step+1)/max(1,warmup)))
     torch.manual_seed(config['training']['seed']);random.seed(config['training']['seed'])
     data_digest=digest([{k:v for k,v in row.items() if k not in {'reference','target'}} for row in train_rows])
-    save_training(model,optimizer,scheduler,config,'branch_only',run,0,0,data_digest,scaler=make_scaler(config))
+    save_training(model,optimizer,scheduler,config,'branch_only',run,0,0,data_digest)
     (run/'latest_checkpoint.txt').write_text(str(run/'checkpoint-000000')+'\n')
     exp=experiment(config,run)
     for name in ('identity.json','resolved_config.yaml','optimizer_inventory.json','native_checks.json','resume_parity.json','routing_masks.json'):
@@ -207,19 +206,26 @@ def infer(run,config,step):
     times=get_schedule(config['validation']['steps'],height*width//256)
     torch.cuda.reset_peak_memory_stats()
     samples=[];started=time.monotonic()
-    for row in rows:
-        key=row['sample_id'];path=folder/f'{key}.safetensors'
-        native_path=run/'native'/path.name
-        assert file_hash(native_path)==masks[key]['latent_sha256']
-        if path.exists():
-            with safe_open(path,framework='pt') as f: assert f.metadata()['checkpoint_sha256']==sha
-        else:
-            tensors,_=load_pair(config,row,'cuda',negative=True)
-            assert 'target_latent' not in tensors
-            native=load_file(native_path)['latent'].cuda()
-            alpha=token_alpha(face_alpha((width,height),masks[key]['face_bbox'],config['branch']['mask_feather_pixels'])).cuda()
+    pending=list(rows)
+    while pending:
+        group=[pending.pop(0)]
+        ref_key=cache_path(config,group[0],'vae')
+        while pending and len(group)<config['validation'].get('batch_size',1) and cache_path(config,pending[0],'vae')==ref_key:
+            group.append(pending.pop(0))
+        paths=[folder/f"{row['sample_id']}.safetensors" for row in group]
+        for row,path in zip(group,paths):
+            assert file_hash(run/'native'/path.name)==masks[row['sample_id']]['latent_sha256']
+            if path.exists():
+                with safe_open(path,framework='pt') as f: assert f.metadata()['checkpoint_sha256']==sha
+        if not all(path.exists() for path in paths):
+            loaded=[load_pair(config,row,'cuda',negative=True)[0] for row in group]
+            assert all('target_latent' not in pair for pair in loaded)
+            tensors={key:loaded[0][key] if key=='reference_mask' else torch.cat([pair[key] for pair in loaded]) for key in loaded[0]}
+            assert all(torch.equal(pair['reference_mask'],tensors['reference_mask']) for pair in loaded)
+            native=torch.cat([load_file(run/'native'/path.name)['latent'] for path in paths]).cuda()
+            alpha=torch.cat([token_alpha(face_alpha((width,height),masks[row['sample_id']]['face_bbox'],config['branch']['mask_feather_pixels'])) for row in group]).cuda()
             tensors['target_face_mask']=alpha.flatten(1)
-            noise=torch.randn(native.shape,generator=torch.Generator().manual_seed(row['seed']),dtype=native.dtype).cuda()
+            noise=torch.cat([torch.randn(native[i:i+1].shape,generator=torch.Generator().manual_seed(row['seed']),dtype=native.dtype) for i,row in enumerate(group)]).cuda()
             face=noise.clone()
             for current,following in zip(times[:-1],times[1:]):
                 sigma=torch.tensor([current],device='cuda',dtype=face.dtype)
@@ -232,11 +238,14 @@ def infer(run,config,step):
             assert torch.isfinite(latent).all()
             outside=alpha.expand_as(latent)==0
             assert torch.equal(latent[outside],native[outside])
-            save_file({'latent':latent.cpu().contiguous()},path,metadata={'checkpoint_sha256':sha})
+            for i,path in enumerate(paths):
+                if not path.exists():save_file({'latent':latent[i:i+1].cpu().contiguous()},path,metadata={'checkpoint_sha256':sha})
             memory()
-        samples.append({**{k:row[k] for k in ('sample_id','identity_id','prompt','seed')},
-            'image':key+'.png','checkpoint_sha256':sha,'target_photo_loaded':False,
-            'mask_source':'frozen native generation','face_cfg':config['validation']['guidance']})
+        for row in group:
+            key=row['sample_id']
+            samples.append({**{k:row[k] for k in ('sample_id','identity_id','prompt','seed')},
+                'image':key+'.png','checkpoint_sha256':sha,'target_photo_loaded':False,
+                'mask_source':'frozen native generation','face_cfg':config['validation']['guidance']})
         write(folder/'validation.json',{'backend':config['model']['arch'],'mode':'branch_only',
             'variant':'online_masked_qkvo_v1','checkpoint':str(checkpoint),'checkpoint_sha256':sha,
             'panel_sha256':file_hash(config['data']['validation_manifest']),'samples':samples})

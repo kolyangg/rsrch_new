@@ -16,10 +16,6 @@ def main():
         raise RuntimeError('Exactly two Slurm-visible GPUs are required')
     if torch.__version__ != '2.7.1+cu126' or torch.version.cuda != '12.6' or 'sm_70' not in torch.cuda.get_arch_list():
         raise RuntimeError('Expected the pinned CUDA 12.6 PyTorch build with sm_70 kernels')
-    available = next(int(line.split()[1])*1024 for line in Path('/proc/meminfo').read_text().splitlines()
-                     if line.startswith('MemAvailable:'))
-    if available < 64*2**30:
-        raise RuntimeError('Need 64 GiB available host RAM for two FP32 text encoders and model loading')
     devices = []
     for index in range(2):
         gpu = torch.cuda.get_device_properties(index)
@@ -41,8 +37,7 @@ def main():
             for line in env.read_text().splitlines())):
         raise RuntimeError('Configure COMET_API_KEY privately before submission')
     print(json.dumps({'slurm_job_id':os.environ['SLURM_JOB_ID'],'devices':devices,
-                      'torch':torch.__version__,'cuda':torch.version.cuda,'dataset_verified':True,
-                      'host_available_gib':available/2**30}), flush=True)
+                      'torch':torch.__version__,'cuda':torch.version.cuda,'dataset_verified':True}), flush=True)
 
 
 if __name__ == '__main__':

@@ -30,8 +30,7 @@ def load_transformer(config, device="cuda"):
     weights = load_file(str(Path(config["model"]["weights"]) / filename), device="cpu")
     model = Flux2.load_from_state_dict(weights, dtype=model_dtype(config), config=Klein4BParams() if is4 else Klein9BParams())
     del weights
-    from ba_dit.precision import configure_residuals
-    return configure_residuals(model.requires_grad_(False).to(device).eval(), config)
+    return model.requires_grad_(False).to(device).eval()
 
 
 def load_encoder(config):
@@ -79,12 +78,6 @@ def encode_images(vae, config, row):
 
 
 def predict(model, tensors, noisy, sigma, config, branch=True, negative=False):
-    from ba_dit.precision import compute_context
-    with compute_context(config):
-        return _predict(model, tensors, noisy, sigma, config, branch, negative)
-
-
-def _predict(model, tensors, noisy, sigma, config, branch=True, negative=False):
     if 'dtype' in config['model']:
         noisy = noisy.to(model_dtype(config))
         tensors = {k: v.to(model_dtype(config)) if k in {'reference_tokens', 'prompt_embeds', 'negative_prompt_embeds'} else v
@@ -94,7 +87,7 @@ def _predict(model, tensors, noisy, sigma, config, branch=True, negative=False):
     prediction = model(
         x=torch.cat((packed, tensors["reference_tokens"]), dim=1),
         x_ids=torch.cat((tensors["target_ids"], tensors["reference_ids"]), dim=1),
-        timesteps=sigma.to(noisy.dtype).reshape(1).expand(noisy.shape[0]), ctx=tensors[prefix + "prompt_embeds"],
+        timesteps=sigma.to(noisy.dtype).reshape(-1).expand(noisy.shape[0]), ctx=tensors[prefix + "prompt_embeds"],
         ctx_ids=tensors[prefix + "text_ids"], guidance=None,
         branch_reference_mask=tensors["reference_mask"] if branch else None,
         branch_target_tokens=packed.shape[1] if branch else None,

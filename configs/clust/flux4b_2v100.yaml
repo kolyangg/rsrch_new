@@ -1,7 +1,6 @@
-# Named FP32 experiment: FP16 native activations overflow on the measured V100.
-# One sample/GPU x two ranks x four accumulation steps; effective batch eight.
+# Named FP16 experiment: one sample/GPU x two ranks x four accumulation steps.
 schema_version: 2
-name: flux4b_clust_2v100_fp32_qkvo_r128_20k
+name: flux4b_clust_2v100_fp16_qkvo_r128
 model:
   backend: flux
   arch: flux2_klein_4b
@@ -9,7 +8,7 @@ model:
   encoder: ${BA_ROOT}/weights/flux4b_text
   vae: ${BA_ROOT}/weights/flux_vae/ae.safetensors
   revision_lock: ${BA_ROOT}/locks/weights-small.json
-  dtype: float32
+  dtype: float16
   conditioning_dtype: float32
 data:
   conditioning: online
@@ -34,7 +33,7 @@ lora:
   rank: 8
   alpha: 8
 training:
-  steps: 20000
+  steps: 2000
   grad_accum: 4
   lr: 5.0e-05
   warmup: 100

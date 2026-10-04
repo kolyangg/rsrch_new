@@ -42,12 +42,12 @@ def records(metadata, kind):
 
 def prepare_image(path, box, crop, kind, prepared):
     with Image.open(path) as source:
-        image = source.convert("RGB")
+        image = source
         if crop is not None and image.size != (1024, 1024):
             if kind == "large":
                 left, right, top, bottom = crop
                 crop = [left, top, right, bottom]
-            image = image.crop(tuple(map(int, crop)))
+            image = image.convert("RGB").crop(tuple(map(int, crop)))
             if image.size != (1024, 1024):
                 raise ValueError(f"Legacy body crop is not 1024x1024: {path}")
             prepared.mkdir(parents=True, exist_ok=True)

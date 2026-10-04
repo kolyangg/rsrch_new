@@ -1,8 +1,8 @@
-# Authorized run summary; executable schema-2 config is linked below.
+# Reviewable proposal, NOT executable by ba_dit.load_config or current launchers.
 schema_version: 1
 kind: training_proposal
-status: authorized_20k_submitted
-experiment: flux4b_clust_2v100_fp16_qkvo_r128_20k
+status: awaiting_user_approval_and_v100_implementation
+experiment: flux4b_clust_2v100_multiid_face_qkvo_r128_768_fp16
 model: black-forest-labs/FLUX.2-klein-base-4B
 initialization: fresh_native_initialized_ba_not_one_id_checkpoint
 architecture:
@@ -10,20 +10,10 @@ architecture:
   rank: 128
   alpha: 128
   gamma: 1.0
-  dual_blocks:
-  - 1
-  - 2
-  - 3
-  - 4
-  single_blocks:
-  - 3
-  - 8
-  - 13
-  - 18
+  dual_blocks: [1, 2, 3, 4]
+  single_blocks: [3, 8, 13, 18]
   trainable_parameters: 25165824
-  target_size:
-  - 768
-  - 768
+  target_size: [768, 768]
   reference_size: 512
   mask_feather_pixels: 16
   loss: face_mask_normalized_native_flow_velocity_mse
@@ -32,18 +22,19 @@ scheduler:
   account: proj_1892
   partition: rocky
   nodes: 1
-  gpus: v100:2
+  gpus: 'v100:2'
   tasks: 1
   cpus_per_task: 16
-  time: 7-00:00:00
+  time: '24:00:00'
   requeue: false
+  # Omit --mem: current Slurm RealMemory=1 rejects ordinary RAM requests.
 training:
   strategy: two_ddp_workers_one_per_gpu
   microbatch_per_gpu: 1
   gradient_accumulation_per_worker: 4
   effective_global_batch: 8
-  initial_optimizer_updates: 20000
-  lr: 5.0e-05
+  initial_optimizer_updates: 2000
+  lr: 0.00005
   warmup_updates: 100
   weight_decay: 0.0
   gradient_clip: 1.0
@@ -56,41 +47,31 @@ precision:
   proposed_denoiser: fp16_with_dynamic_loss_scaling
   adapter_parameters_and_optimizer: fp32
   reductions_norms_and_loss: fp32
-  text_encoder_and_vae: fp32_CPU_text_encoder_per_rank_and_GPU_VAE
+  text_encoder_and_vae: fp32_with_staged_offload_if_needed
   status: requires_real_finite_forward_backward_checks
 environment:
-  python: 3.11.13
-  cuda: 12.6 with sm_70 required
-  torch: 2.7.1+cu126
-  constraints: locks/flux-v100-constraints.txt
+  python: '3.11'
+  cuda: '12.x build with verified sm_70 kernels; never CUDA 13'
+  torch: resolve_and_pin_a_V100_supported_build_before_GPU_admission
 validation:
   locations: configs/clust/validation.yaml
   manifest: data/validation/manual_val_96.jsonl
-  at_updates:
-  - 0
-  - 2000
-  - 4000
-  - 6000
-  - 8000
-  - 10000
-  - 12000
-  - 14000
-  - 16000
-  - 18000
-  - 20000
+  at_updates: [0, 2000]
   denoising_steps: 20
   guidance: 4.0
   batch_size: 1
-  execution: training_workers_exit_before_serial_validation
+  execution: serial_on_rank_zero_with_other_rank_waiting
   masks: native_generated_for_this_named_precision_experiment
 data:
   locations: configs/clust/training_sources.yaml
-  preference: full_adjusted_Large_cross_view_identities
-  train_manifest: data/train_pairs_large_clust.jsonl
-  readiness: verified_file_checksums_and_manifest_receipt
+  preference: verified_large_cross_view_identities_else_explicitly_named_cosmic_pairs
+  verified_train_manifest: null
 blocking_work:
-- Prepare isolated cluster environment, pinned weights and private Comet credential.
-- Pass pretrained V100 parity/gradients/peak-memory/exact-resume admission before
-  long training.
-executable_config: configs/clust/flux4b_2v100.yaml
-sbatch: jobs/flux4b_clust_2v100.sbatch
+  - Restore readable training dataset location or supply an accessible copy.
+  - Implement DDP sampling, gradient synchronization, rank-zero I/O and per-rank resume state.
+  - Replace hard-coded BF16 consistently in patched training and validation paths.
+  - Validate V100-compatible environment and fetch pinned sources/weights.
+  - Measure native/off parity, branch updates, finite gradients, peak memory and checkpoint replay on V100.
+# Start with microbatch1 per GPU. This is an initial engineering choice, not a
+# measured maximum. If FP16 is nonfinite, stop and review FP32/offload results;
+# do not silently change backbone, resolution, scientific controls or dtype.

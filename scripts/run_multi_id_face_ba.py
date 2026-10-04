@@ -131,11 +131,9 @@ def main(args):
     (ROOT/'runs').mkdir(exist_ok=True)
     lock = (ROOT/'runs/face_flow_gpu.lock').open('a')
     fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
-    dedicated_encoder = config['data'].get('encoder_device') == 'cuda:1'
-    visible = 2 if dedicated_encoder else world
-    minimum = config['hardware']['min_vram_gb'] if world > 1 or dedicated_encoder else max(45,config['hardware']['min_vram_gb'])
-    if torch.cuda.device_count() < visible or any(torch.cuda.get_device_properties(i).total_memory < minimum*10**9 for i in range(visible)):
-        raise RuntimeError(f'Requires {visible} visible GPU(s), each with at least {minimum} GB VRAM')
+    minimum = config['hardware']['min_vram_gb'] if world > 1 else max(45,config['hardware']['min_vram_gb'])
+    if torch.cuda.device_count() < world or any(torch.cuda.get_device_properties(i).total_memory < minimum*10**9 for i in range(world)):
+        raise RuntimeError(f'Requires {world} visible GPU(s), each with at least {minimum} GB VRAM')
     # A killed controller must not leave a child that a second controller can duplicate.
     os.set_inheritable(lock.fileno(), True)
     envs = Path(os.environ.get('BA_ENVS_DIR', ROOT/'envs')).resolve()
@@ -146,24 +144,6 @@ def main(args):
     if (run.exists() or setup.exists()) and not args.resume:
         raise FileExistsError('Run/setup already exists; use --resume or a fresh --run')
     setup.mkdir(parents=True, exist_ok=True)
-    if os.getenv('BA_COMET_OFFLINE') == '1' and config['logging']['enabled']:
-        from ba_dit.logging import connect
-        registration = ROOT/'scratch/clust-v100'/f"comet-registration-{os.getenv('SLURM_JOB_ID')}"/'comet_experiment.json'
-        if registration.is_file() and not (setup/'comet_experiment.json').exists():
-            record = json.loads(registration.read_text())
-            if record.get('config_sha256') != digest(config):
-                raise ValueError('Queued Comet registration belongs to a different configuration')
-            write(setup/'comet_experiment.json', record)
-        startup = connect(config, setup, name=run.name)
-        startup.log_parameters({'cluster/job_id': os.getenv('SLURM_JOB_ID'),
-                                'cluster/cuda_allocator': os.getenv('PYTORCH_CUDA_ALLOC_CONF', 'default'),
-                                'training/effective_batch': world * config['training']['grad_accum'],
-                                'training/microbatch_per_gpu': 1})
-        startup.log_other('cluster/stage', 'dataset_verification')
-        startup.log_other('cluster/slurm_state', 'RUNNING')
-        startup.end()  # Close the startup archive immediately for the login uploader.
-        write(setup/'status.json', {'stage':'dataset_verification', 'status':'running',
-                                   'controller_pid':os.getpid()})
     if args.mask_overrides and (run/'comet_experiment.json').exists():
         raise ValueError('Masks are immutable after initialization; use a fresh run for changed masks')
     state_dir = setup
