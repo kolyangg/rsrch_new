@@ -1,0 +1,21 @@
+# Separate local 768 px / four-prompt fixed-input diagnostic.
+name: flux4b_face_one_id_strong
+base_config: configs/flux4b_48_one_id.yaml
+resolution: 768
+train_images: 19
+validation_images: 4
+inference_steps: 20
+blocks: 8
+rank: 256
+gamma: 1.0
+gate_prior: 0.1
+sigmas: [0.05, 0.15, 0.3, 0.5, 0.7, 0.9]
+fit_noise_seeds: 2
+steps: 2000
+batch_size: auto
+lr: 0.0003
+warmup: 100
+router_weight: 1.0
+probe_every: 500
+validation_every: 1000
+seed: 142
