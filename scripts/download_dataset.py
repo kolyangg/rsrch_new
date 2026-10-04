@@ -8,6 +8,7 @@ import subprocess
 import tarfile
 import tempfile
 import zipfile
+from urllib.parse import parse_qs, urlparse
 from pathlib import Path
 
 
@@ -52,7 +53,34 @@ def download(url, download_dir):
         if "drive.google.com" in url or "://" not in url:
             import gdown
             options = {"url": url, "fuzzy": True} if "://" in url else {"id": url}
-            result = gdown.download(output=str(temporary), quiet=False, resume=True, **options)
+            try:
+                result = gdown.download(output=str(temporary), quiet=False, resume=True, **options)
+            except gdown.exceptions.FileURLRetrievalError:
+                # Some public archives work through Google's download endpoint
+                # even when the share-page parser fails. Quota errors still fail.
+                import requests
+                from tqdm import tqdm
+                parts = urlparse(url)
+                file_id = (parts.path.split('/d/')[1].split('/')[0] if '/d/' in parts.path
+                           else parse_qs(parts.query).get('id', [url])[0])
+                offset = temporary.stat().st_size if temporary.exists() else 0
+                headers = {'Range': f'bytes={offset}-'} if offset else {}
+                endpoint = 'https://drive.usercontent.google.com/download'
+                with requests.get(endpoint, params={'id':file_id,'export':'download','confirm':'t'},
+                                  headers=headers, stream=True, timeout=(30, 120)) as response:
+                    response.raise_for_status()
+                    if 'text/html' in response.headers.get('Content-Type', ''):
+                        raise RuntimeError('Google Drive returned an error page (quota/access), not an archive')
+                    if offset and (response.status_code != 206 or not response.headers.get('Content-Range','').startswith(f'bytes {offset}-')):
+                        raise RuntimeError('Google Drive did not honor the partial-download range')
+                    total = int(response.headers.get('Content-Length', 0)) + offset
+                    with temporary.open('ab' if offset else 'wb') as stream, tqdm(total=total or None, initial=offset, unit='B', unit_scale=True) as progress:
+                        for chunk in response.iter_content(1024*1024):
+                            stream.write(chunk)
+                            progress.update(len(chunk))
+                    if total and temporary.stat().st_size != total:
+                        raise RuntimeError('Incomplete Google Drive archive')
+                result = str(temporary)
             if not result:
                 raise RuntimeError("Drive download failed; check the archive link and access")
         else:

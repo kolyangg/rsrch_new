@@ -2,6 +2,86 @@
 
 The branch runner is independent of a PhotoMaker installation. Only the original dataset metadata/photos and identity lookup files are reused.
 
+## FLUX4B multi-ID Q/K/V/O BA on 48GB
+
+Use `configs/FLUX1_vast_4b.yaml` and `scripts/run_flux4b_multi_id.sh`
+for the full-denoiser experiment continued from the successful online one-ID
+architecture. Transfer the current working source (these additions are not yet
+committed), set up `flux48` below, download the adjusted Large image archive,
+and install the private validation and training-metadata bundles. Supply
+`COMET_API_KEY` through the environment or untracked `.env`.
+
+```bash
+# On the NEW machine, after environment/weights/data download:
+bash scripts/run_flux4b_multi_id.sh \
+  --run runs/flux4b_large_qkvo_r128 \
+  --images-root /workspace/datasets/large_dataset
+
+# Resume interrupted preparation, training or scoring using the same run:
+bash scripts/run_flux4b_multi_id.sh \
+  --run runs/flux4b_large_qkvo_r128 --resume \
+  --images-root /workspace/datasets/large_dataset
+
+# Optional full-cache experiment (requires substantially more disk):
+bash scripts/run_flux4b_multi_id.sh \
+  --run runs/flux4b_large_qkvo_r128_cached \
+  --images-root /workspace/datasets/large_dataset --conditioning cached
+
+# Configuration/plan only: no data reads, CUDA calls or preparation:
+bash scripts/run_flux4b_multi_id.sh --run runs/flux4b_large_qkvo_r128 --dry-run
+```
+
+`--images-root` must point to the extracted directory expected by the Large
+metadata, not its parent archive folder. `--metadata /path/filtered_ids3_adj.json`
+can override the default private bundle location. If a full imported
+`data/train_pairs_large.jsonl` already exists, the launcher verifies its import
+audit and reuses it. The original Large archive URL is not saved in this
+repository; downloading it requires `LARGE_DATASET_URL` or transferring the
+existing archive. This launcher starts from downloaded images.
+
+| Setting | Value |
+|---|---|
+| Backbone | Frozen FLUX.2-klein **Base 4B**, full denoiser in the gradient path |
+| Trainable | Q/K/V/output BA LoRA only, rank128, 25,165,824 parameters |
+| Training data | Full pinned adjusted Large, held-out validation identities removed via saved aliases |
+| Pairing | Distinct same-ID views, deterministic next-view pairs, shuffled each epoch |
+| Batch | **Microbatch1 × accumulation8 = effective8**; one GPU |
+| Geometry | Target768×768, reference512 |
+| Optimizer | AdamW, LR5e-5, warmup100, gradient checkpointing |
+| Budget | 10,000 optimizer updates; full checkpoints every500 |
+| Validation | Original fixed96 order/prompts/seeds/references, at0/2000/4000/6000/8000/10000 |
+| Generation | 20 sampling steps, CFG4; masks/background from matching native generations |
+
+Fresh adapters are initialized; the one-ID checkpoint is not loaded. The
+launcher imports pairs, checks identity/image disjointness, caches only fixed96
+validation inputs, runs pretrained native/off/gradient/frozen-weight/memory and exact
+optimizer-resume checks, then generates and scores the native panel. It freezes
+these native face masks and starts serial training/validation in one Comet run
+under `rsrch_new`. ID_sim/CLIP, seven face-quality curves, paired face panels,
+background preservation checks and `best_checkpoint.json` are retained. Missing
+or ambiguous native faces stop initialization for review; correct their boxes
+in JSON and resume with `--mask-overrides /path/reviewed_boxes.json`. Masks cannot
+change after initialization. The native images are under `RUN_setup/native96/`.
+
+Training uses `data.conditioning: online`: frozen text encoder and VAE remain
+loaded alongside the denoiser and encode each selected pair under no-grad.
+In the default online mode, no training embeddings or latents are written to disk.
+`--conditioning cached` enables full precomputation as a separate named run.
+Conditioning mode is frozen on resume; both modes retain the same loss and data. Encoder execution
+preserves the flow noise/timestep RNG stream. Only the fixed96 validation
+inputs are cached and reused across checkpoints. The earlier400–500GiB estimate
+was for an unnecessary full-dataset embedding cache, explicitly rejected by the
+user; it is **not** a requirement of this setup. Disk is needed for raw data,
+weights, environments, checkpoints and validation outputs. `BA_ENVS_DIR` is
+supported. The authorized destination is documented in `MACHINES.md`.
+
+Admission requires at least45GB CUDA-addressable memory and peak reserved memory below90%. This is
+a conservative starting batch configuration, not a measured48GB throughput
+optimum. Only syntax, configuration, resume-selection and dry-run checks were
+performed while preparing these scripts; no local data preparation or training
+was run. Earlier one-ID runs retain their original source snapshots; use commit
+`3714e7d` to replay that completed run exactly.
+
 ## 1. Transfer the current source and validation data
 
 If using Git, transfer a revision containing the current changes. Prepared archives live in `data/bundles/` and can be transferred directly. To package a newer working checkout without committing it, use unused output filenames (the packers refuse to overwrite an existing archive):
@@ -60,7 +140,7 @@ Both original dataset options work with `flux48`, `flux80`, `qwen48`, and `qwen8
 For a rented Vast instance when the original Large link is unavailable, transfer the 17 GB adjusted image folder from the old workstation. The command resumes partial transfers and also sends the two private metadata/validation bundles:
 
 ```bash
-python3 scripts/sync_large_dataset_vast.py 53574065
+python3 scripts/sync_large_dataset_vast.py 53994096 --jobs 8
 # On the instance, after cloning this repository and creating the FLUX environment:
 envs/flux-toolkit/bin/python scripts/download_dataset.py \
   --archive /workspace/training-metadata.tar.gz --destination data/datasets/metadata
@@ -194,3 +274,89 @@ scripts/run_profile.sh qwen80 train --mode branch_only --quality-metrics \
 ```
 
 This retains the checkpoint's saved geometry. For expanded geometry use `--init-adapter` with the new profile to start a separate run. The 4B and 9B FLUX adapters have different shapes and are intentionally incompatible.
+# Quick Cosmic hardware probe
+
+For an explicitly named short hardware check, with a prepared Cosmic paired
+manifest and the usual locked FLUX environment/weights:
+
+```bash
+envs/flux-toolkit/bin/python -m scripts.run_cosmic_smoke \
+  --run runs/flux4b_cosmic_hardware15_qkvo_r128
+```
+
+The supplied config uses the 15 pairs available locally on 2026-10-03 because
+the original Drive downloads became quota-blocked. It is **not** a full Cosmic
+experiment. The probe trains 100 updates with live conditioning, effective
+batch8 and rank128 BA only. It checks native/off parity and finite updates,
+then saves/reloads the actual optimizer after2 updates. It omits generated
+image panels and ID/CLIP scoring at the user's explicit request to confirm
+hardware quickly. Only one validation input is cached for encoding parity;
+the original fixed96 manifest is also read to check data overlap.
+
+To use another prepared Cosmic manifest, copy the YAML to a new named config
+and change `data.train_manifest`; pass `--config` and a fresh `--run` path.
+The normal data command remains `python scripts/prepare_dataset.py cosmic`
+(with project `PYTHONPATH=.`), using the original two Drive links. An HTTP200
+HTML quota page is a download failure. The downloader falls back to Google's
+public download endpoint when gdown's share-page parsing fails, but still
+rejects access/quota error pages and checks download lengths.
+
+## GB10: FLUX.2-klein Base 9B pilot
+
+After account approval for the gated official9B repository, download the pinned
+`locks/weights-flux80.json` components into the existing FLUX environment.
+`configs/FLUX1_vast_9b_batch8.yaml` is a separate full-Large, fixed12
+held-out pilot:768px, reference512, rank128 Q/K/V/output BA, fresh adapters,
+online conditioning,2000 updates and validation0/1000/2000. The fixed12 panel
+is intentionally smaller than the normal96 protocol. Native-generated9B
+masks must be prepared by its controller; do not reuse4B masks/checkpoints.
+
+Benchmark true microbatch1/2/4 at effective batch8 and choose by measured
+throughput with memory headroom. The benchmark needs a small paired manifest
+with original image paths, not a full training cache:
+
+```bash
+envs/flux-toolkit/bin/python -m scripts.benchmark_flux9b \
+  --config configs/FLUX1_vast_9b_batch8.yaml \
+  --manifest data/train_pairs_large_benchmark8.jsonl \
+  --output runs/flux9b_gb10_benchmark
+
+bash scripts/run_flux4b_multi_id.sh \
+  --run runs/flux9b_large_qkvo_r128_pilot12 \
+  --config runs/flux9b_gb10_benchmark/selected_config.yaml \
+  --images-root /workspace/datasets/large_dataset \
+  --pilot-panel --id-clip-only
+```
+
+The shared launcher supports both4B and9B despite its historical filename.
+The second command performs pretrained parity, gradients and exact resume
+admission, then native12/masks, initialization, training and serial scoring.
+It retains original ID_sim/CLIP while omitting seven optional face-quality
+models. True batches require identical token shapes without padding; the
+adjusted Large images satisfy that layout. Each example retains its own
+reference-face keys and fresh noise/timestep. Native LoRA is disabled.
+
+For a resumed transfer with a slow last directory, use
+`python3 scripts/sync_large_dataset_vast.py 53994096 --jobs 16 --balance-files`
+Stop only the old transfer to that
+same destination before launching replacement streams.
+
+On3October the user explicitly requested immediate training. The dedicated
+`scripts.run_flux9b_training_first` controller starts the full-Large9B pilot
+without the preceding image panel/replay sequence. It saves actual checkpoint0,
+trains to1000, evaluates0/1000 with newly generated native9B masks, then
+trains/evaluates2000. This is an explicitly deferred initial evaluation.
+Use the selected benchmark config, the same `--run`, and `--resume` only for
+an existing training-first run. Its immutable training identity and ordinary
+checkpoint compatibility checks remain enabled.
+
+### Five-hour9B pilot on GB10
+
+Use `configs/FLUX1_vast_9b.yaml` with
+`scripts.run_flux9b_training_first --profile-validation`. This keeps9B,768px
+and rank128 but uses effectivebatch1. Two thousand updates therefore process
+2000 examples, versus16000 for effectivebatch8. It is a separate scientific
+experiment. The training worker saves checkpoint0 and measures a conservative
+validation timing estimate after update2 without advancing training RNG.
+Measured initial projection:4.47h including all fixed12 panels and30min
+loading/scoring reserve; see the run's five_hour_budget.json for actual values.

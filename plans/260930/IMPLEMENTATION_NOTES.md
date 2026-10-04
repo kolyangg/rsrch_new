@@ -184,6 +184,395 @@ hash to `Apps/temp/rsrch_new/2026-10-01/flux4b_branched_attention_architecture.p
 The Dropbox helper was copied from EMDR and configured for API root
 `/rsrch_new` inside `Apps/temp`; credentials are in ignored `.env` with mode 0600.
 
+## Fast face-focused BA diagnostic — 2026-10-01
+
+Implemented a separate FLUX Base 4B path with one reference-face attention read
+at the final single-stream block, rank-16 output LoRA and a learned scalar face
+gate. Only the 101,377 BA/router parameters train. Target boxes supervise gate
+BCE and face-balanced flow loss during training; inference uses model queries
+to predict the gate and receives no target/generated-face masks. The existing
+multi-site FLUX/Qwen paths and checkpoints are unchanged.
+
+The new `scripts/run_face_diagnostic.sh` stages exact frozen-prefix caching,
+training, save/process-resume, serial validation, ID/CLIP scoring and a visual
+report. An initial cache attempt caught a BF16 rounding difference (0.03125)
+when target rows alone were replayed. Retaining the complete native token
+layout fixed it: all 24 cached cases and the trained full-model comparison are
+exact. Tests also cover native initialization, reference-value dependence,
+target-only scatter, finite/nonzero gradients and rejection of external
+inference target gates.
+
+Completed on the local 16 GB GPU: four one-ID images, three fixed noise levels,
+separate probe noise seeds, batch four and 300 updates; validation is a separate
+512 px/two-prompt/20-step diagnostic. Optimization took 14.698 seconds at
+3.803 GiB peak reserved; prefix capture took 13.425 seconds at 8.158 GiB.
+The complete run through review/scoring took 272 seconds. These are fixed-input
+cache timings, not general fresh-noise training throughput.
+
+Face-MSE fell 10.96% on fitted noise and 3.02% on separate probe noise. Probe gate
+IoU reached 0.936, with per-token correction RMS 64.1× larger inside faces than
+outside. Both generated images changed visibly. A conditional-only CFG trial
+reduced identity similarity; using BA in both CFG lanes with identical trained
+weights improved identity 0.383189→0.438182 and CLIP 27.241908→27.454217.
+Some gate activation and final image changes extend to hands/clothing. These
+small-panel results demonstrate learning and branch influence, not strict
+pixel isolation or generalization.
+
+Details, failed-trial evidence and artifact locations are in
+[FACE_BA_DIAGNOSTIC.md](FACE_BA_DIAGNOSTIC.md). Final review:
+`runs/flux4b_face_one_id_fast_20261001_shared_cfg/review.html`;
+[Comet experiment](https://www.comet.com/nikolay-2104/rsrch-new/a49b042877154369a30080c2da5393f6).
+Vast instance 53574065 was observed stopped and was not restarted.
+
+## Stronger local face BA — 2026-10-01
+
+Added a separate differentiable eight-block suffix (FLUX single blocks 12–19)
+with rank-256 face BA: 12,607,496 trainable parameters, exclusively output LoRA
+and query-predicted face routers. Native weights remain frozen, including the
+blocks through which branch gradients propagate. Exact frozen-prefix caching
+uses 228 fitted and 114 separate-noise cases from all 19 one-ID pairs at 768 px.
+The first/last cached full-model predictions and native initialization match
+exactly; all 19 transformed training masks were visually checked.
+
+Six local throughput/memory trials selected batch 1 without activation
+checkpointing: 0.600 s/update and 7.033 GiB reserved in the short benchmark.
+Batch 2 fits at 11.641 GiB but is slower per sample; batch 4 without checkpointing
+exceeded the memory gate (21.027 GiB reserved) and was rejected. Checkpointed
+batches 1/2/4 fit but are slower. The actual training rate and final results are
+recorded separately from these short benchmarks.
+
+Run `runs/flux4b_face_one_id_strong_20261001` has started its requested 2,000
+updates. All eight BA sites updated during the first 25 steps, native gradients
+remained absent, and checkpoint reload plus fresh-process update-26 resume
+matched exactly. Initial training peak was 7.051 GiB. Serial four-prompt
+validation runs at 0/1,000/2,000 using the same patched model in both CFG lanes.
+Baseline ID similarity is 0.306791 and CLIP is 28.454863; final gains are not yet
+established at this note's creation.
+
+Final launch check at 11:31 UTC: 374/2,000 updates, all recorded losses/gradient
+norms finite, exact resume at update 26, peak training reserved 7.145 GiB.
+Sustained speed was 1.156 s/update; NVIDIA reported active software thermal
+slowdown at 88°C and roughly 98% GPU utilization. About 31 minutes of optimizer
+time remained, plus serial validations. The launcher continues through 2,000
+and final scoring/report generation; active monitoring stopped per the user's
+earlier request. This is a running experiment, not a completed quality result.
+
+Details and benchmark table: [FACE_BA_STRONG.md](FACE_BA_STRONG.md).
+[Comet](https://www.comet.com/nikolay-2104/rsrch-new/7beb18408145451896ccdeaa9a6722bb).
+Sources/configs are snapshotted in the ignored run folder. Vast was not used;
+new experimental code remains uncommitted pending an explicit push request.
+
+## Strong face BA: 24-image one-ID validation — 2026-10-01
+
+The completed local 2,000-update FLUX 4B run was revalidated on a named
+24-image panel at initialization, step 1,000 and step 2,000, using the existing
+branch checkpoints and patched backend. The original one-ID panel has twelve
+prompts, so this panel uses those twelve at seeds 0 and 1. The source four-image
+outputs were reused byte for byte; all other images were regenerated with the
+same reference and inference settings. All 72 PNGs and saved gate records are
+complete. Peak CUDA reserved memory was 9.611 GiB; sustained inference slowed
+under local GPU thermal throttling. No Vast machine was used.
+
+Mean ID similarity was 0.331399 → 0.339098 → 0.339220, while CLIP was
+28.0729 → 27.6710 → 26.8572. TOPIQ-Face declined 0.689587 → 0.673590 →
+0.636220. At step 2,000 only 10 of 24 ID scores improved; a 12-prompt clustered
+bootstrap interval for mean ID change spans zero. Mean saved gate activation at
+step 2,000 is 0.9168 within the frozen baseline face boxes and 0.0848 outside,
+and all 24 images changed. This confirms a face-focused active branch, but the
+larger panel does not establish an identity or quality gain.
+
+All 24 scoring masks passed automatic coverage and visual overlay review;
+the cached BA reference mask selects the intended face. Masks from generated
+images are for scoring only and were never input to inference. Full tables,
+bootstrap intervals, overlays, source/checkpoint provenance and the dedicated
+[Comet experiment](https://www.comet.com/nikolay-2104/rsrch-new/65297da706af4cd6a0308b78fc18f9ca)
+are recorded in [FACE_BA_24_VALIDATION.md](FACE_BA_24_VALIDATION.md) and the
+ignored run `runs/flux4b_face_one_id_24_val_20261001`.
+
+## BA-only face reconstruction from noise — 2026-10-01
+
+The user clarified that faces should start near random and depend on BA. Added
+a separate 256 px face-crop flow head whose zero output projections initially
+leave Gaussian latents untouched. It uses one four-head attention layer,
+learned query/noisy-latent paths, 2,408,448 BA parameters, and a frozen FLUX
+feature extractor. The native FLUX velocity is disabled. No target mask or
+generated face box enters inference. Only native flow MSE is optimized.
+
+Pure-reference and query-only residual trials reduced losses but left speckled
+undetected faces. A timestep-scaled noisy projection was unstable at the initial
+learning rate; all failures are retained. The final direct-velocity variant
+completed 2,000 updates and produced detected faces on all four generation seeds
+at both 1,000 and 2,000, versus none at initialization. Mean ID similarity is
+0→0.30705→0.30599; image quality remains rough. Separate-noise flow MSE fell
+58.7%. Disabling the reference read raises probe error 31.8% and lowers seed-zero
+ID similarity 0.39975→0.27812, although the query path still produces a coarse face.
+
+All trainable tensors updated with finite gradients; fresh-process resume and
+cached/full predictions were exact. Peak CUDA reservation was 7.527 GiB with
+the backbone and 0.461 GiB for cached BA training. The 2,000 optimizer steps took
+11.10 seconds, and the complete primary run about three minutes. This is a
+one-ID reconstruction proof using fixed cached inputs, not full-scene editing
+or evidence of identity generalization. See [FACE_CROP_BA_ONLY.md](FACE_CROP_BA_ONLY.md),
+`runs/flux4b_ba_only_face_crop_direct_20261001/report.md`, and
+[Comet](https://www.comet.com/nikolay-2104/rsrch-new/29b7730044c94c2c97b736d27ae442e0).
+
+## Corrected prompted validation with spatial routing — 2026-10-01
+
+The user clarified that the task is new prompted generation, not face-crop
+reconstruction. Added `scripts/masked_face_flow.py` and
+`ba_dit/nn/masked_face_flow.py` for a named CL14-inspired spatial split: reuse
+native generated scenes and their verified face masks; BA alone predicts face
+flow from noise, with native background context and explicit exterior pixel
+preservation after decoding. Target photographs are never validation inputs.
+The user's instruction explicitly authorizes native-output masks for inference
+in this experiment; the general reference-only protocol is unchanged.
+
+All 24 mask/image hashes matched and overlays were reviewed. Pretrained BA-off
+prediction is bit-exact after branch installation. The complete step-zero panel
+contains noisy faces and zero pixel error outside the blend support. A fresh
+full-scene one-ID training run and 0/1k/2k prompted validation are in progress:
+`runs/flux4b_masked_face_flow_24_20261001`,
+[Comet](https://www.comet.com/nikolay-2104/rsrch-new/1ef76d1341fa4c52989af372a5b65ce2).
+See [MASKED_FACE_FLOW.md](MASKED_FACE_FLOW.md) for the precise difference from
+CL14, conditioning, trainable parameters, cache protocol and limitations.
+
+The first full-scene pilot was stopped at 1k after probe loss regressed with
+lr .002/sequential cases. Its evidence is retained. The completed fresh run
+`flux4b_masked_face_flow_24_stable_20261001` uses lr .001 and seeded shuffled
+batches, with the verified same feature cache. All 72 prompted images at
+0/1k/2k are generated and scored. Mean ID similarity is
+**0.02024 → 0.15084 → 0.19661**; untouched native scores **0.33140**. This
+demonstrates learning for prompted generation, with rough faces that remain
+below native quality. Probe flow MSE falls 51.3%; disabling reference attention
+raises it 22.9%. Native-off parity, exact resume and cached/live checks pass,
+all BA tensors change with finite gradients, and all 72 final composites
+preserve the exterior exactly. Peak inference CUDA reservation is 9.422 GiB.
+The final [Comet run](https://www.comet.com/nikolay-2104/rsrch-new/d59463ae28784748a9092746eafeee24)
+and [protocol/results](MASKED_FACE_FLOW.md) include the masks, raw decoder
+outputs, face close-ups, source snapshots and limitations.
+
+## Requested continuation to 10k — 2026-10-01
+
+Started `flux4b_masked_face_flow_24_10k_20261001` as a new Comet experiment,
+continuing both BA weights and Adam state from update 2000. Training/data/
+architecture and the prompted 24-image panel are unchanged. New image metrics
+are collected at 4k/6k/8k/10k. Extended batch-order prefix and process-resumed
+update 2001 match exactly. See [MASKED_FACE_FLOW_10K.md](MASKED_FACE_FLOW_10K.md)
+for lineage, scope and measured results.
+
+## User extends target to 100k, validates every 20k — 2026-10-01
+
+The 10k controller was superseded at 6k. Its completed 6k panel scores ID
+0.21402 / CLIP 27.1623 (4k: 0.21165 / 26.7754). A new detached continuation
+`flux4b_masked_face_flow_24_100k_r1_20261001` retains the 6k weights and Adam
+state, and targets 100k total updates with 24-image validation at
+20k/40k/60k/80k/100k. Same BA architecture, one-ID feature cache, lr .001,
+batch8 and inference protocol. Cached-loss probes run every1k; all updates
+are recorded locally, with live metrics sampled every100.
+
+An initial 100k setup failed strict config validation before training because
+cadence was placed in core config fields. Cadence now belongs to experiment
+identity metadata; config validation runs before Comet creation. See
+[MASKED_FACE_FLOW_100K.md](MASKED_FACE_FLOW_100K.md) and the
+[new Comet run](https://www.comet.com/nikolay-2104/rsrch-new/fa43a8dd82274d1397cbf9befbbda9bf).
+The cached-feature optimization speed must not be presented as end-to-end
+FLUX throughput or fresh-noise training.
+
+## Investigating ID regression and BA capacity — 2026-10-01
+
+The completed 60k panel declined to ID 0.15408 (6k: 0.21402). Stopped the
+superseded continuation and retained its checkpoints. Fixed-input diagnostics
+show attention saturation and growing cancellation between the reference and
+query/noise output paths, alongside fixed-cache overfitting. Added a separate
+512-wide, time-conditioned head with bounded cosine attention, plus a plain
+width512 capacity control and a fresh noise/sigma cache builder. See
+[FACE_FLOW_CAPACITY.md](FACE_FLOW_CAPACITY.md) for evidence, controls and results.
+A strict restart check exposed a 1.86e-9 FP32 difference, not a lost optimizer
+state; the new check records an explicit numerical tolerance. No improved
+identity claim is made before actual prompted-image scoring.
+
+The completed wider/stabilized head on the original cache did **not** improve
+ID: .18814 at 2k → .17927 at 6k. It is retained as a rejected control. A fresh
+separate run combines the same conditioned width 512 head (5,327,360 BA-only
+parameters) with 684 fit cases, continuous fresh sigmas/noise, lr .0003 and
+weight decay .01. On the unchanged 24 prompted images, ID rises
+**.02024 → .16421 → .22660 at 0/2k/10k**; 21/24 images improve from 2k to 10k.
+This exceeds the prior best .21402, while native remains .33140 and CLIP text
+similarity declines 26.8878 → 26.1877. Faces still show artifacts. Fit/probe MSE
+at 10k is .51707/.80847, with finite gradients and every BA tensor updated.
+Native-off and cached/live parity pass; restart differs by at most 7.45e-9.
+All 72 composites preserve exterior pixels exactly and checkpoint hashes match.
+Peak inference reservation is 9.396 GiB; cached training peaks at 1.334 GiB.
+The run is complete at 10k, with no further GPU job queued. See
+[FACE_FLOW_CAPACITY.md](FACE_FLOW_CAPACITY.md) and
+[Comet](https://www.comet.com/nikolay-2104/rsrch-new/9faec049f9a544948c4faeb2e2fc3a7b).
+
+## Stronger reference refiner and measured batch scaling — 2026-10-01
+
+The user requested stronger BA, training until ID convergence, and higher GPU
+utilization. Added a separate1024-wide/16-head reference refiner with bounded
+cosine attention, pooled-reference modulation and a zero-initialized correction.
+Its14,048,385 parameters train; the best previous512-wide BA core and all FLUX
+weights stay frozen. All24 initial images exactly reproduce the previous best
+ID .226596 checkpoint. The original batch8 admission was superseded after50
+updates and preserved; no quality rejection is implied.
+
+Cached-core outputs, stacked CUDA batch gathering and consolidated finite
+gradient checks improve throughput. Benchmarked batches8/32/64/128/256/512;
+128 reaches3536 cases/s and97–98% post-startup GPU utilization. Larger batches
+add under1% throughput. New run `flux4b_reference_refiner1024_b128_20261001`
+has passed500 real updates: finite gradients, all17 tensors changed, frozen
+core exact, process resume exact, actual peak training reservation5.193 GiB.
+Probe MSE improves .80847→.71048; prompted-image scores are the acceptance gate.
+
+The serial controller validates all24 images at0/500/2k/5k and every5k thereafter,
+stopping after two gains below .003 while retaining the highest-ID checkpoint.
+See [REFERENCE_REFINER.md](REFERENCE_REFINER.md) for architecture, stopping rule,
+batch-size evidence, protocol limitations and reproduction. Active
+[Comet](https://www.comet.com/nikolay-2104/rsrch-new/debb81df08cf4f5591730dffa86f704c).
+
+The first completed refiner panel at500 scores ID **.22971** versus .22660 at
+initialization (+.00312;13/24 images improve). CLIP is nearly unchanged,
+26.1877→26.1648. This is a small gain; the controller continues toward the
+later checks. A5-second sample during actual batch128 training measured
+96% mean GPU utilization and6393 MiB total device memory. All48 decoded
+images at0/500 preserve the exterior exactly; checkpoint hashes and actual
+cached/live prediction audits pass. A16-page architecture/results presentation
+is generated in `reports/261001_reference_refiner/`.
+
+### October 1 — refiner regression and direct identity rerun
+
+The completed 1024 refiner failed to sustain its early ID gain: fixed24 ID_sim
+.22660 → .22971 (500, best) → .20559 (2k) → .19275 (5k). It stopped after
+the 5k panel/scoring, preserving the best checkpoint. Flow loss improvement
+did not predict identity improvement; paired crops show degradation.
+
+The new `flux4b_deep_identity1024_20261001` initializes from the best500 weights,
+adds two independent reference-attention/MLP reads (30.83M trainable BA params),
+and trains flow MSE plus direct differentiable ArcFace identity loss through
+the frozen FLUX2 VAE. Nineteen training photos and their landmarks supply the
+auxiliary data; validation remains generated images on the same fixed24 panel.
+The native backbone, 512-wide core, VAE and recognition model are all frozen.
+
+Measured admission: exact parent predictions, ArcFace/ONNX relative RMS1.19e-6,
+finite identity gradients, batch256 .350s/update with the largest identity
+crop every second update, peak reserved11.06GiB/69.2%. The cuDNN TF32 setting
+was disabled after its less precise path failed the tight ArcFace parity gate.
+Identity weight.5 every2 updates; LR5e-5; optimizer reset. No claim of improved
+generated ID scores until the new panels finish. Save/resume and full patched
+inference audits run in the serial controller before longer continuation.
+
+[Protocol, admission and launch](IDENTITY_FLOW.md).
+[New Comet run](https://www.comet.com/nikolay-2104/rsrch-new/c76d2a9a84814005bcd86287d95c2771).
+
+The fresh24-image step-zero panel exactly reproduces the best parent images
+and ID_sim .2297139211. Native BA-off and full-model cache/live checks pass
+exactly. Fifty initial updates changed all35 trainable tensors while preserving
+all11 frozen core tensors; live peak reserved11.693GiB and mean.276s/update.
+Optimizer resume at51/52, including an identity update, passed its numerical
+tolerance (max parameter error3.27e-7). Training is continuing past100 updates;
+new trained image scores are still pending. The existing follow-up now tracks
+this run using `scripts.review_identity_flow`.
+
+### October 1, 20:30–20:41 UTC — first ID gain and reproducibility repair
+
+The first trained deep-BA panel improves ID_sim **.229714 to .251904** at500
+(20/24 images improve). CLIP26.1648 to26.2695; all faces owned/unambiguous and
+all48 baseline/trained exteriors exact. Paired crops were inspected: artifacts
+remain, and native ID.331399 still exceeds the BA score. This is an early gain,
+not convergence or proof of independent perceptual quality.
+
+The old controller failed on the resumed502 identity update because a4.37e-7
+parameter discrepancy exceeded its near-zero tolerance;501 flow-only resumed
+exactly. CUDA grid_sample backward is nondeterministic. The trainer did not
+enforce the config's deterministic flag. The recovery uses equivalent bilinear
+gathers and enforced deterministic algorithms/cuDNN/cuBLAS settings. Forward
+and CPU gradient parity passed; two separate full training replays at501/502
+now match bit-for-bit. Deterministic on/off prediction equality also passes on
+an actual cached input. No old sources/manifests or failure evidence were changed.
+
+Active continuation: `runs/flux4b_deep_identity1024_det_20261001`,
+[Comet](https://www.comet.com/nikolay-2104/rsrch-new/75e5d8961bdf40efab63ffd2770711ca).
+It imports unchanged0/500 panels with provenance and preserves the500 weights
+**and Adam state**. Only the uncheckpointed501 log entry is excluded from the
+new history; its original remains preserved. New controller
+`scripts.run_deterministic_identity_flow` resumes toward2k and keeps the same
+image-ID convergence rule. Historical initial optimizer-reset metadata refers
+to the original experiment; `continuation.optimizer_reset` is false.
+
+### October 1, 21:04 UTC — 2k evaluation
+
+Deterministic continuation2k scores ID_sim **.241371**, down from best500
+**.251904** (step0:.229714). CLIP26.0794 versus26.2695 at500. Only9/24 images
+improve over500; paired face crops retain artifacts. All72 reviewed exteriors
+are exact; face ownership succeeds for all24. Cached flow and identity losses
+improve while generated ID dips, so those losses are not acceptance evidence.
+
+The2k checkpoint/source hashes, finite gradients, all35 parameter updates,
+all11 frozen core tensors, native BA-off and cache/live checks pass. Fresh
+resume at2001/2002 is bit-exact, including identity loss. Peak training reserved
+12.424GiB, inference9.400GiB. Best500 is preserved. The controller continues
+to5k because this is the first of two allowed insufficient-gain checks; the
+follow-up remains active. See IDENTITY_FLOW.md and the continuation Comet run.
+
+### October 1, 21:44 UTC — deep identity run stopped after final scoring
+
+Completed all24 images at5k: ownership-matched ID_sim **.225265**, CLIP26.2110.
+Best remains **.251904 at500**, compared with .229714 initially and native
+.331399. The two-check rule stopped the controller after2k/5k regression;
+no training or validation process remains. This is a plateau of the best
+development score, not statistical convergence. Fifteen of24 images score worse
+than best500. Paired-face sheets were inspected; eye/mouth/texture artifacts
+persist and the final checkpoint does not establish better visual quality.
+
+All5,000 loss/gradient records finite, all35 BA tensors updated, all11 frozen
+core tensors exact. Source hashes, checkpoint/sample provenance, native BA-off,
+cache/live prediction and exact resume including ID updates pass. All96 reviewed
+composites preserve exterior pixels exactly. Peak training reserved12.424GiB
+(77.7%); inference9.400GiB. Best500 weights and Adam state are hash-verified and
+retained. Original failed/regressed runs remain preserved.
+
+Fit/probe flow MSE ends at.206468/.675383; auxiliary ID loss falls to.042233 over
+the final full76-case cycle despite generated ID regression. Final Comet curves,
+paired images and audits are logged with the correct deep-identity factory.
+See [IDENTITY_FLOW.md](IDENTITY_FLOW.md) for hashes and detailed results.
+The new architecture report describes three BA reads, the frozen core, decoded
+identity objective and deterministic recovery; final export is complete below.
+
+### Final report delivered and follow-up paused
+
+Rendered and inspected the23-page final PDF, including architecture diagrams,
+code, metric curves, masks and all24 paired faces:
+`reports/261001_deep_identity/flux4b_deep_identity1024_architecture.pdf`.
+Uploaded to `Apps/temp/rsrch_new/2026-10-01/flux4b_deep_identity1024_architecture.pdf`
+with verified Dropbox content integrity (5,059,984 bytes).
+SHA256 `0ac45675d1ec943ef2327602028cfcb95c2d29094fb75f9e9e8ae1fd22c79136`.
+The PDF and final audits are also logged to continuation Comet. Best500 weights
+and Adam state remain preserved. The local BA convergence/report follow-up is
+**PAUSED**; see the run's `dropbox_report_upload.json` and
+`followup_completion.json`. No training/validation process remains.
+
+## 2 October 2026 — Critical one-ID review and local full-denoiser benchmark
+
+The user requested a critical comparison with CL14 and a16GB/48GB recommendation.
+The current final-feature head learns its cached objective but regresses in
+prompt-generated identity/quality; widening it further is not the recommended
+next experiment. The proposed replacement keeps native denoising layers and
+trains branch-local attention projections with fresh noise/timesteps. Full
+analysis, historical CL14 trainable ownership and the two proposed settings are
+in [ONE_ID_CRITICAL_REVIEW_20261002.md](ONE_ID_CRITICAL_REVIEW_20261002.md).
+
+A bounded eight-update local test of the existing full-transformer K/V BA path
+at768px/ref512, eight sites, rank128, microbatch1 and gradient checkpointing
+passed:12,582,912 trainable parameters;9.449GiB peak reserved (59.09%);2.088s mean
+per update after two warmups. All32 trainable tensors changed, gradients stayed
+finite and initial/BA-off native predictions were exact. Artifacts and source:
+`runs/critical_review_20261002/`. This establishes bounded feasibility on the
+RTX4090 Laptop16GB, not quality or long-run thermal performance. The proposed
+masked Q/K/V/output variants (approximately25.2M/50.3M at ranks128/256) remain
+unimplemented and unmeasured. No long training run was started; GPU work ended
+after the probe. Prior checkpoints and paused automations are preserved.
+
 ## 2 October 2026 — Approved online masked Q/K/V/O implemented and launched
 
 Implemented the16GB setting requested after the critical review: native-initialized
@@ -255,6 +644,272 @@ The one-ID runner's19/24 assumptions and private native bundle are documented;
 the multi-ID/9B settings are proposals, not launch-ready claims. No new GPU run
 or machine operation was requested or started during this commit/review.
 
+### 3 October — New-machine FLUX4B multi-ID launcher (prepared only)
+
+Added `scripts/run_flux4b_multi_id.sh`, its serial controller and
+`configs/flux4b_48_multi_id_large.yaml`: full pinned adjusted Large dataset,
+validation identity aliases excluded, fresh rank128 Q/K/V/O BA only, target768,
+reference512, microbatch1/accumulation8, LR5e-5,10k updates, save500 and original
+fixed96 validation every2k including step0/final. Pair sampling remains shuffled
+deterministic next-view pairs; no identity-balanced sampler or true batch8 is
+claimed. Trainable architecture/native attention/training loss are unchanged.
+
+Generalized the online runner's initialization and validation to accept an
+explicit native96 bundle, full-cache header verification, dynamic panel counts
+and a measured native ID_sim baseline. The new controller imports already
+downloaded images on the destination, checks provenance/disjointness and disk
+space, runs GPU admission including exact optimizer replay, generates native96
+masks, then runs training/decoding/ID+CLIP/face-quality scoring serially. Resume
+uses complete checkpoints, preserves uncheckpointed metric tails, retries
+unfinished stages and retains the Comet key. Missing native face boxes require
+review; they are not fabricated or silently dropped. Setup and worker source
+hashes are frozen; earlier completed one-ID source is preserved at3714e7d.
+
+Verification here is limited to static syntax/configuration, CLI dry-run and
+focused resume-selection checks. Per the user's narrowed request, **no dataset
+was prepared and no training/GPU job was launched locally or remotely**.
+48GB memory/throughput remain unmeasured; admission executes on the destination.
+The full-data eager-cache estimate is roughly400–500GiB: about47k unique
+captions alone imply ~347GiB of BF16 text embeddings, before image latents.
+This does not apply to the earlier4,096-pair pilot, which used76GB total disk
+after caching on a200GB host. It is a limit of this full-data launcher, not a
+general GPU-training requirement.
+See `docs/deployment.md` for launch/resume commands. No commit/push this turn.
+
+### 3 October — Vast GB10 inventory check
+
+The user's manually rented Vast instance `53994096` was visible as running in
+Denmark at an API-reported $0.49829/hour. It has one GB10, 20 ARM64 CPU cores,
+124,544 MB API-reported RAM, 212.3 GB allocated disk, and marketplace-reported
+3,555.6/2,241.8 Mb/s internet down/up. SSH key authentication succeeded.
+On-host `free -h` reported 121 GiB total shared system memory; `nvidia-smi`
+reported `NVIDIA GB10`, driver 580.178.04, compute capability 12.1, and GPU
+memory `N/A`. Vast's dedicated `gpu_ram` field is zero for this instance. The
+default `python3` and `/opt/miniforge3/bin/python` could not import `torch`;
+no CUDA allocator capacity, model load, training memory, or throughput was
+measured. This 212.3 GB allocation can support a pilot like the earlier
+4,096-pair run (76 GB total disk after caching); the prepared full-data
+eager-cache launcher exceeds it. ARM64 dependency installation and training
+remain untested. This GB10 inspection is separate from the proposed 48 GB
+discrete-GPU experiment.
+
+### 3 October — GB10 deployment and on-demand conditioning
+
+User confirmed Vast53994096 (superseding53574065), then rejected the full
+training-cache default and requested both options. Default4B multi-ID config
+now uses `data.conditioning: online`: frozen native encoder/VAE produce each
+training pair on demand with RNG isolation and no training cache writes.
+`--conditioning cached` retains the previous full-precompute option under a
+separate run name; the mode is immutable on resume. Only fixed96 validation
+inputs are cached by default. The earlier400–500GiB number described storing
+all ~47k padded text embeddings (~7.5MiB each) plus latents, not a model or
+training requirement. It no longer applies to the default setup.
+
+Host SSH/CUDA verified: ARM64, GB10 compute12.1,121GiB unified RAM,212GB disk,
+driver580.178.04. PyTorch2.13+cu130 installs and a CUDA matmul passes. NVIDIA's
+pinned cuSPARSELt0.8.1 has legacy`manylinux2014_sbsa` WHEEL metadata; its actual
+ELF machine183 is AArch64. `check_environment.py` accepts only this specific
+metadata warning after verifying the binary, while preserving all other uv
+dependency checks. Environment setup/data transfer are in progress; no new
+training result is claimed here. Native parity and exact resume admission
+will execute on the destination before the long run.
+
+ARM64 scoring setup also required removing the x86-only `+cpu` local-version
+suffix from the existing torch2.2.0/torchvision0.17.0 constraints; release
+versions, metric code and model definitions stay unchanged. Both scoring
+environments now pass uv dependency checks. All FLUX/text/VAE locked weights
+are downloaded and verified. The fixed96 native job is running while the raw
+17GB dataset transfers in16 disjoint resumable streams. No training cache is
+being built.
+
+Both training modes are exposed through `--conditioning online|cached`; the
+provided config defaults to online. CUDA device placement now explicitly
+matches cache loading for CPU-created token IDs and masks. Online admission
+compares an independently precomputed validation pair against live encoding
+and checks unchanged CPU/CUDA RNG before the existing gradient/resume tests.
+The fixed96-only cache measures191MB on the GB10.
+
+`rsrch_training` is supervised and queued behind completed native generation
+and a verified dataset-transfer receipt; optimizer updates have not yet begun.
+Local transfer watcher/retry paths are in `MACHINES.md`. A few of16 simultaneous
+SSH handshakes were reset; the transfer helper now defaults to8 streams and
+retries failures while preserving partial files. The running completion watcher
+will retry any failed initial chunks before releasing training.
+
+### 3 October — Cosmic switch and short GB10 hardware proof
+
+User requested Cosmic instead of Large, no long image validation before
+training, and measured download speed. Cosmic metadata pairs each scene with
+its associated reference face bank (2–10 candidates); these are target-specific
+pseudo-identities, not curated multi-photo person IDs. The importer retains
+the first sorted eligible distinct reference. The original report's22,140
+effective count included a192px face filter; this importer does not impose it.
+
+Stopped `rsrch_native`, `rsrch_training`, the Large transfer and its local
+completion watcher; partial artifacts remain intact. Both pinned Drive links
+failed: the target returned an explicit quota-exceeded HTML page, and the
+reference endpoint initially advertised an8,560,574,742-byte binary but later
+returned an HTML error too. No archive download completed; observed transfer
+speed is0MB/s while blocked. Downloader now tries the official public download
+endpoint on a gdown parsing failure, rejects HTML errors, and verifies length
+and Range before accepting a resumed file. This does not bypass Drive quotas.
+
+To get a real hardware check without waiting on downloads, imported all15
+complete original first-reference pairs present locally into a separately
+named manifest, preserving prompts/boxes and original selected metadata.
+No image bytes overlap the original validation panel. The1,914,880-byte
+bundle plus launcher/config transferred in2.98s including three SSH setups
+(not a Google Drive throughput measurement). The manifest subset SHA256 is
+2756c5c8f1d5d119a7c4251af17685cfa6b84b7c3e0f1ae5513742192b310bb7.
+
+`rsrch_cosmic_smoke` runs `scripts.run_cosmic_smoke`, with immutable source
+copies, config, manifest hash, command receipts and Comet key
+898fb16369334b9e950bfc9605308d7d in project rsrch_new. Run:
+`runs/flux4b_cosmic_hardware15_qkvo_r128`. Full4B native gradient path,
+25,165,824 BA parameters, Q/K/V/O rank128, eight sites,768px targets,
+microbatch1/accum8, fresh noise/timesteps,100-update budget. Conditioning is
+online with no training cache. Only one existing validation input is used
+for live/cache parity; pretrained native/off and two-update finite-gradient
+checks run before the actual optimizer. Main run checkpoints at2 updates and
+resumes in a fresh worker, then checkpoints every25. Generated-image panels
+and scoring are omitted for this hardware-only smoke by explicit user request.
+Full-data training remains blocked by unavailable full reference images.
+Do not interpret smoke loss or15 pairs as held-out identity improvement.
+
+Measured GB10 admission passed: exact native/BA-off and zero-mask predictions,
+exact live/cache conditioning and RNG preservation, finite two-update
+gradients with all64 BA tensors changed, and frozen model hash unchanged.
+Branch-on/off prediction mean absolute difference0.212628; trained-versus-
+initial difference0.009181. Peak CUDA reserved16.684GiB (13.72% of the
+GB10-reported unified capacity). These are real pretrained tensor checks,
+not image-quality measurements. Comet URL:
+https://www.comet.com/nikolay-2104/rsrch-new/898fb16369334b9e950bfc9605308d7d
+
+The actual Cosmic smoke optimizer completed steps1/2:22.95/21.88 seconds,
+loss0.98681/0.99949, finite gradient norms0.09960/0.08088, effective batch8,
+all32 B matrices updated on step1, peak reserved17.006GiB. Saved
+checkpoint-000002 and launched a fresh worker to restore it and continue
+to100. Startup/admission optimizer updates are separate from these two
+recorded training steps. No loss trend is inferred from two random batches.
+
+Latest user instruction: continue transfer using whichever dataset is faster.
+Resumed the original Large dataset with8 resumable streams and no queue
+watcher: local source17.127GB, already14.271GB on remote at11:00:54UTC.
+This preserves the fastest route to a complete dataset while Cosmic15 trains.
+The old96-image native job and old Large training queue remain stopped.
+Local transfer PID/log: scratch/deploy_53994096_large_resume.{pid,log}.
+
+Measured resumed Large transfer:14,271,018,566 to14,422,539,965 bytes in43s,
+3.52MB/s aggregate (du apparent bytes, includes small directory overhead).
+About2.705GB remained, ~13minutes at that instantaneous rate.
+
+Fresh-process resume succeeded: steps3/4 were recorded after loading
+checkpoint-000002 (Adam/scheduler/RNG/cursor restore passed compatibility
+checks). Step4: finite loss1.01674, gradient norm0.07585,21.93s/update,
+peak reserved16.898GiB; main optimizer has now seen32 samples. This confirms
+save/reload and continued updates, not a bit-exact replay comparison.
+Both background processes remain active: Cosmic hardware smoke and Large
+raw-image rsync. No long validation or full-data optimizer was started.
+
+### 3 October — GB10 larger-backbone feasibility review (proposal, not a new run)
+
+User asked whether the high-memory machine supports a larger base and how to
+utilize it well. Running4B job was left unchanged; no second GPU job was run.
+Observed host:121GiB unified CPU/GPU RAM,175GiB free disk. At step26, last10
+updates averaged22.273s (effective batch8:0.3592 training images/s), peak
+reserved17.076GiB. Ten subsequent one-second GPU-utilization samples were
+[96,96,77,96,95,95,96,94,96,96], mean93.7%. This is busy time, not achieved
+FLOP throughput; there is spare memory but no demonstrated idle GPU capacity.
+NVIDIA documents128GB LPDDR5x shared memory and273GB/s bandwidth; the advertised
+1PFLOP is sparse FP4 and is not BF16 training throughput:
+https://docs.nvidia.com/dgx/dgx-spark/hardware.html
+
+Recommended next model: FLUX.2-klein-base-9B, frozen BF16 base with BA-only
+training. The official card identifies it as undistilled and intended for
+fine-tuning/research: https://huggingface.co/black-forest-labs/FLUX.2-klein-base-9B
+Pinned locks/weights-flux80.json has16.910GiB generator,15.271GiB Qwen3-8B
+encoder and0.313GiB VAE (32.495GiB total file bytes, approximately resident
+BF16 weights). A CPU meta-device construction, with no weights or CUDA
+allocation, confirmed9,078,581,248 generator parameters, width4096/32heads,
+8dual+24single blocks. Current4B:3,875,544,576, width3072/24heads,5+20blocks.
+Eight rank128 Q/K/V/O BA sites would contain33,554,432 trainable parameters
+(about0.5GiB for FP32 parameters/gradients/two Adam moments); rank256 doubles
+that to67,108,864 and about1GiB. Rank alone does not consume the available
+memory or guarantee better ID scores.
+
+Planning budget for9B at768px/ref512, microbatch1, online conditioning and
+activation checkpointing: approximately40–60GiB including activations and
+workspaces. This is an estimate, not measured9B training; exact throughput
+and peak memory require a serial benchmark after the active run. Existing
+disk capacity comfortably covers the additional ~35GB pinned files.
+
+Implementation gaps: config.py and masked_face_attention.install restrict
+masked_face_qkvo to4B and hardcode its site map. Older9B configs use the
+different reference_delta branch, not the present face-ownership mechanism.
+Port the current path to width4096 and9B sites dual[2,4,6,7],
+single[4,10,16,22], derive inventory counts instead of4B constants, and
+initialize new adapters/optimizer. Re-encode text with Qwen3-8B and generate
+new9B native images/masks for inference;4B adapter tensors and native masks
+are not reusable. Current training is truly microbatch1 with accumulation8.
+Real batches2/4 require collation/bucketing, per-example reference-key masks
+and independent noise/timesteps; changing grad_accum alone is not batching.
+
+Proposed tuning order: short9B parity/finite-gradient/resume proof at matched
+768/512/r128; benchmark checkpointing on/off to exchange available memory
+for reduced recomputation; implement/benchmark true batches1,2,4 while
+retaining effective batch8 (accum8,4,2). Choose by images/sec, preserve CPU
+memory headroom (~20GiB), then consider rank256 or1024px as separate quality
+experiments. Keep online conditioning and avoid a full dataset cache. Use
+full transferred Large data for substantive results; the15-pair hardware
+smoke cannot establish generalization. Short explicitly named held-out image
+checks can precede longer evaluation, matching the user's latest request.
+
+Alternatives: Qwen-Image-2.1 has a7B visual generator but is a separate
+architecture, not a larger FLUX sibling:
+https://huggingface.co/Qwen/Qwen-Image-2.1
+FLUX.2-dev32B plus its24B Mistral encoder imply roughly104GiB BF16 weights
+before training activations/OS, so the current all-resident online layout
+is too tight to recommend as the next step. It would need a separate port
+and memory strategy, with unmeasured speed:
+https://huggingface.co/black-forest-labs/FLUX.2-dev
+https://github.com/black-forest-labs/flux2
+
+Access prerequisite: pinned9B weight HEAD returned401/GatedRepo. No HF token
+was available in the local project environment or Hugging Face token cache.
+A token authorized for the model's gated repository is needed before download.
+No model download, training configuration mutation, commit or push was made
+as part of this review.
+
+### 3 October — Existing Hugging Face credential found; 9B access still gated
+
+At the user's request, searched environment files in other local projects
+under /home/kolyangg without printing credential values. Found one genuine
+distinct token in voice_bot/VoiceAssistant/.env (HUGGING_FACE_TOKEN). A broader
+non-template environment-file search found no additional distinct tokens.
+Hugging Face whoami-v2 returned200; the token is valid and fine-grained.
+Authenticated access to the pinned FLUX.2-klein-base-9B weight returned403
+GatedRepo: the account/token is not on the authorized access list. Thus the
+previous missing-token finding is superseded; model authorization remains
+unresolved. Reused this credential as HF_TOKEN in rsrch_new/.env only after
+confirming that file is ignored/untracked, and set permissions0600. Source
+credential file unchanged; no credentials were printed, tracked, or sent to
+the rented host in this review.
+
+Recommendation remains9B Base, BA-only rank128 initially,768/ref512 with
+actual microbatch2 or4 after implementing correct batching, effective8.
+Account owner should open the official9B model page using the account behind
+this token, review/accept or request gated access, and ensure the fine-grained
+token permits reading that repository. Recheck the exact pinned weight URL
+before downloading; do not substitute unofficial mirrors to avoid the gate.
+Meanwhile the4B job/data transfer can continue. Next engineering work can
+benchmark checkpointing on/off and true batches on4B, then port the current
+face-specific BA path to9B, use new adapters and9B-generated routing masks,
+and run a short pretrained parity/gradient/resume check before a larger
+full-Large training pilot. Suggested first quality pilot:2000 updates with a
+separately named fixed12 held-out panel at0/1000/2000, preserving the original
+prompts/order/seeds/reference images and metric definitions. No claim of9B
+training throughput or memory measurement is made yet.
+
 ### 3 October — Prepared HSE two-V100 FP16/DDP experiment (not submitted)
 
 Prepared configs/clust/flux4b_2v100.yaml and jobs/flux4b_clust_2v100.sbatch for
@@ -303,6 +958,35 @@ approval before training. Concurrent 9B/true-microbatch/Vast edits are excluded
 from this commit. Cluster dependency/weight provisioning and private Comet setup
 remain prerequisites. See docs/clust_deployment.md for exact commands and limits.
 
+### 3 October — Gated 9B access granted; deployment and throughput admission
+
+The authorized account now returns HTTP200 for the pinned 9B weights. Reused
+the ignored HF_TOKEN on Vast53994096 through encrypted SSH stdin; credentials
+remain untracked with mode0600. Downloaded pinned FLUX.2-klein-base-9B
+32773329fbe7e81a90ef971740e8ba4b0364ecf3 (18.157GB), Qwen3-8B
+b968826d9c46dd6066d109eabc6255188de91218 (16.397GB), and shared VAE.
+The previous authorization blocker is resolved.
+
+Preserved completed 4B Cosmic hardware smoke at100 updates. Created isolated
+/workspace/rsrch_9b for the new 9B code; weights/environments are shared, runs
+are separate, and both checkouts share the same GPU lock. The current 9B
+masked Q/K/V/O branch uses width4096 at dual2/4/6/7 and single4/10/16/22;
+rank128 gives33,554,432 trainable parameters (64 tensors), with the native
+backbone frozen. True batches preserve each example's reference key mask,
+independent noise/timestep and face-normalized loss. No native token padding.
+The small BA read executes per example while native attention executes batched.
+A focused CPU check matched separate BA outputs and all parameter gradients.
+
+Serial real9B two-update benchmarks use8 distinct Large pairs only for speed,
+768/ref512, effective batch8 and online conditioning. First measured profile
+(microbatch1/accum8, checkpointing enabled):51.158sec/update after warmup,
+35.678GiB peak CUDA reserved, finite gradient norms .04352/.03510. This does
+not establish quality or full-data training. Other profiles and exact native/
+resume admission are pending. Full Large transfer continues; no training
+latent/text cache is planned. The next quality run is a separately named
+fixed12 held-out 2000-update pilot with validation0/1000/2000, new9B-native
+images/masks and the original ID_sim/CLIP definitions.
+
 Transfer completion: all four streams returned0 from checksum verification with
 zero file differences. The280 reported differences were exclusively shared
 directory modification times changed by concurrent streams; they do not affect
@@ -310,6 +994,61 @@ file-content validation. The47,500-image dataset,47,341-pair manifest/audit and
 verified completion receipt were published to clust. Training-source readiness
 is now true for Large; paired Cosmic remains unavailable. No transfer remains
 active and no GPU job has been submitted.
+
+Throughput follow-up: checkpointing OFF, batch1/accum8 measured40.969sec/update
+and51.789GiB, with the same first two gradient norms as checkpointing ON.
+Batch2/accum4 measured41.909sec/update and69.891GiB: larger batches were
+not faster in this short measurement. Batch4 is being tested with an80%
+allocator cap to retain unified-system memory headroom. Its uncapped startup
+was stopped before any update, with the incomplete directory preserved.
+
+Removed unnecessary startup work before full-data admission: masks are built
+only for training rows actually used, and initialization records target byte
+hashes/source boxes instead of evaluating47k dense masks. Mask geometry can
+be obtained without decoding/resizing a photo;20 original images matched the
+old transform exactly. Separable coordinate broadcasting in face_alpha matches
+the former full-grid result bit for bit (including fractional/border boxes).
+Measured local mask construction fell from24.9ms to2.1ms per sample. Dataset
+import also avoids RGB decoding when the original adjusted image already
+needs no crop. These preserve mask values and model mathematics.
+
+Large transfer was resumed with16 disjoint file-level streams after the final
+two directory streams slowed. Preserve logs in scratch/deploy_53994096_large_*;
+the unrelated cluster transfer was not touched. SSH TCP retransmissions are
+visible on this link, so transfer ETA is variable.
+
+9B benchmark selection: batch4 reached the97.30GiB (80%) allocator cap and
+raised CUDA OOM before completing an update; preserved its worker traceback.
+No host OOM or driver changes. Selected microbatch1/accum8 with checkpointing
+OFF (40.969sec/update;51.789GiB); batch2 offered no speed improvement.
+The fresh pilot command is `scripts.run_multi_id_face_ba --run
+runs/flux9b_large_qkvo_r128_pilot12 --config
+runs/flux9b_gb10_benchmark/selected_config.yaml --images-root
+/workspace/datasets/large_dataset --pilot-panel --id-clip-only` in the9B
+checkout, supervised as rsrch_9b_pilot. Configuration dry-run confirms
+2000 updates and panels0/1000/2000. Training-only estimate from benchmark
+is22.8hours, not yet a full-data run measurement. Startup admission is still
+required. Original source inventory contains47,500 files,17,116,845,489bytes;
+remote data import waits for every file to match size.
+
+Full transfer completed and every source file passed the size inventory check.
+Pinned importer produced47,341 pairs, excluding110 held-out pairs and49
+duplicate-content pairs, with0 validation-image-overlap pairs. Remote manifest
+SHA256:3deb922e295c300d9a0e72578d0e0b11eb48ccf1550037f3ab68a16c55d61d22.
+Supervisor rsrch_9b_pilot started at approximately12:05UTC on3October;
+controllerPID29311. First observed stage:preflight. It owns the shared GPU
+lock and will run cache12, admission, native12/masks/ID+CLIP, then serial
+training/validation. No long96 panel or full training cache is requested.
+Deployment bundles retained locally for exact source reconstruction:
+- `scratch/flux9b_code.tar.gz` SHA256 `a101709cbbddb8781085b3f533ec9d93c7c8952429fe7c1f8baf955f55c4d946`
+- `scratch/flux9b_startup_updates.tar.gz` SHA256 `57b35a65a4b07fc1c45cc775408ccf5e501d0c83bd5d807e77b654086faf8776`
+
+Pretrained9B admission native checks passed around12:14UTC on the largest
+training face support: native/off and zero-mask exact; all64 BA tensors finite
+and updated; full frozen parameter hash unchanged; live/cached conditioning
+exact and training RNG preserved. Branch-on/off mean absolute prediction
+difference .374550; two-update prediction change .008759. Peak CUDA reserved
+52.1328GiB (42.86%). Exact fresh-worker save/resume check is running next.
 
 ### 3 October — Authorized20k HSE run and one-V100 immediate probe
 
@@ -338,6 +1077,34 @@ local ignored scratch/clust-start-20k/submission. The source is the committed
 cluster snapshot6156c31 plus explicitly recorded20k/smoke-launch changes;
 concurrent Vast/9B workspace edits were not synchronized to clust.
 
+### 3 October — User-directed immediate training; validation deferred
+
+The user explicitly requested immediate training after objecting to startup
+delay. Stopped the supervised pre-training controller and its children,
+preserving all admission evidence. Native/off, zero-mask, finite gradients,
+all64 branch updates, frozen equality, conditioning/RNG and memory had passed;
+two uninterrupted full-data updates completed. Fresh-process replay was
+interrupted before final comparison, so exact replay is NOT claimed for this
+9B run. No remaining GPU diagnostic process was present before launch.
+
+Started `scripts.run_flux9b_training_first` under the same rsrch_9b_pilot
+supervisor, run `runs/flux9b_large_qkvo_r128_pilot12`. It initializes fresh
+adapters/Adam, saves checkpoint0 before the first update within the training
+worker, then trains immediately to1000. Only then does it generate native12
+images/masks and evaluate preserved checkpoints0 and1000; next it continues
+to2000 and evaluates2000. Thus step0 is evaluated retrospectively from the
+actual untrained checkpoint, with unchanged prompts/seeds/held-out panel.
+The validation schedule deviation is recorded in execution_plan.json and
+Comet. No cache or baseline generation blocks the first training segment.
+
+Comet key:7b7169cd61b64a2cace2fe1e52861afc
+https://www.comet.com/nikolay-2104/rsrch-new/7b7169cd61b64a2cace2fe1e52861afc
+Observed main controllerPID30088, training workerPID30097, status train_1000.
+Its source/config/manifest identity is frozen in training_identity.json and
+source_snapshot. A separate inference identity is written only once native
+masks have been generated and frozen. Existing training save/resume checks
+remain in force; no checkpoint configuration hashes were bypassed or edited.
+
 ### 3 October — HSE short-job bootstrap failure and repair
 
 The first one-V100 test allocation, job4372995, started immediately on cn-025
@@ -349,6 +1116,40 @@ project scratch directory per Slurm job and set TMPDIR there. The pinned
 uv0.11.12 executable is being transferred directly to avoid another installer
 download in the GPU allocation. This is one diagnosed retry; the20k job
 remains dependent on successful prerequisite completion.
+
+Main training confirmed at12:29UTC: actual updates1 and2 completed in41.914
+and40.749sec, respectively (16 training examples). Finite losses .84734 and
+.95390 and gradient norms .04714/.03169; all32 B matrices updated on step1.
+Peak reserved51.627GiB (42.45% of device capacity); sampled GPU utilization
+96%. Actual checkpoint0 contains manifest, adapters and optimizer/RNG state.
+Current training ETA to2000 is22.94hours plus deferred validation. Main run
+is active with Comet7b7169cd61b64a2cace2fe1e52861afc. Per the user's earlier
+instruction, stopped active monitoring after these two verified updates.
+
+### 3 October — Five-hour total budget: separate batch1 pilot
+
+The user requires2000 updates plus validation within5hours. The prior41sec
+update contained8 complete9B training examples (online encoder/VAE and full
+denoiser forward/backward); sampled utilization96% showed no idle-GPU issue.
+Stopped that run after9 logged updates, preserving its checkpoint0, metrics
+and source snapshot. Updates1–9 were not a saved resumable checkpoint.
+
+Started fresh `runs/flux9b_large_qkvo_r128_fast5h_b1`, config
+`configs/flux9b_gb10_large_qkvo_r128_fast5h.yaml`: same9B/768/ref512/r128,
+full47,341-pair sampling pool, online conditioning, checkpointingOFF, but
+microbatch1/accum1 instead ofaccum8. This is2000 examples over2000 updates,
+not the previous16000-example budget; it is a separately named time-bounded
+pilot and not an equal-data throughput improvement. LR/warmup/loss unchanged.
+
+The training-first controller preservescheckpoint0, trains to1000, evaluates
+0/1000, then trains/evaluates2000. A short inference timing hook runs after
+update2 using the already loaded backbone, cached real validation inputs,
+the largest reference layout and full-target BA mask. It preserves RNG and
+model mode, measures native/BA CFG forward cost, and extrapolates all48
+images (native12 plus three BA panels), with a30-minute reserve for loading,
+decode and scoring. This is a runtime estimate, not scored image validation.
+Actual timing and Comet key are pending the first updates. No new cache or
+long admission sequence precedes training.
 
 ### 3 October — Dedicated activated Conda environment for clust
 
@@ -365,6 +1166,24 @@ and disable user-site packages. Separate pinned metric tools remain isolated
 under envs/clust-v100 because their CLIP/Transformers versions conflict with
 the training stack. Job4372978 was held pending corrected setup. No pretrained
 V100 result or optimizer update is claimed at this point.
+
+Five-hour pilot measured at12:41UTC: first two updates averaged5.831sec
+(first includes warmup). Native CFG inference extrapolates to51.307sec/image
+at20 steps; full-target BA worst-case is55.727sec/image. Across native12 and
+three BA12 panels this is2621.85sec (43.7min) of generation. Adding2000
+updates and a30-minute loading/decode/scoring allowance gives4.468hours.
+This is a measured projection, not completed validation or a guaranteed
+wall-clock deadline. The short timing probe ended and training continued.
+Comet key:cfbd6f879e3d4158959bbbef7fb8e894
+https://www.comet.com/nikolay-2104/rsrch-new/cfbd6f879e3d4158959bbbef7fb8e894
+Profiler results are in the run's five_hour_budget.json and Comet metrics.
+
+Post-probe health confirmed throughupdate25: latest updates5.16/5.11sec,
+finite gradients/losses,51.568GiB peak reserved. Rolling training rate694
+updates/hour (~5.19sec/update) gives~4.11h total when combined with measured
+generation plus30min reserve. Report4–4.5h expected, preserving margin below
+5h. Active training remains supervised; no further tuning or monitoring needed
+for this startup request.
 
 ### 3 October — Compute-node download timeout; prepared shared caches
 
@@ -534,6 +1353,44 @@ pretrained save/resume admission or scored image validation.
 Slurm job4373489 is submitted with2V100s/8CPUs and a reduced30-minute cap.
 No50-hour production configuration has yet been selected or launched.
 
+### 2026-10-03 — 2k checkpoint preserved; native12 before continuation
+
+Vast53994096 batch1 fast pilot completed2000 and scoring successfully.
+Original owner-based ID_sim: native .38159112; BA0 .15439762;
+BA1000 .42430972; BA2000 .43407627. Step2000 text_sim28.41344118.
+These are measured fixed12 pilot results, not the full96 benchmark.
+
+Downloaded `runs/flux9b_large_qkvo_r128_fast5h_b1/checkpoint-002000` plus
+runtime snapshot and provenance locally. All checkpoint files are SHA256
+verified against the remote originals; verification receipt is next to it.
+Adapter weights, optimizer/scheduler/RNG/data cursor are retained.
+
+The user requested native baseline validation first. Started supervisor
+`rsrch_9b_baseline_then_8k` in isolated `/workspace/rsrch_9b_8k`: fresh native9B
+(no BA/checkpoint), same12 and generation settings, original ID/CLIP scoring,
+Comet `1acaa7707e184bad9176008e78f97ea6`, then full-state continuation to8000.
+No other GPU job was present. Continuation code allows only training.steps
+and validation_every to differ; frozen original code/config/data/model
+hashes passed preflight. LR/rank/batch changes are rejected. Original runtime
+and checkpoints remain unchanged; inherited0/1000/2000 panels are explicitly
+marked as imports. New panels are4000/6000/8000. No commit/push performed.
+
+Latest100 update mean5.2114s gives8h41m for6000 extra updates, approximately
+9.5–10h including panels/loading, plus this requested baseline. Accountcredit
+$3.5682 at$0.49829/h covers~7.16h as of16:56UTC. User authorized starting even
+if balance is short; suggested$2–3 top-up. Actual baseline/continuation
+completion status will be appended after startup verification.
+
+Follow-up steering added a separate full96 native baseline before training.
+Created Comet `6abec2cdaa104924a563e8b53f5a622c` with mode/native, BAfalse,
+no checkpoint, trainingfalse and zero trainable parameters. Original96
+manifest order/references/prompts/seeds remain unchanged; config768px,
+20steps/CFG4/batch2. Queued after native12 and before8k, with separate outputs
+and original ID_sim/CLIP scoring. Active shell's unread tail was extended
+without interrupting its native12 worker; verified file offset and bash syntax.
+The controller is supervised and all GPU stages share the existing lock.
+Extra full96 validation adds to the prior continuation time/cost estimate.
+
 
 ### 2026-10-03 — Measured FP32 V100 budget and mixed-precision probe
 
@@ -613,6 +1470,22 @@ not started. Benchmark source hash was
 a copy is retained under remote `logs/clust/benchmark-4373571.py` and local
 `scratch/clust-v100/budgets/4373571`. Later script edits only clarify its
 docstring. All GPU work ran inside the activated cluster `rsrch_new` environment.
+
+### 2026-10-03 17:55UTC — native baseline visibility verified
+
+User could not see live validation/training in Comet. Supervisor and GPU worker
+are running the native96 panel;44/96 generated at inspection. Native12 finished
+successfully: ID_sim.3815911189, text_sim28.495046. Comet API confirmed its
+12 image assets and ID/CLIP metrics. Native96 had only config assets because
+images upload during the subsequent VAE decode stage, and the initial Comet
+session had ended during generation. Training is still queued after scoring.
+
+Added `scripts/log_native_validation_progress.py` as a separate CPU-only
+supervised logger, without editing frozen training/inference sources. It keeps
+the existing native96 Comet session live, reports count/percent/generationETA
+once/minute, and ends when scored or if its controller stops. First report:
+44/96 (45.83%), generationETA2400sec; decoding/scoring are additional.
+Supervisor `rsrch_native_progress` on53994096. No GPU job duplication.
 
 
 ### 2026-10-03 — Approved two-V100 mixed-precision production launch
@@ -766,6 +1639,27 @@ during step-0 validation. Large asset uploads still stall on the cluster route;
 those retries are now independent of heartbeat/status/progress publishing and
 archives remain queued. Logging fix committed and pushed as `7cf102c`.
 
+### 2026-10-03 — automatic 8k completion, full96, Comet consolidation and stop
+
+User explicitly requested this sequence and an extra pre-stop agent check-in.
+Installed `scripts/finalize_flux9b_remote.py` in frozen9B checkout (new file;
+existing training sources untouched) and prepared its original96/native-mask
+bundle. Remote supervisor rsrch_9b_final96 waits for completed8000/fixed12 and
+verified local checkpoint copy, then serially runs trained full96 and scoring.
+Installed local `scripts/finalize_flux9b_local.py` under enabled systemd user
+service rsrch-flux9b-finish. It copies/verifies full checkpoint+results, imports
+continuation histories and separately prefixed full96 metrics/images into
+original2k Comet, verifies server state, then stops53994096. It never terminates.
+
+At22:22UTC step4359, latest100 mean5.11446s, measured fixed12 panel780.90s.
+ETA8000+fixed12:04:04UTC4October; all work including full96/transfers/Comet:
+05:54UTC (~7h32m). Credit$5.9364 versus totalhourly$0.49829. First check-in
+04:19UTC; stop floor05:00UTC, still gated on successful artifacts/uploads.
+Syntax/unit checks and negative stop-gate checks passed; remote/native96
+preparation and live read-only local probe passed. Both waiting services are
+running. Actual final artifacts/stop remain pending. No commit/push performed.
+Detailed scope, paths, receipts and recovery: FLUX9B_8K_COMPLETION.md.
+
 
 ## 2026-10-04: Recover Comet artifacts and record cluster cancellation
 
@@ -818,6 +1712,23 @@ resume, start a status logger and relay for the new Slurm job ID; retained Comet
 history beyond the checkpoint must be handled explicitly to avoid treating
 repeated optimizer-step numbers as new distinct updates.
 
+### 2026-10-04 04:22UTC — 8k complete, full96 in progress
+
+Scheduled check-in verified completion of8000 and fixed12 scoring at04:02UTC.
+Full8000 checkpoint downloaded04:03UTC and rehashed locally; all64 BA tensors
+changed from2k and are finite. Adam step/cursor8000, finite optimizer moments,
+all RNG states present. Runtime/native mask hashes and active full96 checkpoint
+hash match. Full96 is20/96 with one GPU worker; original canonical Comet merge
+and automatic stop remain pending behind their existing completion gates.
+
+Measured fixed12 ID_sim declines after2k:2k.43407627,4k.42768707,
+6k.41867339,8k.41646561 (native.38159112).2k remains best. Continuation
+Comet API confirms8k metrics and12 images+2 comparison sheets. Estimated
+remaining work finishes06:30–06:45BST. Credit$2.88 sufficient, local5.8GB free.
+Only repair: corrected local controller's misleading waiting_for_training
+status after training completion; restarted that CPU service, leaving GPU
+validation untouched. Historical intermittent SSH errors recovered automatically.
+
 
 ## 2026-10-04: Requested checkpoint-500 resume and cancellation investigation
 
@@ -867,3 +1778,28 @@ Five focused tests passed, including isolation of replayed metrics from the
 cancelled attempt, plus syntax and whitespace checks. No training code changed.
 At 08:31 UTC training remained PENDING/Priority; the scheduler estimated
 09:19:45 UTC (10:19:45 London) today. This is a mutable estimate, not a start claim.
+
+### 2026-10-04 — rename the current BA setup to FLUX1 and preserve deployments
+
+User requested FLUX1 naming, explicit Vast/cluster entry points, and commit/push.
+Renamed the8 executable masked-Q/K/V/O configs and the cluster proposal file;
+updated launcher/test/config links. Model/data/optimizer/sampling fields are
+unchanged. Kept historical run names/configs and source identities intact; the
+one-ID validation schedule remains0/500/1000/2000 under the new display name.
+README separates Vast9B/BF16, cluster4B/selectiveFP16 with encoderGPU, local4B
+one-ID and the4B Vast alternative. Earlier rank16 and cached-head experiments
+remain explicitly historical. Regenerated26-page FLUX1 report plus whole-model,
+BA and inference vector diagrams; source/hash/metric/layout checks passed.
+
+Captured actual machine sources read-only and verified against immutable run
+identities (23 Vast and26 cluster source hashes). Archived runtime Git branches
+preserve those exact files and original configs; main contains current maintained
+code and FLUX1 fresh-launch naming. No training was launched or changed by naming.
+
+Also repaired the pending8k completion controller's Comet image-name comparison:
+SDK PNG/duplicate suffixes had made already-uploaded images appear missing.
+Using normalized names and uncached API reads verified90048 metric points and
+138 logical image/step pairs. Duplicate uploads already created are retained.
+The authorized controller then stopped Vast53994096; actualstateexited confirmed
+08:38:26UTC, and its heartbeat was paused. Local full checkpoint/results remain
+verified; no termination occurred.

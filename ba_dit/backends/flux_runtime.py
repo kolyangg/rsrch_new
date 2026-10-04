@@ -94,7 +94,7 @@ def _predict(model, tensors, noisy, sigma, config, branch=True, negative=False):
     prediction = model(
         x=torch.cat((packed, tensors["reference_tokens"]), dim=1),
         x_ids=torch.cat((tensors["target_ids"], tensors["reference_ids"]), dim=1),
-        timesteps=sigma.to(noisy.dtype).reshape(1).expand(noisy.shape[0]), ctx=tensors[prefix + "prompt_embeds"],
+        timesteps=sigma.to(noisy.dtype).reshape(-1).expand(noisy.shape[0]), ctx=tensors[prefix + "prompt_embeds"],
         ctx_ids=tensors[prefix + "text_ids"], guidance=None,
         branch_reference_mask=tensors["reference_mask"] if branch else None,
         branch_target_tokens=packed.shape[1] if branch else None,

@@ -325,7 +325,7 @@ def main(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--run', type=Path, required=True)
-    parser.add_argument('--config', type=Path, default=ROOT/'configs/flux4b_48_multi_id_large.yaml')
+    parser.add_argument('--config', type=Path, default=ROOT/'configs/FLUX1_vast_4b.yaml')
     parser.add_argument('--images-root', type=Path, help='Already extracted adjusted Large image directory')
     parser.add_argument('--metadata', type=Path, help='Pinned filtered_ids3_adj.json; defaults to private metadata bundle')
     parser.add_argument('--mask-overrides', type=Path, help='Reviewed native-image boxes; allowed only before initialization')

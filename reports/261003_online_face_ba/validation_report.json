@@ -1,0 +1,10 @@
+{
+  "pages": 26,
+  "source_hashes_verified": 20,
+  "text_bounds_pass": true,
+  "metrics_match_raw_csv": true,
+  "native_images_match_frozen_hashes": true,
+  "checkpoint_hashes_match": true,
+  "no_inference_or_training_performed": true,
+  "pdf_sha256": "54ec5c613bca52f997a76e5d2dc1728414ca8723143785d7c6e8631217c04b64"
+}

@@ -12,7 +12,7 @@ from ba_dit.validation_masks import mask_directory
 
 
 def test_mixed_precision_cannot_reuse_fp32_adapter_identity_or_masks():
-    config = load_config(ROOT/'configs/clust/flux4b_2v100_amp.yaml')
+    config = load_config(ROOT/'configs/clust/FLUX1_cluster_4b.yaml')
     full = copy.deepcopy(config)
     del full['model']['compute_precision']
     assert adapter_identity(config) != adapter_identity(full)
@@ -24,7 +24,7 @@ def test_scaler_optimizer_and_rng_resume_exactly(tmp_path):
     random.seed(42)
     model = SlicedLoRALinear(torch.nn.Linear(8,8,bias=False), [(0,8,0,8)], 2,2)
     fresh = copy.deepcopy(model)
-    config = load_config(ROOT/'configs/clust/flux4b_2v100_amp.yaml')
+    config = load_config(ROOT/'configs/clust/FLUX1_cluster_4b.yaml')
 
     def setup(model):
         opt = torch.optim.AdamW([p for p in model.parameters() if p.requires_grad], lr=.01)

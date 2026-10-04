@@ -2,7 +2,7 @@
 # Batch one follows the GB10 fast pilot; 20k updates now mean 20k samples.
 # Preserve the cluster fixed96 panel, architecture, LR, and 20k update target.
 schema_version: 2
-name: flux4b_clust_bf16_qkvo_r128_20k_batch1
+name: FLUX1_cluster_4b_bf16_proposed
 model:
   backend: flux
   arch: flux2_klein_4b

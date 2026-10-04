@@ -19,4 +19,4 @@ fi
 # Worker count follows the config; validation stays serial.
 # It never overwrites CUDA_VISIBLE_DEVICES supplied by Slurm.
 exec "$python_bin" -m scripts.run_multi_id_face_ba \
-  --config "${BA_CLUST_CONFIG:-configs/clust/flux4b_2v100.yaml}" "$@"
+  --config "${BA_CLUST_CONFIG:-configs/clust/FLUX1_cluster_4b_fp32.yaml}" "$@"

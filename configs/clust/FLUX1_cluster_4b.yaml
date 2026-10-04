@@ -1,7 +1,7 @@
-# Named FP32 experiment: FP16 native activations overflow on the measured V100.
-# One sample/GPU x two ranks x four accumulation steps; effective batch eight.
+# Approved 2-V100 setup: one training GPU and one frozen text encoder GPU.
+# Measured 100 updates at 3.619 s/update; fixed96 validation is unchanged.
 schema_version: 2
-name: flux4b_clust_2v100_fp32_qkvo_r128_20k
+name: FLUX1_cluster_4b
 model:
   backend: flux
   arch: flux2_klein_4b
@@ -11,6 +11,7 @@ model:
   revision_lock: ${BA_ROOT}/locks/weights-small.json
   dtype: float32
   conditioning_dtype: float32
+  compute_precision: amp_fp16_fp32_branch
 data:
   conditioning: online
   train_manifest: ${BA_ROOT}/data/train_pairs_large_clust.jsonl
@@ -21,7 +22,7 @@ data:
   - 768
   reference_size: 512
   cache_dir: ${BA_ROOT}/cache/conditioning
-  encoder_device: cpu
+  encoder_device: cuda:1
 branch:
   kind: masked_face_qkvo
   rank: 128
@@ -35,7 +36,7 @@ lora:
   alpha: 8
 training:
   steps: 20000
-  grad_accum: 4
+  grad_accum: 1
   lr: 5.0e-05
   warmup: 100
   checkpoint_every: 500
@@ -46,7 +47,7 @@ training:
   weight_decay: 0.0
   gradient_clip: 1.0
   max_reserved_fraction: 0.9
-  world_size: 2
+  world_size: 1
 validation:
   steps: 20
   guidance: 4.0

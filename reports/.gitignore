@@ -2,3 +2,8 @@
 *.png
 *.svg
 index.html
+
+# Publish code-generated FLUX1 architecture diagrams; raster results remain private.
+!261003_online_face_ba/FLUX1_whole_model.svg
+!261003_online_face_ba/FLUX1_branched_attention.svg
+!261003_online_face_ba/FLUX1_inference_protocol.svg

@@ -1,4 +1,119 @@
-# Branched attention for FLUX.2 and Qwen-Image-2.1
+# FLUX1 — masked branched attention inside FLUX
+
+**FLUX1** is the experiment previously called `online_masked_qkvo_v1`: rank-128
+branch-local **Q/K/V/output LoRA at eight attention sites**, trained through the
+complete frozen FLUX denoiser with fresh noise and timesteps. Only BA parameters
+train. The backbone, text encoder and VAE stay frozen; generic backbone LoRA is
+disabled. Naming the experiment FLUX1 does **not** change its attention equations,
+initialization, masks, loss, data, sampling or evaluation settings.
+
+The native attention path stays intact when BA is off. With BA on, the branch
+routes reference-face attention into the target face region. Training target
+masks are supervision; inference uses frozen masks from native backbone
+**generations**, never target photographs. Native exterior pixels are preserved
+explicitly. Training encodes examples online by default; only the fixed
+validation inputs are cached. The earlier cached face-head experiments and
+rank-16 reference-read-delta profiles below are separate historical experiments.
+
+### Architecture charts
+
+The existing architecture report is now titled **FLUX1**. Its measured results
+and model dimensions describe the completed **4B one-ID variant**, not the 9B
+Vast run. The same BA mechanism is used by the Vast and cluster variants; the
+backbone width, attention-site indices, precision and training panels differ.
+
+- [FLUX1 whole-model chart](reports/261003_online_face_ba/FLUX1_whole_model.svg)
+- [FLUX1 branched-attention chart](reports/261003_online_face_ba/FLUX1_branched_attention.svg)
+- [FLUX1 inference/mask protocol](reports/261003_online_face_ba/FLUX1_inference_protocol.svg)
+- [Report source and rebuild instructions](reports/261003_online_face_ba/rebuild.txt)
+
+The rebuild writes `reports/261003_online_face_ba/FLUX1_architecture_and_one_id_results.pdf`.
+It uses the original immutable one-ID evidence; private images/checkpoints stay
+outside Git. The report's equations and numerical results have not changed.
+
+## FLUX1 deployment variants
+
+| Variant | Config | Actual setup | Validation |
+|---|---|---|---|
+| **Vast — current 9B** | [FLUX1_vast_9b.yaml](configs/FLUX1_vast_9b.yaml) | GB10, BF16, microbatch 1 / accumulation 1, 768 px / reference 512; 2k pilot continued to8k | Fixed12 during training; native96 and trained8k full96 separately |
+| **HSE cluster — current 4B** | [FLUX1_cluster_4b.yaml](configs/clust/FLUX1_cluster_4b.yaml) | Two V100s: GPU 0 denoiser, GPU 1 frozen text encoder; one training worker; selective FP16 with FP32 BA/residual safeguards; batch 1 | Original fixed96 at 0 / every 2k; configured 20k target |
+| **Local — 4B one-ID** | [FLUX1_local_4b_one_id.yaml](configs/FLUX1_local_4b_one_id.yaml) | 16GB, full-denoiser BA-only, accumulation 4, 2k | Named fixed24 one-ID panel |
+| **Vast — 4B alternative** | [FLUX1_vast_4b.yaml](configs/FLUX1_vast_4b.yaml) | 48GB proposal, online conditioning, effective batch 8 | Fixed96 at 0 / every 2k |
+
+These are variants of one attention mechanism, **not matched hardware or quality
+benchmarks**. On the Vast fixed12 panel, ID_sim was 0.4341 at 2k and 0.4165 at 8k;
+2k remains best. Cluster progress, interruption/resume and exact deployment
+versions are recorded in [implementation notes](plans/260930/IMPLEMENTATION_NOTES.md).
+
+### FLUX1 on Vast
+
+Environment/weights: `scripts/setup_machine.sh` (uv), using `flux80` for 9B or
+`flux48` for 4B. Data download/import: `scripts/prepare_dataset.py`,
+`scripts/download_dataset.py`; workstation transfer fallback:
+`scripts/sync_large_dataset_vast.py`. See [deployment/data instructions](docs/deployment.md).
+
+```bash
+# New 9B pilot, after setup and data import; creates a fresh run.
+envs/flux-toolkit/bin/python -m scripts.run_flux9b_training_first \
+  --config configs/FLUX1_vast_9b.yaml --run runs/FLUX1_vast_9b_2k
+
+# Full-state continuation of that completed 2k run, with validations at 4k/6k/8k.
+envs/flux-toolkit/bin/python -m scripts.continue_flux9b \
+  --parent runs/FLUX1_vast_9b_2k --run runs/FLUX1_vast_9b_8k --target 8000
+
+# 4B alternative: preflight/admission, native masks, then training.
+bash scripts/run_flux4b_multi_id.sh --config configs/FLUX1_vast_4b.yaml \
+  --run runs/FLUX1_vast_4b --images-root /workspace/datasets/large_dataset
+```
+
+`run_flux9b_training_first.py` is the measured fast pilot protocol: it saves
+checkpoint 0, trains to 1k, then scores 0/1k and finally 2k. `continue_flux9b.py`
+restores optimizer/RNG/data cursor; only total steps and validation cadence can
+change. `finalize_flux9b_remote.py` and `finalize_flux9b_local.py` implement the
+**existing instance 53994096 completion/download/Comet/stop workflow**; they are
+bound to that run and must not be used as generic new-machine launchers.
+
+### FLUX1 on the HSE cluster
+
+Environment: `scripts/setup_clust_v100.sh` and `scripts/activate_clust_env.sh`.
+Dataset locations/import: `configs/clust/training_sources.yaml` and
+`scripts/import_training_dataset.py`. The cluster launcher is separate from
+Vast's training-first pilot:
+
+```bash
+# On the cluster after environment/data setup; scheduler allocation is required.
+mkdir -p logs/clust
+sbatch jobs/flux4b_clust_2v100_amp.sbatch
+```
+
+- `jobs/flux4b_clust_2v100_amp.sbatch` selects **FLUX1_cluster_4b.yaml** and runs
+  `scripts/run_clust_v100.sh` → `scripts/run_multi_id_face_ba.py`.
+- `jobs/clust_comet.sbatch` / `scripts/upload_clust_comet.py` publish job status.
+  `scripts/sync_clust_comet.py` relays metrics/images from the workstation when
+  compute-node uploads fail. All publishers reuse the saved Comet key.
+- `scripts/check_clust_v100.py` and `scripts/check_online_face_ba.py` verify the
+  environment and pretrained training invariants. Benchmark/proposal configs
+  ending `_fp32` or `_bf16_proposed` are not the active selective-FP16 setup.
+- Two V100s do **not** mean two data-parallel workers in this configuration:
+  the second GPU holds the frozen text encoder.
+
+### Config rename and existing checkpoints
+
+FLUX1 configs are the current names for fresh launches. Saved run directories,
+Comet keys, source snapshots and checkpoint configs keep their original names
+and hashes. Use the exact frozen runtime for an existing checkpoint; renaming
+its saved config in place would invalidate resume checks. The source versions
+used on each machine are preserved in Git as **`FLUX1-vast-runtime`** and
+**`FLUX1-cluster-runtime`**; [deployment provenance](docs/FLUX1_DEPLOYMENTS.md)
+records their source hashes and the old-to-new config map. `main` contains the
+latest maintained code and FLUX1 naming.
+
+## Earlier project profiles and experiments
+
+The sections below describe the original rank-16 reference-read-delta setup,
+Qwen profiles and historical diagnostics. They are retained for reproducibility.
+
+### Original branched-attention setup for FLUX.2 and Qwen-Image-2.1
 
 A reference-read correction for native FLUX.2-klein Base and Qwen-Image-2.1. The branch adds `gamma * (adapted_reference_read - native_reference_read)` at eight attention sites. The original attention, conditioning, key normalization and RoPE remain in place. Zero-initialized adapters preserve native outputs.
 
@@ -103,6 +218,60 @@ scripts/run_profile.sh qwen48 train --mode branch_only --smoke-steps 2 \
   --output-dir runs/qwen_local_smoke
 ```
 
+## Fast face-focused one-ID diagnostic (FLUX 4B)
+
+```bash
+bash scripts/run_face_diagnostic.sh runs/flux4b_face_one_id_fast_NAME
+```
+
+This separate experiment uses one final-block reference-face attention read,
+rank-16 output LoRA and a learned face gate (101,377 trainable parameters).
+All native model weights stay frozen. Target boxes supervise training only;
+inference predicts face locations from model features. Four same-ID image pairs
+and fixed noise/timestep inputs allow exact frozen-prefix caching for a fast
+overfit check. A separate set of noise seeds tests the update beyond fitted
+noise. Both CFG lanes use BA.
+
+The 512 px/two-prompt validation is a named diagnostic, separate from the
+original panels. The launcher writes paired images, inference gate overlays,
+learning curves, checkpoint/source audits and a `review.html` in the run folder.
+See [face BA diagnostic](plans/260930/FACE_BA_DIAGNOSTIC.md) for measured speed,
+parity checks, mask roles and limitations. Use the original profiles above for
+the original multi-site experiment.
+
+### Stronger local one-ID experiment
+
+```bash
+bash scripts/run_face_suffix.sh runs/flux4b_face_one_id_strong_NAME
+```
+
+This separate 768 px diagnostic trains eight late BA sites at rank 256 on all
+19 one-ID pairs for 2,000 updates. Only BA output LoRAs and their face routers
+train. The frozen prefix is cached; the complete eight-block suffix remains
+differentiable. The launcher measures batch throughput and memory, chooses a
+safe configuration for the local GPU, checks process resume, and runs serial
+four-prompt validation at 0, 1,000 and 2,000. Caches use a finite bank of noise
+inputs; this is an overfit diagnostic. See
+[strong face BA experiment](plans/260930/FACE_BA_STRONG.md).
+
+### BA-only faces from noise
+
+```bash
+bash scripts/run_face_crop_flow.sh runs/flux4b_ba_only_face_crop_NAME
+```
+
+This controlled 256 px face-crop experiment replaces the entire native velocity
+prediction with a small BA network. Its output projections start at zero, so
+step-zero samples remain noise. Only 2.41 million parameters in the added
+attention/query/noisy-latent paths train; FLUX is a frozen feature extractor.
+The launcher runs 2,000 cached-input updates, checks process resume and exact
+cached/full predictions, and generates four seeds at 0/1,000/2,000 for Comet.
+The completed trial changed noise into detected faces on all four seeds.
+This demonstrates reconstruction on one ID, with rough image quality, and does
+not establish full-scene face replacement or generalization. See
+[BA-only face experiment](plans/260930/FACE_CROP_BA_ONLY.md) for the equations,
+failed controls, reference-read ablation and measured results.
+
 ## Verification and scope
 
 Both pretrained backbones available locally passed branch initialization parity, two real optimizer updates, finite/nonzero gradients at all 16 branch B matrices, and exact save/resume checks. Full-step initialized-branch checks generated one image each for FLUX 4B at 768 pixels and Qwen 7B at 768 and 1024 pixels.
@@ -111,12 +280,45 @@ The complete native panels at 768 pixels contain 96 images and 96 usable output 
 
 Measured results, Comet links, full-panel mask coverage and outstanding hardware checks are recorded in [implementation notes](plans/260930/IMPLEMENTATION_NOTES.md). These are engineering checks, not evidence of a trained identity-quality gain. The original [implementation plan](plans/260930/CL39_Qwen_FLUX_48GB_80GB_Implementation_Plan.md) remains unchanged.
 
-## Current one-ID setting: BA inside the full denoiser
+## Native background with BA-generated faces
+
+The user-requested CL14-like diagnostic generates faces in the existing 24
+prompted native scenes, using masks detected from those exact backbone images.
+It trains only a small BA flow head; zero output starts the face region as noise.
+Native exterior pixels are preserved explicitly after decoding. This is a
+separately named two-pass generation protocol; target photographs are never
+validation inputs. See [protocol and measured status](plans/260930/MASKED_FACE_FLOW.md).
+
+```bash
+bash scripts/run_masked_face_flow.sh runs/NEW_NAME
+```
+
+### Stronger reference refiner and convergence run
+
+This historical local experiment freezes the best trained BA core and adds a
+1024-wide, 16-head reference refiner (14.05M trainable parameters). It uses a
+larger verified noise/sigma cache and measured batch128 throughput. The serial
+controller selects the best checkpoint using the 24-image prompted ID score
+and stops after two small gains. See
+[architecture, benchmarks and measured results](plans/260930/REFERENCE_REFINER.md)
+for the actual module, launch commands, stopping rule and Comet run.
+
+### Deeper BA with direct identity supervision
+
+The refiner above regressed after step 500. The next named experiment starts
+from that best checkpoint, adds two reference-attention reads (30.83M trainable
+BA parameters), and combines flow MSE with a differentiable face identity loss.
+The backbone, trained 512-wide core, VAE and ArcFace remain frozen. Batch256
+was measured below the local 16GB memory limit. Generated-image ID scores,
+paired crops and the unchanged 24-image panel decide whether it improves.
+See [identity-flow architecture, admission and launch](plans/260930/IDENTITY_FLOW.md).
+
+## FLUX1 local one-ID results: BA inside the full denoiser
 
 The approved replacement for the cached face heads trains rank128 branch-local
 Q/K/V/output LoRA at eight FLUX Base4B sites, with the complete frozen denoiser
 in the gradient path and fresh noise/timesteps every microbatch. Only25.17M BA
-parameters train. At768px/ref512, accumulation4 uses under10GiB in the bounded
+parameters train. At768 px / reference 512, accumulation 4 uses under10GiB in the bounded
 local16GB admission checks. The fixed24 prompted panel runs serially at
 0/500/1000/2000, using reviewed native-generated masks and exact exterior
 composition. It stops after2000 and final scoring.

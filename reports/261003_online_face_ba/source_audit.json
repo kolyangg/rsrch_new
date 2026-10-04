@@ -1,0 +1,434 @@
+{
+  "report_date": "2026-10-03",
+  "run": "runs/flux4b_oneid_online_face_qkvo_r128_768_20261002",
+  "completed_at_utc": "2026-10-02T23:40:58.894505+00:00",
+  "comet_url": "https://www.comet.com/nikolay-2104/rsrch-new/c955799c57d94fd7a234dec331323e06",
+  "configuration": {
+    "schema_version": 2,
+    "name": "flux4b_oneid_online_face_qkvo_r128_768",
+    "model": {
+      "backend": "flux",
+      "arch": "flux2_klein_4b",
+      "weights": "${BA_ROOT}/weights/flux4b",
+      "encoder": "${BA_ROOT}/weights/flux4b_text",
+      "vae": "${BA_ROOT}/weights/flux_vae/ae.safetensors",
+      "revision_lock": "${BA_ROOT}/locks/weights-small.json"
+    },
+    "data": {
+      "train_manifest": "${BA_ROOT}/data/datasets/one_id/train.jsonl",
+      "train_limit": 19,
+      "validation_manifest": "${BA_ROOT}/data/datasets/one_id/validation_24_seeds01.jsonl",
+      "target_size": [
+        768,
+        768
+      ],
+      "reference_size": 512,
+      "cache_dir": "${BA_ROOT}/cache/conditioning"
+    },
+    "branch": {
+      "kind": "masked_face_qkvo",
+      "rank": 128,
+      "alpha": 128,
+      "gamma": 1.0,
+      "query_chunk": 128,
+      "max_reference_keys": 512,
+      "mask_feather_pixels": 16
+    },
+    "lora": {
+      "rank": 8,
+      "alpha": 8
+    },
+    "training": {
+      "steps": 2000,
+      "grad_accum": 4,
+      "lr": 5e-05,
+      "warmup": 100,
+      "checkpoint_every": 500,
+      "validation_every": 500,
+      "seed": 142,
+      "deterministic": true,
+      "gradient_checkpointing": true,
+      "weight_decay": 0.0,
+      "gradient_clip": 1.0,
+      "max_reserved_fraction": 0.9
+    },
+    "validation": {
+      "steps": 20,
+      "guidance": 4.0,
+      "limit": 24,
+      "batch_size": 1
+    },
+    "hardware": {
+      "min_vram_gb": 15
+    },
+    "logging": {
+      "comet_project": "rsrch_new",
+      "enabled": true
+    }
+  },
+  "model_identity": {
+    "backend": "flux",
+    "arch": "flux2_klein_4b",
+    "revisions": {
+      "flux4b": "a3b4f4849157f664bdbc776fd7453c2783562f4d",
+      "flux4b_text": "1cfa9a7208912126459214e8b04321603b3df60c",
+      "flux_vae": "3f679cf232e6d91d28396522d9502c31e8f7ccbe"
+    },
+    "source_commit": "ecee894ed2b1f3716d9d7326693061ec1a3105bb",
+    "source_patch_sha256": "2e8dfaba605694f1c76b87eb64e4d539da8a24992915a9df2ce95e3ef3ddb021",
+    "adapter_code_sha256": "a03b07d29a48df4addf441fad7d71ce8f693866b6f39657953e1a712cb73f060",
+    "branch": {
+      "kind": "masked_face_qkvo",
+      "rank": 128,
+      "alpha": 128,
+      "gamma": 1.0,
+      "query_chunk": 128,
+      "max_reference_keys": 512,
+      "mask_feather_pixels": 16
+    },
+    "lora": {
+      "rank": 8,
+      "alpha": 8
+    }
+  },
+  "native_metrics": {
+    "id_sim_legacy_best": 0.3313986753782956,
+    "id_sim_face_count": 4.125,
+    "id_sim_no_face": 0.0,
+    "id_sim": 0.3313986753782956,
+    "id_sim_mask_iou": 1.0,
+    "id_sim_unowned": 0.0,
+    "output_mask_missing": 0.0,
+    "id_sim_ambiguous": 0.0,
+    "text_sim": 28.072930653889973
+  },
+  "ba_metrics": {
+    "500": {
+      "id_sim_legacy_best": 0.36576633527874947,
+      "id_sim_face_count": 4.125,
+      "id_sim_no_face": 0.0,
+      "id_sim": 0.36576633527874947,
+      "id_sim_mask_iou": 0.88026483804396,
+      "id_sim_unowned": 0.0,
+      "output_mask_missing": 0.0,
+      "id_sim_ambiguous": 0.0,
+      "text_sim": 27.249032497406006
+    },
+    "2000": {
+      "id_sim_legacy_best": 0.419023413831989,
+      "id_sim_face_count": 4.125,
+      "id_sim_no_face": 0.0,
+      "id_sim": 0.419023413831989,
+      "id_sim_mask_iou": 0.8449044446387862,
+      "id_sim_unowned": 0.0,
+      "output_mask_missing": 0.0,
+      "id_sim_ambiguous": 0.0,
+      "text_sim": 27.321863253911335
+    },
+    "1000": {
+      "id_sim_legacy_best": 0.43025404773652554,
+      "id_sim_face_count": 4.125,
+      "id_sim_no_face": 0.0,
+      "id_sim": 0.43025404773652554,
+      "id_sim_mask_iou": 0.8946862377163161,
+      "id_sim_unowned": 0.0,
+      "output_mask_missing": 0.0,
+      "id_sim_ambiguous": 0.0,
+      "text_sim": 26.967033227284748
+    },
+    "0": {
+      "id_sim_legacy_best": 0.1460638454494377,
+      "id_sim_face_count": 4.125,
+      "id_sim_no_face": 0.0,
+      "id_sim": 0.14602376443023482,
+      "id_sim_mask_iou": 0.7418571939003576,
+      "id_sim_unowned": 0.0,
+      "output_mask_missing": 0.0,
+      "id_sim_ambiguous": 0.0,
+      "text_sim": 27.702707211176556
+    }
+  },
+  "best_checkpoint": "379408b6122082919783ccaecaf3d8d80d3ecac479d2216ce1e27d1519ec8890",
+  "paired_id_gains_vs_native": {
+    "oneid_00": 0.033659398555755615,
+    "oneid_01": 0.07290393114089966,
+    "oneid_02": 0.20797389361541718,
+    "oneid_03": 0.11683884263038635,
+    "oneid_04": 0.12984409928321838,
+    "oneid_05": 0.17477956414222717,
+    "oneid_06": 0.033738553524017334,
+    "oneid_07": 0.010923951864242554,
+    "oneid_08": 0.13861185312271118,
+    "oneid_09": 0.16339686512947083,
+    "oneid_10": 0.15261739492416382,
+    "oneid_11": 0.06567230820655823,
+    "oneid_00_s1": 0.10065454244613647,
+    "oneid_01_s1": 0.06315651535987854,
+    "oneid_02_s1": 0.1414063274860382,
+    "oneid_03_s1": -0.018451213836669922,
+    "oneid_04_s1": 0.2989068776369095,
+    "oneid_05_s1": 0.06992213428020477,
+    "oneid_06_s1": 0.059945493936538696,
+    "oneid_07_s1": 0.026254892349243164,
+    "oneid_08_s1": 0.13710293173789978,
+    "oneid_09_s1": 0.02870839834213257,
+    "oneid_10_s1": 0.06105148792266846,
+    "oneid_11_s1": 0.10290989279747009
+  },
+  "positive_pairs": 23,
+  "mean_gain": 0.09885537235822994,
+  "median_gain": 0.08677923679351807,
+  "source_snapshot_hashes_verified": {
+    "scripts/online_face_ba.py": "cc9fd02d45472a824db9b98674012091e714394dcb7519c2cdea4035cc65db0c",
+    "scripts/run_online_face_ba.py": "4efdc768cbf1269211f77d6a13ee1b951d4925b788270b4331a90349467263d2",
+    "ba_dit/nn/masked_face_attention.py": "f4ef6a8cd37cbf130333605c00d6b72cf3372b2d64f0dd4112251df351fba54e",
+    "ba_dit/nn/masked_face_flow.py": "c57b4ced830fc306bfc073299be9a9937eea06e579e8eb9c291a7a841bdf0596",
+    "ba_dit/backends/flux_runtime.py": "7a11043e59cde93639168a41387dfd2f376adfde8e98b2000ad7753fde1b5a14",
+    "ba_dit/backends/attention.py": "8a60ef1e945acdc8558597cdde542d29a0f7f4b5cf7cccd255eba429e39d4e0b",
+    "ba_dit/backends/flux2_native.py": "f57551036340f86bd5199b277e45d303c803cf06f7eac64d2023a3adc8aab7fa",
+    "ba_dit/nn/reference_read_delta.py": "d75c338d5b25a3cf2d6d7274ffe869684b585701803f3c2d2a74069b367ded23",
+    "ba_dit/adapters.py": "4d5a81b82efc67b91116f51e0b8fa7b9a5a7da1cede588c8c41114aff2f78da0",
+    "ba_dit/training.py": "80afb19ba64c769d6cda8354d16aa04613aa22f2cc5188ce269c50f49d58fce0",
+    "ba_dit/checkpoint.py": "8d8bd5ea6ca45001fe3fce9e50558b8793d1c200890ae988181a274ae7a8c86d",
+    "ba_dit/config.py": "e7e03eb4ca9d06dee6e44a9305847c15065335f2b9552be31f7b2278ff445d4b",
+    "ba_dit/runtime.py": "b0da405d950dcfdf629f6c9088dd172d8a2596187bd3df0657ffcd9e8067d4e9",
+    "ba_dit/logging.py": "b17c32c7230baab07c7f4325e2511256138e6da3e88cf8d2888a15cb1ff40a4c",
+    "ba_dit/progress.py": "f6ead107d337a2d3a60bad1c9fcce04a7fda580215b7f4b5940697d1e97e7b58",
+    "ba_dit/data/cache.py": "0871fe0c22780f91cccd20cfed96ab750a96d909a3c2950f62e2d76b81272b26",
+    "ba_dit/data/geometry.py": "0a24fea226e5a1a8a4344b2e8f534a4e2fbc6e425df835124693b0e83da799bd",
+    "ba_dit/data/manifest.py": "78c41864bd2a53e3258322ecb1ca55c433f2b5d78b813a8eca1ba3b36da441ae",
+    "ba_dit/metrics.py": "a0fa9c6c1613176a962ac5afcf9073d94670ea1fd4e7a6777ce8338dab8528f9",
+    "patches/flux2_reference_branch_and_offload.patch": "2e8dfaba605694f1c76b87eb64e4d539da8a24992915a9df2ce95e3ef3ddb021"
+  },
+  "artifact_sha256": {
+    "data/datasets/one_id/ref/51.jpg": "5fdc48f461b0629b75113cfb2a7e078cc94d6a4f1b61eb1121452d87b4d77ed9",
+    "plans/260930/ONLINE_FACE_BA_RESULTS.json": "710147a971506e46b80fcee57176280a76f5d1106fa72d19558382c6bd3ea971",
+    "runs/flux4b_face_one_id_24_val_20261001/validation-000000/quality_per_image.csv": "054ed55b200bfa87daaebf35e35b6655ee9482d586171f965be22dec3a585b34",
+    "runs/flux4b_oneid_online_face_qkvo_r128_768_20261002/identity.json": "d073a236895cb46b6c149f6ba9387dce6b8cd0e1acde2c5354587e272054a789",
+    "runs/flux4b_oneid_online_face_qkvo_r128_768_20261002/native/oneid_00.png": "82c270a9397213763bc0d5d0d8f602874cdff4460cfbc14c08e5d2239fb7fad5",
+    "runs/flux4b_oneid_online_face_qkvo_r128_768_20261002/native/oneid_00_s1.png": "a7fc35dc22fc6b314927aaee220e728ff38dd7df4399f831c7becf707cbcfc7f",
+    "runs/flux4b_oneid_online_face_qkvo_r128_768_20261002/native/oneid_01.png": "8ee3046497978d173c3bbbe57b6e78f08c963590de25878ed3db23dee76fdee2",
+    "runs/flux4b_oneid_online_face_qkvo_r128_768_20261002/native/oneid_01_s1.png": "3dc8ae75161554253a7ea13d6920461b3c1908ce3c72eb6c2ef64f7fabe28e5a",
+    "runs/flux4b_oneid_online_face_qkvo_r128_768_20261002/native/oneid_02.png": "947f8c3cc7415eb4e5c1cc739b58872fab1bd59fbac5451299e91b6e042e1a12",
+    "runs/flux4b_oneid_online_face_qkvo_r128_768_20261002/native/oneid_02_s1.png": "7847e97460f5ccc92567177d9d124efc1ee871847ddc8a7e160e15e87be78344",
+    "runs/flux4b_oneid_online_face_qkvo_r128_768_20261002/native/oneid_03.png": "64b847bd6353170eeb8301355799d462f7d39047a64e6abea4461a46db10ff82",
+    "runs/flux4b_oneid_online_face_qkvo_r128_768_20261002/native/oneid_03_s1.png": "62574b302e50fae7f83ff68ab58ac7144048b7da525779ca9448589067b8bcf5",
+    "runs/flux4b_oneid_online_face_qkvo_r128_768_20261002/native/oneid_04.png": "11c18204b35b339cbe72ec961bde7ad90790160d1ed82cbf3446b301b0f42f02",
+    "runs/flux4b_oneid_online_face_qkvo_r128_768_20261002/native/oneid_04_s1.png": "970482a2a24555118b1a3c48e2eeb5496e08815ba9e3d46a9ff9f123ea771f56",
+    "runs/flux4b_oneid_online_face_qkvo_r128_768_20261002/native/oneid_05.png": "8afc5ea12da0204c29495298aef44f5378324ab576b3c56cc30bbd64949acd47",
+    "runs/flux4b_oneid_online_face_qkvo_r128_768_20261002/native/oneid_05_s1.png": "55390c257d63a71b7d8e84b71db97ceca7d69d48ad75731590bc7c6cc3e44334",
+    "runs/flux4b_oneid_online_face_qkvo_r128_768_20261002/native/oneid_06.png": "01f8dc42e3ce2d032a4a5b875f44200b76b7a3ff82eb4598817441852a69c734",
+    "runs/flux4b_oneid_online_face_qkvo_r128_768_20261002/native/oneid_06_s1.png": "bc09ed5f7cdd08650d5966497169b0aeb836a5041ce470a3841bad681cf69922",
+    "runs/flux4b_oneid_online_face_qkvo_r128_768_20261002/native/oneid_07.png": "357518f66778697c7d3e788bee3d265e304877b11ca78836ac20c2f9c2a25bdf",
+    "runs/flux4b_oneid_online_face_qkvo_r128_768_20261002/native/oneid_07_s1.png": "5c26daec5791f68fb67f14e49a4e18ff7bc5551e85234ed119f39a18f0cc97ac",
+    "runs/flux4b_oneid_online_face_qkvo_r128_768_20261002/native/oneid_08.png": "66db87ff21f719dee28f7583b4315a75bf88bdad3d9723c6ec718c88ae005e9b",
+    "runs/flux4b_oneid_online_face_qkvo_r128_768_20261002/native/oneid_08_s1.png": "aa764af8b613d6fc16890759c9c35450476e68c0c0436388f8e431816326edc8",
+    "runs/flux4b_oneid_online_face_qkvo_r128_768_20261002/native/oneid_09.png": "efa3835d9e87cc563bef4b6265d963e72c691403f087e9be333b5fb711b8abd4",
+    "runs/flux4b_oneid_online_face_qkvo_r128_768_20261002/native/oneid_09_s1.png": "2ff32f6a022e1b5e0dd84698575080819c32b7c1618f7a69fb3ab20ff31bed83",
+    "runs/flux4b_oneid_online_face_qkvo_r128_768_20261002/native/oneid_10.png": "f16e1ae34990ef8bf99f82da9984fa410113b1c731c8437124701635e1d656ed",
+    "runs/flux4b_oneid_online_face_qkvo_r128_768_20261002/native/oneid_10_s1.png": "e405436c6c54771149ba76939fced63f5223f0599372201196bf7096a4ad1e00",
+    "runs/flux4b_oneid_online_face_qkvo_r128_768_20261002/native/oneid_11.png": "24b4dd1ccfd763f661cb729c0f0998a077b5951c80ef9610e4c08b5c2a259834",
+    "runs/flux4b_oneid_online_face_qkvo_r128_768_20261002/native/oneid_11_s1.png": "6494fd090ff5ead1748c3276abc4c5c0c53fbf6a72b0405a815afdba22ba494c",
+    "runs/flux4b_oneid_online_face_qkvo_r128_768_20261002/resolved_config.yaml": "80c350f3198e349cca499ee620ac6d3eb9606b53c7579e0988cb7d0c770d1b82",
+    "runs/flux4b_oneid_online_face_qkvo_r128_768_20261002/routing_masks.json": "92a2e571ffb10da0f91cb19ae4a8c24d74f8e4354a2441ca2fb7f50ccbc26628",
+    "runs/flux4b_oneid_online_face_qkvo_r128_768_20261002/source_snapshot/ba_dit/adapters.py": "4d5a81b82efc67b91116f51e0b8fa7b9a5a7da1cede588c8c41114aff2f78da0",
+    "runs/flux4b_oneid_online_face_qkvo_r128_768_20261002/source_snapshot/ba_dit/backends/attention.py": "8a60ef1e945acdc8558597cdde542d29a0f7f4b5cf7cccd255eba429e39d4e0b",
+    "runs/flux4b_oneid_online_face_qkvo_r128_768_20261002/source_snapshot/ba_dit/backends/flux2_native.py": "f57551036340f86bd5199b277e45d303c803cf06f7eac64d2023a3adc8aab7fa",
+    "runs/flux4b_oneid_online_face_qkvo_r128_768_20261002/source_snapshot/ba_dit/backends/flux_runtime.py": "7a11043e59cde93639168a41387dfd2f376adfde8e98b2000ad7753fde1b5a14",
+    "runs/flux4b_oneid_online_face_qkvo_r128_768_20261002/source_snapshot/ba_dit/checkpoint.py": "8d8bd5ea6ca45001fe3fce9e50558b8793d1c200890ae988181a274ae7a8c86d",
+    "runs/flux4b_oneid_online_face_qkvo_r128_768_20261002/source_snapshot/ba_dit/config.py": "e7e03eb4ca9d06dee6e44a9305847c15065335f2b9552be31f7b2278ff445d4b",
+    "runs/flux4b_oneid_online_face_qkvo_r128_768_20261002/source_snapshot/ba_dit/data/cache.py": "0871fe0c22780f91cccd20cfed96ab750a96d909a3c2950f62e2d76b81272b26",
+    "runs/flux4b_oneid_online_face_qkvo_r128_768_20261002/source_snapshot/ba_dit/data/geometry.py": "0a24fea226e5a1a8a4344b2e8f534a4e2fbc6e425df835124693b0e83da799bd",
+    "runs/flux4b_oneid_online_face_qkvo_r128_768_20261002/source_snapshot/ba_dit/data/manifest.py": "78c41864bd2a53e3258322ecb1ca55c433f2b5d78b813a8eca1ba3b36da441ae",
+    "runs/flux4b_oneid_online_face_qkvo_r128_768_20261002/source_snapshot/ba_dit/logging.py": "b17c32c7230baab07c7f4325e2511256138e6da3e88cf8d2888a15cb1ff40a4c",
+    "runs/flux4b_oneid_online_face_qkvo_r128_768_20261002/source_snapshot/ba_dit/metrics.py": "a0fa9c6c1613176a962ac5afcf9073d94670ea1fd4e7a6777ce8338dab8528f9",
+    "runs/flux4b_oneid_online_face_qkvo_r128_768_20261002/source_snapshot/ba_dit/nn/masked_face_attention.py": "f4ef6a8cd37cbf130333605c00d6b72cf3372b2d64f0dd4112251df351fba54e",
+    "runs/flux4b_oneid_online_face_qkvo_r128_768_20261002/source_snapshot/ba_dit/nn/masked_face_flow.py": "c57b4ced830fc306bfc073299be9a9937eea06e579e8eb9c291a7a841bdf0596",
+    "runs/flux4b_oneid_online_face_qkvo_r128_768_20261002/source_snapshot/ba_dit/nn/reference_read_delta.py": "d75c338d5b25a3cf2d6d7274ffe869684b585701803f3c2d2a74069b367ded23",
+    "runs/flux4b_oneid_online_face_qkvo_r128_768_20261002/source_snapshot/ba_dit/progress.py": "f6ead107d337a2d3a60bad1c9fcce04a7fda580215b7f4b5940697d1e97e7b58",
+    "runs/flux4b_oneid_online_face_qkvo_r128_768_20261002/source_snapshot/ba_dit/runtime.py": "b0da405d950dcfdf629f6c9088dd172d8a2596187bd3df0657ffcd9e8067d4e9",
+    "runs/flux4b_oneid_online_face_qkvo_r128_768_20261002/source_snapshot/ba_dit/training.py": "80afb19ba64c769d6cda8354d16aa04613aa22f2cc5188ce269c50f49d58fce0",
+    "runs/flux4b_oneid_online_face_qkvo_r128_768_20261002/source_snapshot/patches/flux2_reference_branch_and_offload.patch": "2e8dfaba605694f1c76b87eb64e4d539da8a24992915a9df2ce95e3ef3ddb021",
+    "runs/flux4b_oneid_online_face_qkvo_r128_768_20261002/source_snapshot/scripts/online_face_ba.py": "cc9fd02d45472a824db9b98674012091e714394dcb7519c2cdea4035cc65db0c",
+    "runs/flux4b_oneid_online_face_qkvo_r128_768_20261002/source_snapshot/scripts/run_online_face_ba.py": "4efdc768cbf1269211f77d6a13ee1b951d4925b788270b4331a90349467263d2",
+    "runs/flux4b_oneid_online_face_qkvo_r128_768_20261002/validation-000000/oneid_03_s1.png": "d926deac5dfa10c6308cb90ea8ace4c720e86f8402944fe7cfbd35c4b2befc29",
+    "runs/flux4b_oneid_online_face_qkvo_r128_768_20261002/validation-000000/oneid_04_s1.png": "39f00b79d67bbd3cfe798eaa1d4dda3b6314e70e7a4250194b72afc215ce5941",
+    "runs/flux4b_oneid_online_face_qkvo_r128_768_20261002/validation-000000/oneid_07.png": "3993330250ab32f8cf99423dae2117e5ed3163796fcbf3f577cc0474c2ea050a",
+    "runs/flux4b_oneid_online_face_qkvo_r128_768_20261002/validation-000000/quality_per_image.csv": "5a780906692a3676631bf489fde27aae1733da08c38fecc88e1c1dd4c11f350f",
+    "runs/flux4b_oneid_online_face_qkvo_r128_768_20261002/validation-000000/quality_summary.json": "b44db3756125a21ff386a07767610fa1b15bbaa9d4d75659e2338d2495bb094b",
+    "runs/flux4b_oneid_online_face_qkvo_r128_768_20261002/validation-000500/quality_per_image.csv": "5af8c05a3a7e48c3508dce5b15f5ac9a726864d08343916f33f966c9db5a2063",
+    "runs/flux4b_oneid_online_face_qkvo_r128_768_20261002/validation-000500/quality_summary.json": "fed625e0eeef0a6033b6298e48469fc4d00157ab99d80535dba89c29ebfc93b3",
+    "runs/flux4b_oneid_online_face_qkvo_r128_768_20261002/validation-001000/oneid_00.png": "ff6bbb44f38984d735b8f912ed2adf2aad38a03406de6cb0a9858a4a0fa1a62c",
+    "runs/flux4b_oneid_online_face_qkvo_r128_768_20261002/validation-001000/oneid_00_s1.png": "2e972299864264e4efae161564c35d5cc5a1fd7fa2dc64f568f899a28fd1720f",
+    "runs/flux4b_oneid_online_face_qkvo_r128_768_20261002/validation-001000/oneid_01.png": "7ffbeac9305ca95864af347f37ba9a3c80cf49ba2094a249bc59664d9b36a6e6",
+    "runs/flux4b_oneid_online_face_qkvo_r128_768_20261002/validation-001000/oneid_01_s1.png": "9eceafbd50aeac6ba6cec838cac38476fb1f5b8411b7fd11e7f235a93be305c8",
+    "runs/flux4b_oneid_online_face_qkvo_r128_768_20261002/validation-001000/oneid_02.png": "cf6e788de1a508cac64fa0e4ae07ed5a8b050a4db594dcbc4db63eb486d61a78",
+    "runs/flux4b_oneid_online_face_qkvo_r128_768_20261002/validation-001000/oneid_02_s1.png": "22300e70ddb66004007072b12caac8daec03fed1ec9bc774ffd80b392047e191",
+    "runs/flux4b_oneid_online_face_qkvo_r128_768_20261002/validation-001000/oneid_03.png": "2173401944387bf56577b9d82a292da985642209e4ab4d4e0105a59dbffdedec",
+    "runs/flux4b_oneid_online_face_qkvo_r128_768_20261002/validation-001000/oneid_03_s1.png": "fa244207506fe427c8124b32779fbedd705e52841777d96312bd6e87460a8991",
+    "runs/flux4b_oneid_online_face_qkvo_r128_768_20261002/validation-001000/oneid_04.png": "c8f4140df919c2d4ea8425851627f7f0aca607b320a6f651fd732839e9f54513",
+    "runs/flux4b_oneid_online_face_qkvo_r128_768_20261002/validation-001000/oneid_04_s1.png": "77f6dcd4a22dd5c18d6be24b0501f28b3abd5cc2f8845026349ba5ff7ca1d6f7",
+    "runs/flux4b_oneid_online_face_qkvo_r128_768_20261002/validation-001000/oneid_05.png": "26f784303a7588f2748e11dbde187db2d09885adcada9b24a5c17786b674e77a",
+    "runs/flux4b_oneid_online_face_qkvo_r128_768_20261002/validation-001000/oneid_05_s1.png": "fe41af38221d6ebd68d3d737324196e809a32427c47b1a5b9cd70cea38412f90",
+    "runs/flux4b_oneid_online_face_qkvo_r128_768_20261002/validation-001000/oneid_06.png": "efee72d930e8cf85828ff7618a5b292630d5dbb6de3d7baedf845d03ba0583a7",
+    "runs/flux4b_oneid_online_face_qkvo_r128_768_20261002/validation-001000/oneid_06_s1.png": "53509c27e4222b7816b1f23ec62a3402243adc0ceb0df4ac79d2ec9ffc90a377",
+    "runs/flux4b_oneid_online_face_qkvo_r128_768_20261002/validation-001000/oneid_07.png": "6becfd6172e339179da0f95b514583dc8b6db9814962e765eb351b3902165c0f",
+    "runs/flux4b_oneid_online_face_qkvo_r128_768_20261002/validation-001000/oneid_07_s1.png": "21f9872e8d2fd7006edc6baae35e1adf2ab49fbb0468a88054d2f15fbcb798d4",
+    "runs/flux4b_oneid_online_face_qkvo_r128_768_20261002/validation-001000/oneid_08.png": "65e5aa7a68fbb4d8053ec43c72e56b25d82575860ce7a1d8b62c7f8b6f001e98",
+    "runs/flux4b_oneid_online_face_qkvo_r128_768_20261002/validation-001000/oneid_08_s1.png": "6fd9ffa15d135e3a6d0e25507f3498b05ac4af80c893d4783e21fe4aef88a57d",
+    "runs/flux4b_oneid_online_face_qkvo_r128_768_20261002/validation-001000/oneid_09.png": "9021491483c68324ce6a25d1c008a8eee7e5c1d1d5a6f99e4382bb63deaf2ec2",
+    "runs/flux4b_oneid_online_face_qkvo_r128_768_20261002/validation-001000/oneid_09_s1.png": "186ef0d8e7a7397f0f3be809952869bce3f3074ddc5b4df3dbc82dc5c34a5584",
+    "runs/flux4b_oneid_online_face_qkvo_r128_768_20261002/validation-001000/oneid_10.png": "c1ecb67f829cedc4223d7ad1f47fca65fb992b6a3fee2dd1d26ea20fcf0e73ba",
+    "runs/flux4b_oneid_online_face_qkvo_r128_768_20261002/validation-001000/oneid_10_s1.png": "416fb09a055b83f4ec4d9d3db5591a20fdc69f08f80cc18d3faccea18bea411c",
+    "runs/flux4b_oneid_online_face_qkvo_r128_768_20261002/validation-001000/oneid_11.png": "7a0dda354cd33df7a594a96e4f148f0de5d7851b5ee05ff6983d03c8b488c1b6",
+    "runs/flux4b_oneid_online_face_qkvo_r128_768_20261002/validation-001000/oneid_11_s1.png": "8171e9b1ba376122917c10091cc138962c4140768da14c7b5e3aac826b967cf6",
+    "runs/flux4b_oneid_online_face_qkvo_r128_768_20261002/validation-001000/quality_per_image.csv": "6407277d7e1c0986b0c4db1bd566498e4f8b58261d28f029eccd6e86bcd497ed",
+    "runs/flux4b_oneid_online_face_qkvo_r128_768_20261002/validation-001000/quality_summary.json": "d0496618d157918fd33a0237eb4b0941d8165470e9bb3f701bf84ccd9f2e1f66",
+    "runs/flux4b_oneid_online_face_qkvo_r128_768_20261002/validation-002000/oneid_00_s1.png": "a1b5af21a569630983963a78f32b6cb69b335265d4ef83702045e17a9e059b68",
+    "runs/flux4b_oneid_online_face_qkvo_r128_768_20261002/validation-002000/oneid_03_s1.png": "30c5c1600f1d2aa09d5232b7f29559556d505333b5ff4924c6e48166066447d0",
+    "runs/flux4b_oneid_online_face_qkvo_r128_768_20261002/validation-002000/oneid_04_s1.png": "e2497f90445974c8046a5ea42d438f4cd5fa24f182047b17cd96dd6b9419910a",
+    "runs/flux4b_oneid_online_face_qkvo_r128_768_20261002/validation-002000/oneid_06_s1.png": "afd09c092ed09a337b7c3c863f81796f435ebbe5b6f8ad9b4f0136d26552553d",
+    "runs/flux4b_oneid_online_face_qkvo_r128_768_20261002/validation-002000/oneid_07.png": "2264ce5143dba4ca9c3fcd059ff92753b82f4bdf2d7ed3c0a8fe8cc50bf1aed4",
+    "runs/flux4b_oneid_online_face_qkvo_r128_768_20261002/validation-002000/quality_per_image.csv": "237f74be7619d421722df694d5684d3ebd9fb86339309f0a02359d4b0955b412",
+    "runs/flux4b_oneid_online_face_qkvo_r128_768_20261002/validation-002000/quality_summary.json": "f1435ce87ba35613f445f6479194605e3049d53a3710a31acb3774c397c35f07",
+    "sources/ai-toolkit-flux/extensions_built_in/diffusion_models/flux2/src/model.py": "11c6ec0d154f6c782a48dcdd6bc1f409f7026b118b9d4dcd3feacd48882f5a41"
+  },
+  "report_generator_sha256": "305fa88ec42eabb025ddc98a4d4810aeb191cb4cc0f72c164f61ea83627d175a",
+  "report_style_sha256": "32cdd7d322bb070af96db379b6888dc91577a0faa6c001f5024b0168fa693b80",
+  "pdf_sha256": "54ec5c613bca52f997a76e5d2dc1728414ca8723143785d7c6e8631217c04b64",
+  "checks": [
+    {
+      "page": 1,
+      "title": "FLUX1 | One identity, eight attention branches",
+      "page_text_bounds": "pass"
+    },
+    {
+      "page": 2,
+      "title": "FLUX1 | Which branched-attention experiment is this?",
+      "page_text_bounds": "pass"
+    },
+    {
+      "page": 3,
+      "title": "FLUX1 | Whole model: one frozen denoiser, eight trainable branches",
+      "page_text_bounds": "pass"
+    },
+    {
+      "page": 4,
+      "title": "FLUX1 | Exact insertion sites and gradient path",
+      "page_text_bounds": "pass"
+    },
+    {
+      "page": 5,
+      "title": "FLUX1 | Token layout: preserve positions while selecting face support",
+      "page_text_bounds": "pass"
+    },
+    {
+      "page": 6,
+      "title": "FLUX1 | Inside one branch: face queries read reference-face keys",
+      "page_text_bounds": "pass"
+    },
+    {
+      "page": 7,
+      "title": "FLUX1 | Attention arithmetic and native block composition",
+      "page_text_bounds": "pass"
+    },
+    {
+      "page": 8,
+      "title": "FLUX1 | Code: adapt native projections, then apply norm and RoPE",
+      "page_text_bounds": "pass"
+    },
+    {
+      "page": 9,
+      "title": "FLUX1 | Code: fractional routing and exact zero-mask rows",
+      "page_text_bounds": "pass"
+    },
+    {
+      "page": 10,
+      "title": "FLUX1 | Code: insert the output delta before the native gate",
+      "page_text_bounds": "pass"
+    },
+    {
+      "page": 11,
+      "title": "FLUX1 | What learns: 25,165,824 parameters in 64 tensors",
+      "page_text_bounds": "pass"
+    },
+    {
+      "page": 12,
+      "title": "FLUX1 | Two different masks, with explicit provenance",
+      "page_text_bounds": "pass"
+    },
+    {
+      "page": 13,
+      "title": "FLUX1 | Inference uses a frozen native scene at every denoising step",
+      "page_text_bounds": "pass"
+    },
+    {
+      "page": 14,
+      "title": "FLUX1 | Code: fresh face noise, native exterior context and paired CFG",
+      "page_text_bounds": "pass"
+    },
+    {
+      "page": 15,
+      "title": "FLUX1 | Training: fresh flow-matching inputs through the full denoiser",
+      "page_text_bounds": "pass"
+    },
+    {
+      "page": 16,
+      "title": "FLUX1 | Resolved training recipe and execution contract",
+      "page_text_bounds": "pass"
+    },
+    {
+      "page": 17,
+      "title": "FLUX1 | Evaluation: named fixed24, same person and fixed references",
+      "page_text_bounds": "pass"
+    },
+    {
+      "page": 18,
+      "title": "FLUX1 | Measured identity gain, with lower CLIP text alignment",
+      "page_text_bounds": "pass"
+    },
+    {
+      "page": 19,
+      "title": "FLUX1 | Paired results: 23 of 24 improve over native at update 1,000",
+      "page_text_bounds": "pass"
+    },
+    {
+      "page": 20,
+      "title": "FLUX1 | Whole-scene comparison: native, best and final checkpoint",
+      "page_text_bounds": "pass"
+    },
+    {
+      "page": 21,
+      "title": "FLUX1 | Face crops: large gain, small gain and the native regression",
+      "page_text_bounds": "pass"
+    },
+    {
+      "page": 22,
+      "title": "FLUX1 | Complete fixed24 gallery \u00b7 seed 0",
+      "page_text_bounds": "pass"
+    },
+    {
+      "page": 23,
+      "title": "FLUX1 | Complete fixed24 gallery \u00b7 seed 1",
+      "page_text_bounds": "pass"
+    },
+    {
+      "page": 24,
+      "title": "FLUX1 | Engineering evidence: native parity, learning and exact restart",
+      "page_text_bounds": "pass"
+    },
+    {
+      "page": 25,
+      "title": "FLUX1 | What the completed experiment establishes",
+      "page_text_bounds": "pass"
+    },
+    {
+      "page": 26,
+      "title": "FLUX1 | Reproducibility: exact sources, weights, data and checkpoints",
+      "page_text_bounds": "pass"
+    }
+  ],
+  "scope": "Same-identity diagnostic: 19 cross-view training pairs; 12 prompts x 2 seeds; no unseen-identity claim.",
+  "experiment_family": "FLUX1",
+  "note": "Current working tree contains later edits. Run snapshot, not live HEAD alone, defines the reported implementation."
+}

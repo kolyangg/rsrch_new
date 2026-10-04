@@ -32,7 +32,7 @@ recorded source.
 
 ## Training and validation contract
 
-Configuration: `configs/flux4b_oneid_online_face_qkvo_r128_768.yaml`.
+Configuration: `configs/FLUX1_local_4b_one_id.yaml`.
 
 | Setting | Value |
 | --- | --- |
@@ -101,7 +101,7 @@ retain all metrics in Comet/JSONL; console output is compact progress with ETA.
 ```bash
 # Admission check in a new output directory:
 envs/flux-toolkit/bin/python -m scripts.check_online_face_ba \
-  --config configs/flux4b_oneid_online_face_qkvo_r128_768.yaml \
+  --config configs/FLUX1_local_4b_one_id.yaml \
   --output runs/NEW_ADMISSION_NAME
 
 # New experiment after admission passes:

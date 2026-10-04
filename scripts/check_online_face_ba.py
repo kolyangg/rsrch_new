@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 import subprocess
 import sys
+from contextlib import nullcontext
 
 import torch
 import yaml
@@ -16,7 +17,8 @@ from ba_dit.config import ROOT, load_config
 from ba_dit.data.cache import load_pair
 from ba_dit.data.conditioning import TrainingConditioner
 from ba_dit.data.manifest import read_manifest
-from ba_dit.nn.masked_face_attention import training_mask
+from ba_dit.nn.masked_face_attention import training_mask, parameter_count
+from ba_dit.nn.batched_face_attention import collate, reference_batch, training_loss as batch_loss
 from ba_dit.runtime import backend_module
 from ba_dit.precision import make_scaler, device_memory, mixed
 
@@ -59,6 +61,20 @@ def parity(config, out):
         del cached, live
     tensors, _ = conditioner(row)
     tensors['target_face_mask'] = training_mask(row, config).cuda()
+    batch = config['training'].get('microbatch_size', 1)
+    if batch > 1:
+        pairs = [tensors]
+        other = [r for r in rows if r['sample_id'] != row['sample_id']][:batch-1]
+        if len(other) != batch-1:
+            raise ValueError('Admission needs distinct examples for the full microbatch')
+        for item in other:
+            pair, _ = conditioner(item)
+            pair['target_face_mask'] = training_mask(item, config).cuda()
+            pairs.append(pair)
+        tensors = collate(pairs)
+        del pairs, pair
+    def read_context():
+        return reference_batch(tensors['reference_masks'],config['branch']['max_reference_keys']) if batch > 1 else nullcontext()
     noisy = torch.randn_like(tensors['target_latent'])
     sigma = torch.tensor([.5], device='cuda', dtype=noisy.dtype)
     with torch.no_grad():
@@ -66,10 +82,10 @@ def parity(config, out):
     inventory = adapters.install(model, config, 'branch_only')
     params = {n:p for n,p in model.named_parameters() if p.requires_grad}
     assert len(params) == 64 and all('.reference_branch.' in n for n in params)
-    assert sum(p.numel() for p in params.values()) == 25165824
+    assert sum(p.numel() for p in params.values()) == parameter_count(config)
     before = {n:p.detach().cpu().clone() for n,p in params.items()}
     base_hash = frozen_hash(model)
-    with torch.no_grad():
+    with torch.no_grad(), read_context():
         off = backend.predict(model, tensors, noisy, sigma, config, False)
         assert torch.equal(native, off)
         zero_mask = {**tensors, 'target_face_mask': torch.zeros_like(tensors['target_face_mask'])}
@@ -86,8 +102,9 @@ def parity(config, out):
     gradients = []
     for _ in range(2):
         optimizer.zero_grad(set_to_none=True)
-        loss = backend.training_loss(model, tensors, config, True)
-        scaler.scale(loss).backward()
+        with read_context():
+            loss = batch_loss(backend,model,tensors,config) if batch > 1 else backend.training_loss(model,tensors,config,True)
+            scaler.scale(loss).backward()
         scaler.unscale_(optimizer)
         assert torch.isfinite(loss)
         assert all(p.grad is not None and torch.isfinite(p.grad).all() for p in params.values())
@@ -101,7 +118,7 @@ def parity(config, out):
     assert frozen_hash(model) == base_hash
     changes = {n:float((p.detach().cpu()-before[n]).norm()) for n,p in params.items()}
     assert all(changes.values())
-    with torch.no_grad():
+    with torch.no_grad(), read_context():
         trained = backend.predict(model, tensors, noisy, sigma, config, True)
         off = backend.predict(model, tensors, noisy, sigma, config, False)
     assert torch.equal(native, off) and not torch.equal(initial, trained)
@@ -190,7 +207,7 @@ def main(args):
         assert a['grad_scaler'] and len(a['cuda_rng']) == 2
     write(out/'resume_parity.json', {'exact_parameters':True,'exact_optimizer_scheduler_rng_cursor':True,
                                    'exact_gradient_scaler':mixed(config), 'cuda_rng_devices':len(a['cuda_rng']),
-                                   'optimizer_updates':2,'microbatch':1,
+                                   'optimizer_updates':2,'microbatch':config['training'].get('microbatch_size',1),
                                    'world_size':config['training'].get('world_size', 1),
                                    'gradient_accumulation':config['training']['grad_accum']})
     print('Fresh-process optimizer/RNG replay passed', flush=True)

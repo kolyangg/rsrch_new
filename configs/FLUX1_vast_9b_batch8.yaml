@@ -1,0 +1,54 @@
+schema_version: 2
+name: FLUX1_vast_9b_batch8
+model:
+  backend: flux
+  arch: flux2_klein_9b
+  weights: ${BA_ROOT}/weights/flux9b
+  encoder: ${BA_ROOT}/weights/flux9b_text
+  vae: ${BA_ROOT}/weights/flux_vae/ae.safetensors
+  revision_lock: ${BA_ROOT}/locks/weights-flux80.json
+data:
+  conditioning: online
+  train_manifest: ${BA_ROOT}/data/train_pairs_large.jsonl
+  train_limit: null
+  validation_manifest: ${BA_ROOT}/data/validation/manual_val_12_pilot.jsonl
+  target_size:
+  - 768
+  - 768
+  reference_size: 512
+  cache_dir: ${BA_ROOT}/cache/conditioning
+branch:
+  kind: masked_face_qkvo
+  rank: 128
+  alpha: 128
+  gamma: 1.0
+  query_chunk: 128
+  max_reference_keys: 512
+  mask_feather_pixels: 16
+lora:
+  rank: 8
+  alpha: 8
+training:
+  steps: 2000
+  grad_accum: 8
+  lr: 5.0e-05
+  warmup: 100
+  checkpoint_every: 500
+  validation_every: 1000
+  seed: 142
+  deterministic: true
+  gradient_checkpointing: true
+  weight_decay: 0.0
+  gradient_clip: 1.0
+  max_reserved_fraction: 0.8
+  microbatch_size: 1
+validation:
+  steps: 20
+  guidance: 4.0
+  limit: 12
+  batch_size: 2
+hardware:
+  min_vram_gb: 75
+logging:
+  comet_project: rsrch_new
+  enabled: true

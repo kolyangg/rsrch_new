@@ -1,5 +1,5 @@
 schema_version: 2
-name: flux4b_48_multi_id_large_qkvo_r128
+name: FLUX1_vast_4b
 model:
   backend: flux
   arch: flux2_klein_4b

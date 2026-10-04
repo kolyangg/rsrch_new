@@ -262,7 +262,7 @@ def main(args):
 
 if __name__ == '__main__':
     p = argparse.ArgumentParser()
-    p.add_argument('--config', type=Path, default=ROOT/'configs/clust/flux4b_2v100.yaml')
+    p.add_argument('--config', type=Path, default=ROOT/'configs/clust/FLUX1_cluster_4b_fp32.yaml')
     p.add_argument('--output', type=Path, required=True)
     p.add_argument('--worker', action='store_true')
     p.add_argument('--resolution', type=int, default=768)

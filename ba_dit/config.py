@@ -56,7 +56,7 @@ def load_config(path: str | Path) -> dict:
     for section, fields in FIELDS.items():
         optional = {"validation": {"batch_size"}, "branch": {"kind", "mask_feather_pixels"},
                     "data": {"conditioning", "encoder_device"},
-                    "model": {"dtype", "conditioning_dtype", "compute_precision"}, "training": {"world_size"}}
+                    "model": {"dtype", "conditioning_dtype", "compute_precision"}, "training": {"world_size", "microbatch_size"}}
         allowed = fields | optional.get(section, set())
         if not fields <= set(config[section]) or set(config[section]) - allowed:
             raise ValueError(f"Invalid {section} fields: missing={fields-set(config[section])}, unknown={set(config[section])-allowed}")
@@ -74,6 +74,14 @@ def load_config(path: str | Path) -> dict:
     if config['data'].get('encoder_device', 'cuda') not in {'cpu', 'cuda', 'cuda:1'}:
         raise ValueError('encoder_device must be cpu, cuda or cuda:1')
     world = config['training'].get('world_size', 1)
+    batch = config['training'].get('microbatch_size', 1)
+    if type(batch) is not int or batch < 1:
+        raise ValueError('microbatch_size must be a positive integer')
+    if batch > 1 and (world != 1 or config['model']['backend'] != 'flux' or
+            config['branch'].get('kind') != 'masked_face_qkvo' or
+            config['model'].get('dtype', 'bfloat16') != 'bfloat16' or
+            config['model'].get('conditioning_dtype', 'bfloat16') != 'bfloat16'):
+        raise ValueError('True microbatches currently require single-GPU BF16 masked FLUX')
     if type(world) is not int or world not in {1, 2}:
         raise ValueError('Supported world_size is 1 or 2')
     if world == 2 and (config['model']['backend'] != 'flux' or config['branch'].get('kind') != 'masked_face_qkvo'):
@@ -107,8 +115,8 @@ def load_config(path: str | Path) -> dict:
     if config['branch'].get('kind', 'reference_delta') not in {'reference_delta', 'masked_face_qkvo'}:
         raise ValueError('Unknown branch kind')
     if config['branch'].get('kind') == 'masked_face_qkvo':
-        if config['model']['arch'] != 'flux2_klein_4b' or config['branch'].get('mask_feather_pixels', -1) < 0:
-            raise ValueError('Masked Q/K/V/O requires FLUX4B and an explicit nonnegative mask feather')
+        if config['model']['backend'] != 'flux' or config['branch'].get('mask_feather_pixels', -1) < 0:
+            raise ValueError('Masked Q/K/V/O requires FLUX Klein and an explicit nonnegative mask feather')
     return config
 
 
@@ -129,7 +137,7 @@ def adapter_identity(config: dict) -> dict:
     implementation = ["adapters.py", "nn/reference_read_delta.py", "nn/sliced_native_lora.py", "backends/attention.py",
                       "backends/flux2_native.py", "backends/qwen21.py"]
     if config['branch'].get('kind') == 'masked_face_qkvo':
-        implementation += ['nn/masked_face_attention.py', 'nn/masked_face_flow.py']
+        implementation += ['nn/masked_face_attention.py', 'nn/masked_face_flow.py', 'nn/batched_face_attention.py']
     if 'compute_precision' in config['model']:
         implementation.append('precision.py')
     code = hashlib.sha256(b"".join((ROOT / "ba_dit" / name).read_bytes() for name in implementation)).hexdigest()

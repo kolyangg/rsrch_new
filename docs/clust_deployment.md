@@ -9,7 +9,7 @@ That result does not establish multi-ID generalization or V100 performance.
 
 ## Configuration and execution
 
-- Executable configuration: `configs/clust/flux4b_2v100.yaml`.
+- Executable configuration: `configs/clust/FLUX1_cluster_4b_fp32.yaml`.
 - Slurm script: `jobs/flux4b_clust_2v100.sbatch`.
 - Controller: `scripts/run_clust_v100.sh` → `scripts/run_multi_id_face_ba.py`.
 - Training: two DDP replicas, microbatch1 per GPU, accumulation4, **global batch8**.

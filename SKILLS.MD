@@ -1,3 +1,12 @@
+# HSE cluster training and Slurm jobs
+
+For training on `cluster` / `clust`, preparing sbatch files, quick GPU tests,
+resource availability, job status, cancellation, or checkpoint resume, use the
+installed [hse-cluster skill](/mnt/c/Users/ogure/.codex/skills/hse-cluster/SKILL.md).
+It reuses the existing `redshield-vpn` connection skill and includes a batch
+template, scheduler commands, and live-verified queue limits. Recheck account
+and queue limits before submitting; creating the skill did not submit training.
+
 # Vast.ai GPU lifecycle
 
 Use this project workflow when the user asks to find, rent, connect to, stop, restart, or terminate a Vast.ai GPU. The implementation is [`scripts/vast_gpu.py`](scripts/vast_gpu.py), a guarded wrapper around the [official Vast.ai CLI](https://github.com/vast-ai/vast-cli). Version 1.8.2 is installed in ignored `envs/vast-control/`, which the script finds automatically. To recreate it, run `python3 -m venv envs/vast-control && envs/vast-control/bin/python -m pip install vastai==1.8.2`. Keep it separate from the Qwen and FLUX training environments.

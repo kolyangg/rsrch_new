@@ -2,7 +2,7 @@
 schema_version: 1
 kind: training_proposal
 status: authorized_20k_submitted
-experiment: flux4b_clust_2v100_fp16_qkvo_r128_20k
+experiment: FLUX1_cluster_4b_fp32_proposal
 model: black-forest-labs/FLUX.2-klein-base-4B
 initialization: fresh_native_initialized_ba_not_one_id_checkpoint
 architecture:
@@ -92,5 +92,5 @@ blocking_work:
 - Prepare isolated cluster environment, pinned weights and private Comet credential.
 - Pass pretrained V100 parity/gradients/peak-memory/exact-resume admission before
   long training.
-executable_config: configs/clust/flux4b_2v100.yaml
+executable_config: configs/clust/FLUX1_cluster_4b_fp32.yaml
 sbatch: jobs/flux4b_clust_2v100.sbatch

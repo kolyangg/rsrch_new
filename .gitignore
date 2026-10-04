@@ -1,5 +1,6 @@
 .env
 .env.local
+/.vpn/
 /dropbox/
 .venv/
 envs/
@@ -23,8 +24,8 @@ data/bundles/
 data/train_pairs.jsonl
 data/train_pairs_*.jsonl
 data/train_pairs*.audit.json
-data/validation/output_masks/**/*.png
 
 # Cluster logs and transfer completion receipts
 /logs/
 /data/clust_large_transfer.json
+data/validation/output_masks/**/*.png

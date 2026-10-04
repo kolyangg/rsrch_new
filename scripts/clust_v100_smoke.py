@@ -24,7 +24,7 @@ def main():
         raise RuntimeError('Unexpected GPU or unsupported CUDA build')
     run = ROOT/'runs'/f'clust_v100_two_update_smoke_{os.environ["SLURM_JOB_ID"]}'
     run.mkdir(exist_ok=False)
-    config = load_config(ROOT/'configs/clust/flux4b_2v100.yaml')
+    config = load_config(ROOT/'configs/clust/FLUX1_cluster_4b_fp32.yaml')
     if args.dtype:
         config['model']['dtype'] = args.dtype
     original = Path(config['data']['train_manifest'])

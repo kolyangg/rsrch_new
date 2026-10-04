@@ -30,7 +30,7 @@ def sample_at(rows, cursor, seed):
     return rows[order[offset]]
 
 
-def train_segment(config, mode, run_dir, until, resume=None, init_adapter=None, allow_small_gpu=False, limit=None):
+def train_segment(config, mode, run_dir, until, resume=None, init_adapter=None, allow_small_gpu=False, limit=None, save_initial=False, timing_probe=None):
     if config['training'].get('world_size', 1) > 1:
         from ba_dit.distributed_training import train_segment as distributed_segment
         return distributed_segment(config, mode, run_dir, until, resume, init_adapter, limit)
@@ -71,10 +71,20 @@ def train_segment(config, mode, run_dir, until, resume=None, init_adapter=None, 
         step, cursor = restore_training(optimizer, schedule, resume, config, data_digest, scaler=scaler)
     elif init_adapter:
         load_adapters(model, init_adapter, config, mode)
+    if save_initial:
+        if resume or init_adapter:
+            raise ValueError('Initial checkpoint requires fresh adapters and optimizer')
+        checkpoint = save_training(model, optimizer, schedule, config, mode, run_dir, 0, 0, data_digest, scaler=scaler)
+        (run_dir / 'latest_checkpoint.txt').write_text(str(checkpoint)+'\n')
     experiment = connect(config, run_dir)
     trainable = trainable_parameters(model)
     branch_enabled = mode in {"branch_only", "lora_plus_branch"}
     face_masks = {}
+    microbatch = config['training'].get('microbatch_size', 1)
+    if microbatch > 1:
+        if mode != 'branch_only':
+            raise ValueError('Batched face training requires branch_only mode')
+        from ba_dit.nn.batched_face_attention import collate, reference_batch, training_loss as batch_loss
     if config['branch'].get('kind') == 'masked_face_qkvo':
         from ba_dit.nn.masked_face_attention import training_mask
     def face_mask_for(row):
@@ -95,6 +105,24 @@ def train_segment(config, mode, run_dir, until, resume=None, init_adapter=None, 
                 optimizer.zero_grad(set_to_none=True)
                 losses = []
                 for _ in range(config["training"]["grad_accum"]):
+                    if microbatch > 1:
+                        pairs = []
+                        for offset in range(microbatch):
+                            row = sample_at(rows, cursor+offset, config['training']['seed'])
+                            pair, metadata = conditioner(row)
+                            pair['target_face_mask'] = face_mask_for(row)
+                            pairs.append(pair)
+                        tensors = collate(pairs)
+                        del pairs, pair
+                        with reference_batch(tensors['reference_masks'], config['branch']['max_reference_keys']):
+                            loss = batch_loss(backend, model, tensors, config)
+                            if not torch.isfinite(loss):
+                                raise RuntimeError(f'Nonfinite loss at batch cursor {cursor}')
+                            (loss/config['training']['grad_accum']).backward()
+                        losses.append(float(loss.detach()))
+                        cursor += microbatch
+                        del tensors, loss
+                        continue
                     row = sample_at(rows, cursor, config["training"]["seed"])
                     tensors, metadata = conditioner(row)
                     if config['branch'].get('kind') == 'masked_face_qkvo':
@@ -159,6 +187,8 @@ def train_segment(config, mode, run_dir, until, resume=None, init_adapter=None, 
                 (run_dir / "latest_checkpoint.txt").write_text(str(checkpoint) + "\n")
             if fraction > config["training"]["max_reserved_fraction"]:
                 raise RuntimeError(f"Memory acceptance failed: {fraction:.3f} > {config['training']['max_reserved_fraction']:.3f}; checkpoint saved")
+            if timing_probe is not None and step == 2:
+                timing_probe(model, backend, config, run_dir, experiment)
     finally:
         if experiment:
             experiment.end()

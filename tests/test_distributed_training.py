@@ -30,7 +30,7 @@ def worker(rank, directory, resumed):
                             rank=rank, world_size=2)
     try:
         assert not all_true(rank == 0, 'cpu')
-        config = load_config(ROOT/'configs/clust/flux4b_2v100.yaml')
+        config = load_config(ROOT/'configs/clust/FLUX1_cluster_4b_fp32.yaml')
         torch.manual_seed(42)
         model = SlicedLoRALinear(torch.nn.Linear(8,8,bias=False), [(0,8,0,8)], 2,2)
         serial = copy.deepcopy(model)

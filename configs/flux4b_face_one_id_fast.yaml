@@ -1,0 +1,17 @@
+# Separate 512 px, two-prompt overfit diagnostic; not the original 768 px panel.
+name: flux4b_face_one_id_fast
+base_config: configs/flux4b_48_one_id.yaml
+resolution: 512
+train_images: 4
+validation_images: 2
+inference_steps: 20
+rank: 16
+gamma: 1.0
+gate_prior: 0.1
+sigmas: [0.2, 0.5, 0.8]
+steps: 300
+batch_size: 4
+lr: 0.003
+router_weight: 1.0
+probe_every: 50
+seed: 142

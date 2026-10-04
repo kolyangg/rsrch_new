@@ -34,6 +34,7 @@ def main():
     parser.add_argument("--config", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--validation-dir", type=Path)
+    parser.add_argument("--learned-face-gate", action="store_true", help="Describe the face-suffix router used by this validation")
     args = parser.parse_args()
     config = load_config(args.config)
     rows = read_manifest(config["data"]["validation_manifest"])[:config["validation"]["limit"]]
@@ -117,8 +118,14 @@ def main():
             fig.savefig(args.output / name, dpi=145, facecolor="white")
             plt.close(fig)
             figures.append(name)
+    query_scope = ("model-predicted gate on generated-image tokens; no external target-face mask is passed"
+                   if args.learned_face_gate else "all generated-image tokens; no target-face gate is passed")
+    gate_note = ("The face-suffix branch predicts a gate for each generated-image token from native queries. "
+                 "Green masks on generated images are frozen evaluation masks and are never supplied to the branch."
+                 if args.learned_face_gate else
+                 "The branch currently updates all generated-image tokens. Green masks on generated images are frozen evaluation masks and do not constrain branch queries.")
     summary = {"profile": config["name"], "validation_items": len(rows), "references": audit,
-        "target_query_scope": "all generated-image tokens; no target-face gate is passed",
+        "target_query_scope": query_scope,
         "output_face_mask_role": "evaluation only"}
     (args.output / "audit.json").write_text(json.dumps(summary, indent=2) + "\n")
     (args.output / "index.html").write_text('<!doctype html><meta charset="utf-8"><title>Validation face masks</title>'
@@ -126,7 +133,7 @@ def main():
         f'<h1>{html.escape(config["name"])}: actual validation masks</h1>'
         '<p>Blue: source face box. Orange: reference token cells selected by branched attention, read directly from the VAE cache and checked against runtime geometry. Each cell covers 16×16 preprocessed pixels, so mask edges extend slightly beyond the face box.</p>'
         '<p>A maximum of 512 reference keys is used. If a face occupies more cells, the model selects spatially spread cells within that face; the gaps in the orange overlay show this selection.</p>'
-        '<p><strong>The branch currently updates all generated-image tokens.</strong> Green masks on generated images are frozen evaluation masks and do not constrain branch queries.</p>'
+        f'<p>{html.escape(gate_note)}</p>'
         '<p><a href="audit.json">Download mask verification details</a></p>'
         + ''.join(f'<a href="{name}"><img src="{name}" alt="{name}"></a>' for name in figures))
     print(json.dumps({"output": str(args.output), "validation_items": len(rows), "unique_references": len(audit),

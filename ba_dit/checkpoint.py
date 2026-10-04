@@ -23,6 +23,8 @@ def training_code_digest(config):
     files = ["training.py", f"backends/{config['model']['backend']}_runtime.py", "data/cache.py", "data/geometry.py"]
     if config['data'].get('conditioning') == 'online':
         files.append('data/conditioning.py')
+    if config['training'].get('microbatch_size', 1) > 1:
+        files.append('nn/batched_face_attention.py')
     if config['training'].get('world_size', 1) > 1:
         files += ['distributed_training.py', 'checkpoint.py']
     if 'compute_precision' in config['model']:
@@ -94,7 +96,8 @@ def restore_training(optimizer, scheduler, checkpoint, config, data_digest=None,
     checkpoint = Path(checkpoint)
     manifest = json.loads((checkpoint / "manifest.json").read_text())
     if manifest["config_sha256"] != config_digest(config):
-        raise ValueError("Resume requires the exact saved configuration; use --init-adapter for a new curriculum")
+        from ba_dit.continuation import verify_extension
+        verify_extension(checkpoint, config, manifest['config_sha256'])
     if manifest.get("data_sha256") != data_digest:
         raise ValueError("Training images, prompts, geometry or pairing order changed since checkpoint")
     if manifest["training_code_sha256"] != training_code_digest(config):

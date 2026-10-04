@@ -1,0 +1,8 @@
+FLUX1 / Base4B online masked Q/K/V/O — completed one-ID architecture and results
+Rebuild from the project root:
+  envs/report/bin/python reports/261003_online_face_ba/build_report.py
+
+Uses the existing report environment and immutable local run artifacts. No GPU or network calls.
+Sources: saved source_snapshot, recorded patched Toolkit, native/BA images and per-image scores.
+Includes searchable code, 26 slides, PDF bookmarks, 3 standalone vector schemes and source audit.
+The original fixed96 benchmark and current multi-ID deployment are outside this report.

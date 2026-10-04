@@ -14,8 +14,10 @@ def face_alpha(size, box, feather=16):
     width, height = size
     if box is None or not (0 <= box[0] < box[2] <= width and 0 <= box[1] < box[3] <= height):
         raise ValueError("A reviewed native-backbone face box is required")
-    y, x = np.mgrid[:height, :width]
-    distance = np.maximum.reduce([box[0]-x, x-(box[2]-1), box[1]-y, y-(box[3]-1)])
+    x, y = np.arange(width), np.arange(height)
+    dx = np.maximum(box[0]-x, x-(box[2]-1))
+    dy = np.maximum(box[1]-y, y-(box[3]-1))
+    distance = np.maximum(dy[:, None], dx[None, :])
     alpha = np.clip(1-distance/max(feather, 1), 0, 1).astype(np.float32)
     return torch.from_numpy(alpha)[None, None]
 

@@ -4,6 +4,15 @@ Research CL39-inspired branched reference attention on FLUX.2-klein Base 4B/9B a
 
 For Vast.ai GPU offer search, provisioning, SSH, stopping, and termination, follow `SKILLS.MD`. Show current offers and costs before renting; provision only after the user confirms a specific offer and configuration.
 
+Current and historical machine assignments are recorded in `MACHINES.md`.
+AICODE-NOTE: On 2026-10-03 the user confirmed Vast instance **53994096** for the
+FLUX4B multi-ID deployment. Instance53574065 is historical and no longer exists
+in the account; do not infer the current host from older run notes.
+
+# Experiment naming
+
+AICODE-NOTE: The user named the online masked Q/K/V/output BA experiment **FLUX1** on2026-10-04. Use FLUX1 in documentation, diagrams and fresh-launch configs. Keep immutable historical run/checkpoint names and hashes unchanged. Distinguish Vast9B and HSE-cluster4B variants; do not relabel older cached-face-head or rank16 delta experiments as FLUX1.
+
 # Working practices
 
 - Start by checking branch, worktree status, and relevant `AICODE-NOTE:`, `AICODE-TODO:`, and `AICODE-QUESTION:` anchors. Preserve unrelated edits.
