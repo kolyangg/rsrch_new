@@ -11,9 +11,38 @@ import zipfile
 from unittest.mock import Mock, patch
 
 from scripts.upload_clust_comet import ArchiveUploader, complete_archive, keep_alive, scheduler_state
+from scripts.sync_clust_comet import Publisher
 
 
 class CometUploaderTest(unittest.TestCase):
+    def test_resume_keeps_interrupted_metrics_out_of_new_curve(self):
+        # The cancelled attempt has step 2 already, but its replay must still
+        # publish and verify against the new attempt's curve.
+        histories = {'train/loss': {1: 9.0, 2: 8.0}}
+        api, experiment = Mock(), Mock()
+        def metrics(name):
+            return [{'step': step, 'metricValue': value}
+                    for step, value in histories.get(name, {}).items()]
+        def log(values, step):
+            for name, value in values.items():
+                histories.setdefault(name, {})[step] = value
+        api.get_metrics.side_effect = metrics
+        api.get_asset_list.return_value = []
+        api.get_metrics_summary.return_value = []
+        experiment.log_metrics.side_effect = log
+        experiment.flush.return_value = True
+        sdk = SimpleNamespace(API=Mock(return_value=SimpleNamespace(get_experiment_by_key=lambda key: api)),
+                              ExistingExperiment=Mock(return_value=experiment))
+        with tempfile.TemporaryDirectory() as directory, patch.dict(sys.modules, {'comet_ml': sdk}):
+            folder = Path(directory)
+            (folder/'metrics.jsonl').write_text(''.join(json.dumps({'step': step, 'train/loss': step/10})+'\n'
+                                                       for step in range(1, 5)))
+            publisher = Publisher(folder, 'key', 'resume_123/')
+            publisher.publish()
+            self.assertEqual(histories['train/loss'], {1: 9.0, 2: 8.0})
+            self.assertEqual(histories['resume_123/train/loss'], {1: 0.1, 2: 0.2, 4: 0.4})
+            self.assertEqual(json.loads(publisher.receipt.read_text())['verified_metric_step'], 4)
+
     def test_open_empty_archive_is_not_ready_for_upload(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory)/'open.zip'

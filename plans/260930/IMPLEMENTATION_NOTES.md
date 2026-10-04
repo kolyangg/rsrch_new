@@ -817,3 +817,53 @@ running but does not restart across a WSL reboot. For a future authorized
 resume, start a status logger and relay for the new Slurm job ID; retained Comet
 history beyond the checkpoint must be handled explicitly to avoid treating
 repeated optimizer-step numbers as new distinct updates.
+
+
+## 2026-10-04: Requested checkpoint-500 resume and cancellation investigation
+
+The user explicitly requested investigation and continuation. Slurm accounting
+still records job 4374072 as CANCELLED by 0 at 00:03:17 UTC, with batch exit 0:15
+(SIGTERM), Reason=None, and empty Comment/AdminComment/SystemComment. Runtime
+was 3h 01m 56s against a 50-hour limit. The rocky partition has PreemptMode=OFF;
+there was no cn-006 node event in the cancellation window and no other root
+cancellation in that window. The account/project and quotas remain valid.
+The account has no local notification mailbox, and the controller log lives on
+the scheduler host, unavailable from the login account. Thus a root/system-issued
+cancellation is established; the exact administrator or automated-policy trigger
+is not exposed. Do not call this ordinary queue preemption, a training exception,
+an OOM, or a timeout. No support message was sent.
+
+All 25 immutable training source hashes still match. Backed up checkpoint 000500
+locally under scratch/clust-resume-20261004, verified every file against its
+remote SHA256, and loaded it on CPU: 64 finite adapter tensors, 64 finite optimizer
+states at step 500, cursor 500, scheduler step 500, both CUDA RNG states and loss
+scale 32 are intact. The unchanged trainer restores model, optimizer, scheduler,
+scaler and RNG; the full fixed96 panel and 20,000-update endpoint are retained.
+
+Preserved the complete interrupted metric file and separate uncheckpointed
+steps 501–702 before atomically returning metrics.jsonl to steps 1–500. Submitted
+one explicit resume as job 4374962 at 08:28:08 UTC using the existing AMP sbatch
+with --resume, two V100s, 8 CPUs, proj_1892/rocky. The 36-hour allocation covers
+approximately 20 hours of remaining updates plus serial validation and margin,
+within the user's 50-hour budget. Automatic requeue remains disabled. Resume
+receipt: remote scratch/clust-v100/resume-4374962.json, mirrored locally under
+scratch/clust-resume-20261004; it pins checkpoint hashes and the exact command.
+
+Comet retains immutable key 5d31de48010446248639e65a65236cbe. The relay now accepts
+an attempt-specific metric prefix so replayed steps do not merge with abandoned
+points or get skipped as already published. The active curve is
+resume_4374962/train/loss; its verified history starts at 1 and includes checkpoint
+500. Original train/loss and discarded-step evidence remain available. Chart
+metrics publish every 2 updates (plus step 1), keeping 20k training below Comet's
+published 15k-values-per-metric limit; metrics.jsonl retains every update. Source:
+https://www.comet.com/docs/v2/guides/experiment-management/limits-and-performance/.
+The relay also uploads resume receipts and discarded-step history as assets.
+
+CPU-only status logger 4374964 is RUNNING on cn-016. Local systemd relay
+rsrch-clust-comet-4374962 is active, with repeated successful server verification
+of 251 loss points through 500 and 109 existing images. Both stop with the target
+job and have a 7-day upper bound to include queue time; neither resubmits jobs.
+Five focused tests passed, including isolation of replayed metrics from the
+cancelled attempt, plus syntax and whitespace checks. No training code changed.
+At 08:31 UTC training remained PENDING/Priority; the scheduler estimated
+09:19:45 UTC (10:19:45 London) today. This is a mutable estimate, not a start claim.

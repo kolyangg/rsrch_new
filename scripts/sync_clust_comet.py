@@ -19,7 +19,8 @@ def write(path, value):
 
 def sync(run_name, destination):
     includes = ['metrics.jsonl', 'status.json', 'comet-live-status.json', 'comet_experiment.json',
-                'resolved_config.yaml', '*.done.json', 'paired_faces_*.png', 'mask_overlays.png']
+                'resolved_config.yaml', 'resume_latest.json', 'uncheckpointed_metrics_*.jsonl',
+                '*.done.json', 'paired_faces_*.png', 'mask_overlays.png']
     command = ['redshield-vpn', 'exec', 'russia', '--', 'rsync', '-rt', '--partial',
                '--delay-updates', '--timeout=90', *[f'--include=/{p}' for p in includes],
                '--include=/validation-*/', '--exclude=*_raw.png', '--include=/validation-*/*.png',
@@ -69,9 +70,11 @@ def completed_outputs(folder):
 
 
 class Publisher:
-    def __init__(self, folder, key):
+    def __init__(self, folder, key, metric_prefix='', metric_every=2):
         from comet_ml import API, ExistingExperiment
         self.folder, self.key = folder, key
+        self.metric_prefix, self.metric_every = metric_prefix, metric_every
+        self.loss_metric = metric_prefix+'train/loss'
         self.api = API(cache=False).get_experiment_by_key(key)
         if self.api is None:
             raise RuntimeError('The existing Comet experiment was not found')
@@ -79,19 +82,28 @@ class Publisher:
             auto_metric_logging=False, log_env_details=False, log_code=False, log_git_metadata=False,
             log_git_patch=False, log_graph=False)
         self.experiment.log_other('cluster/artifact_transport', 'workstation rsync relay')
-        self.steps = {int(r['step']) for r in self.api.get_metrics('train/loss') if r['step'] is not None}
+        self.experiment.log_other('cluster/active_training_metric', self.loss_metric)
+        self.experiment.log_other('cluster/metric_every', metric_every)
+        self.steps = {int(r['step']) for r in self.api.get_metrics(self.loss_metric) if r['step'] is not None}
         self.receipt = folder/'publisher_verified.json'
 
     def publish(self):
         rows = training_rows(self.folder)
+        # 20k updates exceed Comet's 15k-values-per-metric limit. Full history
+        # stays in metrics.jsonl; the default chart interval gives 10,001 points.
+        chart_rows = [r for r in rows if r['step'] == 1 or r['step'] % self.metric_every == 0]
         existing_assets = self.api.get_asset_list()
         image_keys = {(a['fileName'], a.get('step')) for a in existing_assets if a.get('type') == 'image'}
         asset_names = {a['fileName'] for a in existing_assets}
         current = {(v['name'],v.get('stepCurrent')) for v in self.api.get_metrics_summary()}
-        new = [r for r in rows if r['step'] not in self.steps]
+        new = [r for r in chart_rows if r['step'] not in self.steps]
         for row in new:
-            self.experiment.log_metrics({k:v for k,v in row.items() if k != 'step'}, step=row['step'])
+            self.experiment.log_metrics({self.metric_prefix+k:v for k,v in row.items() if k != 'step'}, step=row['step'])
         images, assets, summaries = completed_outputs(self.folder)
+        assets.extend((p, p.name, None) for p in self.folder.glob('uncheckpointed_metrics_*.jsonl'))
+        if (self.folder/'resume_latest.json').exists():
+            record = json.loads((self.folder/'resume_latest.json').read_text())
+            assets.append((self.folder/'resume_latest.json', f"resume-{record['job_id']}.json", record['checkpoint_step']))
         wanted_images = {(name+'.png',step) for _,name,step,_ in images}
         for path,name,step,metadata in images:
             if (name+'.png',step) not in image_keys:
@@ -108,14 +120,14 @@ class Publisher:
         actual_images = {(a['fileName'],a.get('step')) for a in self.api.get_asset_list() if a.get('type') == 'image'}
         if not wanted_images <= actual_images:
             raise RuntimeError(f'Comet has not confirmed {len(wanted_images-actual_images)} images yet')
-        if rows:
+        if chart_rows:
             # SDK batches may arrive out of step order; summary.stepCurrent is
             # the most recently received point, not the highest optimizer step.
             for attempt in range(6):
-                actual = {int(v['step']):float(v['metricValue']) for v in self.api.get_metrics('train/loss')
+                actual = {int(v['step']):float(v['metricValue']) for v in self.api.get_metrics(self.loss_metric)
                           if v['step'] is not None}
                 if all(r['step'] in actual and math.isclose(actual[r['step']], r['train/loss'],
-                           rel_tol=1e-6, abs_tol=1e-8) for r in rows):
+                           rel_tol=1e-6, abs_tol=1e-8) for r in chart_rows):
                     break
                 if attempt == 5:
                     raise RuntimeError('Comet training history has not caught up')
@@ -123,6 +135,8 @@ class Publisher:
         self.steps.update(r['step'] for r in new)
         result = {'experiment_key':self.key, 'verified_unix_seconds':time.time(),
                   'training_step':rows[-1]['step'] if rows else 0, 'verified_images':len(wanted_images),
+                  'loss_metric':self.loss_metric, 'metric_every':self.metric_every,
+                  'verified_metric_step':chart_rows[-1]['step'] if chart_rows else 0,
                   'new_training_updates':len(new), 'completed_panels':sorted({s for _,_,s,_ in images})}
         write(self.receipt,result)
         print(json.dumps(result),flush=True)
@@ -134,9 +148,13 @@ def main():
     parser.add_argument('--job-id',required=True)
     parser.add_argument('--experiment-key',required=True)
     parser.add_argument('--once',action='store_true')
+    parser.add_argument('--metric-prefix',default='',help='Unique prefix for a resumed attempt, retaining interrupted curves')
+    parser.add_argument('--metric-every',type=int,default=2)
     args=parser.parse_args()
     if not re.fullmatch(r'[A-Za-z0-9_-]+',args.run_name) or not args.job_id.isdigit():
         parser.error('Expected a simple run name and numeric Slurm job ID')
+    if args.metric_every < 1 or (args.metric_prefix and not re.fullmatch(r'[A-Za-z0-9_-]+/',args.metric_prefix)):
+        parser.error('Expected a positive metric interval and a simple optional prefix ending in /')
     for line in (ROOT/'.env').read_text().splitlines():
         if line.startswith('COMET_API_KEY='):
             os.environ['COMET_API_KEY']=line.split('=',1)[1].strip().strip('"\'')
@@ -159,7 +177,7 @@ def main():
             observed=json.loads(observed_path.read_text()) if observed_path.exists() else None
             if observed and observed['job_id'] != args.job_id:
                 raise ValueError('Slurm job identity changed; stop rather than publishing a different run')
-            publisher=publisher or Publisher(folder,args.experiment_key)
+            publisher=publisher or Publisher(folder,args.experiment_key,args.metric_prefix,args.metric_every)
             publisher.publish()
             if args.once or (observed and not observed['active']):
                 if observed and not observed['active']:
