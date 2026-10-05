@@ -2927,3 +2927,19 @@ definitions remain unchanged. Serial validation at 0/500/1000/1500/2000.
 Comet project `rsrch_new`, immutable key `7c88a5c362164fdbad2df18c2f629153`.
 New ignored caches/weights/run artifacts reside on `/mnt/c/Users/ogure/rsrch_flux2`
 because Linux had only ~250MB free. No historical artifacts were removed.
+
+
+### 2026-10-05 — FLUX2 continuous Comet status and streaming validation images
+
+AICODE-NOTE: User clarified that every batch means each **validation batch**,
+not new generation during optimizer batches. Existing checkpoint schedule and
+all numerical training code remain unchanged. Added `scripts/flux2_live.py` as
+a separate execution overlay, reusing the tested streaming decoder. Original
+run source hashes and checkpoint identities are retained. Continuous Comet
+status publisher is active on the original key; per-batch decoding/upload is
+queued to take over at the 1000-step checkpoint after the current training
+worker finishes. Handoff never kills an in-progress optimizer segment.
+Validation GPU use remains serial; Comet no longer ends between stages after
+the live worker wrapper takes over. Upload failures retry outside the GPU worker.
+Five focused lifecycle/publication/streaming/handoff tests passed. Live runtime
+receipts are under the existing run; see `docs/FLUX2_LOCAL.md`.

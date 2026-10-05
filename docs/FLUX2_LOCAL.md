@@ -110,3 +110,33 @@ Run: `runs/FLUX2_local_4b_one_id_20261005`. Immutable Comet key:
 The machine-readable evidence and source hashes are in `FLUX2_ADMISSION.json`.
 The legacy `b_gradient_norm`/`updated_b_matrices` logs apply to older LoRA modules;
 FLUX2 uses the overall gradient norm and its admission parameter inventory.
+
+## Live Comet presentation overlay (2026-10-05)
+
+The user requested continuous Comet Running status and images after **each
+validation batch**, retaining the 500-step validation schedule.
+`scripts/flux2_live.py` adds a CPU publisher with Comet keep-alives and batch
+image upload receipts. Stage SDK sessions still flush, but no longer mark the
+whole experiment ended. The existing tested `StreamingDecoder` decodes each
+completed batch serially on the same GPU, preserves sampler RNG, verifies
+checkpoint/native-image hashes, writes composed PNGs atomically, and enforces
+the existing memory gate. Uploads happen from the CPU publisher within its
+five-second polling cycle; transient network errors retry without stopping GPU
+work. Training still yields the GPU for scheduled validation.
+
+Deployment uses an execution overlay recorded in the run's
+`live_execution_policy.json`; original source identity and snapshots are not
+rewritten. The ongoing 500→1000 training segment continues unchanged. A
+supervised handoff waits for its successful checkpoint/completed-command record,
+then replaces the old controller during restartable validation. No optimizer
+updates are discarded. Complete latents are reused; any interrupted incomplete
+latent is quarantined and regenerated. Subsequent stages use the live wrapper.
+
+Services: `flux2-live-publisher-20261005` (active publisher, retries on failure)
+and `flux2-live-controller-20261005` (boundary handoff, then controller). The
+original controller stays in charge until handoff. All use Comet experiment
+`7c88a5c362164fdbad2df18c2f629153`. `live_progress.json`,
+`live_uploaded_images.json`, and `live_handoff.json` provide local receipts.
+Focused checks cover immediate per-batch publication, failed-upload retry,
+no duplicate acknowledged uploads, pixel/RNG preservation, restored hooks on
+failure, and checkpoint-boundary handoff ordering.
