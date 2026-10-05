@@ -20,7 +20,12 @@ class TrainingConditioner:
         if not self.online:
             # Safetensors resolves bare "cuda" to cuda:0, regardless of the
             # process's current device. Each DDP rank must load its own inputs.
-            return load_pair(self.config, row, device=f'cuda:{torch.cuda.current_device()}')
+            pair = load_pair(self.config, row, device=f'cuda:{torch.cuda.current_device()}')
+            if self.config.get('branch', {}).get('kind') == 'flux2_face':
+                tensors, metadata = pair
+                from ba_dit.data.flux2_memory import load_memory
+                tensors.update(load_memory(self.config, row, device=f'cuda:{torch.cuda.current_device()}'))
+            return pair
         # Encoding must not advance the RNG used by flow noise/timestep sampling.
         with torch.no_grad(), torch.random.fork_rng(devices=conditioning_devices(self.encoder)):
             text, text_info = self.backend.encode_text(self.encoder, self.config, row)

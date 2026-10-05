@@ -31,7 +31,7 @@ def portable_config(config):
     result = copy.deepcopy(config)
     root = Path(os.getenv("BA_ROOT", ROOT)).resolve()
     for section, fields in (("model", ("weights", "encoder", "vae", "revision_lock")),
-                            ("data", ("train_manifest", "validation_manifest", "cache_dir", "identity_supervision"))):
+                            ("data", ("train_manifest", "validation_manifest", "cache_dir", "identity_supervision", "flux2_cache"))):
         for field in fields:
             if field not in result[section]:
                 continue
@@ -57,7 +57,7 @@ def load_config(path: str | Path) -> dict:
         raise ValueError(f"Expected schema 2 and fields {sorted(expected)}")
     for section, fields in FIELDS.items():
         optional = {"validation": {"batch_size"}, "branch": {"kind", "mask_feather_pixels", "reference_bank", "token_ownership"},
-                    "data": {"conditioning", "encoder_device", "identity_supervision"},
+                    "data": {"conditioning", "encoder_device", "identity_supervision", "flux2_cache"},
                     "model": {"dtype", "conditioning_dtype", "compute_precision"}, "training": {"world_size", "microbatch_size", "identity_loss"}}
         allowed = fields | optional.get(section, set())
         if not fields <= set(config[section]) or set(config[section]) - allowed:
@@ -115,11 +115,17 @@ def load_config(path: str | Path) -> dict:
         raise ValueError("Invalid memory gate or branch scale")
     if config["validation"].get("batch_size", 1) <= 0:
         raise ValueError("Validation batch size must be positive")
-    if config['branch'].get('kind', 'reference_delta') not in {'reference_delta', 'masked_face_qkvo'}:
+    if config['branch'].get('kind', 'reference_delta') not in {'reference_delta', 'masked_face_qkvo', 'flux2_face'}:
         raise ValueError('Unknown branch kind')
     if config['branch'].get('kind') == 'masked_face_qkvo':
         if config['model']['backend'] != 'flux' or config['branch'].get('mask_feather_pixels', -1) < 0:
             raise ValueError('Masked Q/K/V/O requires FLUX Klein and an explicit nonnegative mask feather')
+    if config['branch'].get('kind') == 'flux2_face':
+        if (config['model']['backend'] != 'flux' or world != 1 or batch != 1 or
+                config['validation'].get('batch_size', 1) != 1 or
+                config['branch'].get('token_ownership') != 'binary_support' or
+                not config['data'].get('flux2_cache') or config['data'].get('conditioning', 'cached') != 'cached'):
+            raise ValueError('FLUX2 requires single-GPU cached conditioning and binary face ownership')
     bank = config['branch'].get('reference_bank', 'joint')
     ownership = config['branch'].get('token_ownership', 'soft')
     if bank not in {'joint', 'isolated_image'} or ownership not in {'soft', 'binary_support'}:
@@ -133,7 +139,7 @@ def load_config(path: str | Path) -> dict:
         bf16 = (config['model'].get('dtype', 'bfloat16') == 'bfloat16' and
                 config['model'].get('conditioning_dtype', 'bfloat16') == 'bfloat16')
         v100 = config['model'].get('compute_precision') == 'amp_fp16_fp32_branch'
-        if config['branch'].get('kind') != 'masked_face_qkvo' or batch != 1 or not (bf16 or v100):
+        if config['branch'].get('kind') not in {'masked_face_qkvo', 'flux2_face'} or batch != 1 or not (bf16 or v100):
             raise ValueError('FLUX1 follow-ups require masked FLUX, microbatch 1 and BF16 or the explicit V100 precision policy')
     if objective.get('weight', 0) > 0 and not config['data'].get('identity_supervision'):
         raise ValueError('Identity supervision requires its prepared data path and the live frozen VAE')
@@ -162,6 +168,8 @@ def adapter_identity(config: dict) -> dict:
         implementation.append('nn/isolated_reference.py')
     if 'compute_precision' in config['model']:
         implementation.append('precision.py')
+    if config['branch'].get('kind') == 'flux2_face':
+        implementation += ['nn/flux2_face.py', 'data/flux2_memory.py']
     code = hashlib.sha256(b"".join((ROOT / "ba_dit" / name).read_bytes() for name in implementation)).hexdigest()
     patch_name = "flux2_reference_branch_and_offload.patch" if config["model"]["backend"] == "flux" else "qwen21_local_pairs_comet.patch"
     identity = {"backend": config["model"]["backend"], "arch": config["model"]["arch"],
@@ -173,4 +181,7 @@ def adapter_identity(config: dict) -> dict:
         identity['precision'] = {k: config['model'].get(k, 'bfloat16') for k in ('dtype', 'conditioning_dtype')}
     if 'compute_precision' in config['model']:
         identity['precision']['compute_precision'] = config['model']['compute_precision']
+    if config['branch'].get('kind') == 'flux2_face':
+        from ba_dit.data.flux2_memory import memory_identity
+        identity['flux2_memory'] = memory_identity(config)
     return identity

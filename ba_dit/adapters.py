@@ -17,7 +17,12 @@ def install(model, config, mode):
     branch = config["branch"]
     if mode in {"branch_only", "lora_plus_branch"}:
         options = dict(rank=branch["rank"], alpha=branch["alpha"], gamma=branch["gamma"], query_chunk=branch["query_chunk"])
-        if branch.get('kind') == 'masked_face_qkvo':
+        if branch.get('kind') == 'flux2_face':
+            if mode != 'branch_only':
+                raise ValueError('FLUX2 trains only its face branch')
+            from ba_dit.nn.flux2_face import install as install_flux2
+            install_flux2(model, config)
+        elif branch.get('kind') == 'masked_face_qkvo':
             if mode != 'branch_only':
                 raise ValueError('Masked one-ID Q/K/V/O trains only branch-local adapters')
             from ba_dit.nn.masked_face_attention import install as install_face_attention

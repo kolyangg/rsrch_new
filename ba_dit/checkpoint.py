@@ -20,7 +20,8 @@ def trainable_parameters(model):
 def training_code_digest(config):
     import hashlib
     from ba_dit.config import ROOT
-    files = ["training.py", f"backends/{config['model']['backend']}_runtime.py", "data/cache.py", "data/geometry.py"]
+    files = ['nn/flux2_face.py', 'data/flux2_memory.py'] if config['branch'].get('kind') == 'flux2_face' else []
+    files += ["training.py", f"backends/{config['model']['backend']}_runtime.py", "data/cache.py", "data/geometry.py"]
     if config['data'].get('conditioning') == 'online':
         files.append('data/conditioning.py')
     if config['training'].get('microbatch_size', 1) > 1:

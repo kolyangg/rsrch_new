@@ -91,12 +91,15 @@ def parity(config, out):
     def read_context():
         return reference_batch(tensors['reference_masks'],config['branch']['max_reference_keys']) if batch > 1 else nullcontext()
     noisy = torch.randn_like(tensors['target_latent'])
+    tensors['flux2_context_noise'] = noisy
     sigma = torch.tensor([.5], device='cuda', dtype=noisy.dtype)
     with torch.no_grad():
         native = backend.predict(model, tensors, noisy, sigma, config, False)
     inventory = adapters.install(model, config, 'branch_only')
     params = {n:p for n,p in model.named_parameters() if p.requires_grad}
-    assert len(params) == 64 and all('.reference_branch.' in n for n in params)
+    assert all('reference_branch.' in n for n in params)
+    if config['branch'].get('kind') != 'flux2_face':
+        assert len(params) == 64
     assert sum(p.numel() for p in params.values()) == parameter_count(config)
     before = {n:p.detach().cpu().clone() for n,p in params.items()}
     base_hash = frozen_hash(model)
@@ -162,6 +165,21 @@ def parity(config, out):
         trained = backend.predict(model, tensors, noisy, sigma, config, True)
         off = backend.predict(model, tensors, noisy, sigma, config, False)
     assert torch.equal(native, off) and not torch.equal(initial, trained)
+    isolation_checks = {}
+    if config['branch'].get('kind') == 'flux2_face':
+        with torch.no_grad():
+            changed = {**tensors, 'flux2_context':tensors['flux2_context'].clone(),
+                       'reference_tokens':tensors['reference_tokens']+10}
+            excluded = ~tensors['flux2_context_keep'].bool().reshape(1,1,*noisy.shape[-2:])
+            changed['flux2_context'] = changed['flux2_context'] + 10*excluded
+            outside = ~tensors['target_face_mask'].bool().reshape(1,1,*noisy.shape[-2:])
+            isolated = backend.predict(model,changed,noisy+10*outside,sigma,config,True)
+            assert torch.equal(trained,isolated), 'Native face/excluded context entered FLUX2'
+            donor = {**tensors, 'flux2_identity':tensors['flux2_identity'].roll(17,-1)}
+            swapped = backend.predict(model,donor,noisy,sigma,config,True)
+            assert not torch.equal(trained,swapped), 'FLUX2 ignored its reference identity'
+        isolation_checks = {'native_face_and_excluded_context_invariant':True,
+                            'reference_identity_swap_changes_prediction':True}
     stress = None
     if mixed(config) or config['branch'].get('reference_bank') == 'isolated_image':
         # Qualify the largest real reference grid with maximal routing support.
@@ -197,14 +215,17 @@ def parity(config, out):
         del full, stress_loss
     per_device = device_memory(config)
     fraction = max(item['reserved_fraction'] for item in per_device.values())
-    assert fraction < config['training']['max_reserved_fraction']
+    write(out/'memory_admission.json', {'device_memory':per_device,
+        'peak_allocated_gib':torch.cuda.max_memory_allocated()/2**30,
+        'reserved_fraction':fraction, 'passed':fraction < config['training']['max_reserved_fraction']})
+    assert fraction < config['training']['max_reserved_fraction'], f'Memory admission failed: {per_device}'
     write(out/'native_checks.json', {'sample':row['sample_id'], 'trainable_parameters':sum(p.numel() for p in params.values()),
         'native_off_exact':True, 'zero_mask_exact':True, 'all_frozen_parameters_exact':True,
         'frozen_sha256':base_hash, 'trainable_tensors':len(params), 'first_two_gradients':gradients,
         'parameter_changes':changes, 'branch_on_off_mean_abs':float((initial-native).abs().float().mean()),
         'trained_prediction_change':float((trained-initial).abs().float().mean()),
         'peak_reserved_gib':torch.cuda.max_memory_reserved()/2**30, 'reserved_fraction':fraction,
-        'inventory':inventory, 'device_memory':per_device, 'largest_layout_stress':stress, **live_check, **identity_checks})
+        'inventory':inventory, 'device_memory':per_device, 'largest_layout_stress':stress, **live_check, **identity_checks, **isolation_checks})
     print('Pretrained parity, gradients, frozen equality and memory passed', flush=True)
 
 

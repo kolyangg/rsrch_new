@@ -1,0 +1,61 @@
+{
+  "architecture": "FLUX2 Lite 4B full768",
+  "date": "2026-10-05",
+  "baseline_commit": "b5ee039",
+  "gpu": "NVIDIA GeForce RTX 4090 Laptop GPU, 16376 MiB",
+  "trainable_parameters": 30482432,
+  "trainable_tensors": 179,
+  "focused_tests_passed": 32,
+  "native_off_exact": true,
+  "zero_mask_exact": true,
+  "all_frozen_parameters_exact": true,
+  "native_face_and_excluded_context_invariant": true,
+  "reference_identity_swap_changes_prediction": true,
+  "arcface_onnx_parity_max_abs": 0.0014908313751220703,
+  "identity_gradient_norm": 0.004502216082243078,
+  "weighted_identity_to_flow_gradient_ratio": 0.05232173526881027,
+  "gradient_accumulation": 4,
+  "accumulated_training_peak_reserved_gib": 11.560546875,
+  "accumulated_training_reserved_fraction": 0.7229092241458276,
+  "all_pairs_forced_identity_gradient_count": 19,
+  "all_pairs_peak_reserved_gib": 11.556640625,
+  "resume": {
+    "exact_parameters": true,
+    "exact_optimizer_scheduler_rng_cursor": true,
+    "exact_gradient_scaler": false,
+    "cuda_rng_devices": 1,
+    "optimizer_updates": 2,
+    "microbatch": 1,
+    "world_size": 1,
+    "gradient_accumulation": 4
+  },
+  "paired_generation": {
+    "sample": "oneid_00",
+    "checkpoint_step": 2,
+    "finite": true,
+    "background_exact": true,
+    "target_photo_loaded": false,
+    "steps": 20,
+    "guidance": 4,
+    "seed": 0
+  },
+  "visual_assessment": "Near-untrained (2-update) probe has a patchy, poorly formed face. Numeric/information-flow admission is not evidence of quality improvement.",
+  "failed_admission": "Without frozen context-buffer CPU offload, accumulated training reserved 14.763671875 GiB (92.32%); rejected. Expandable allocator alone was insufficient.",
+  "allocator": "PYTORCH_ALLOC_CONF=expandable_segments:True",
+  "admission_directory": "/mnt/c/Users/ogure/rsrch_flux2/admission/full768_offload",
+  "comet_experiment_key": "7c88a5c362164fdbad2df18c2f629153",
+  "validation_steps": [
+    0,
+    500,
+    1000,
+    1500,
+    2000
+  ],
+  "evidence_sha256": {
+    "native_checks.json": "75ad1d18cc19bb423df1ccd9f71ad7b808a04f3d1bfb820a21129b13ca154bda",
+    "resume_parity.json": "21b1bdea9ef0ffab73b9bd8db3c776eab1320182e8169a329d79fadd209bd787",
+    "all_pairs_gradients.json": "4669323e06131408ecc2fdbc470cfa426ac7cad3a72a5fa921a7ed81c6abaea1",
+    "paired_probe.json": "666649907fa45b5b003fd306e845f2e69512dd541ca04f5778f4ff9e9b6fe7c7",
+    "final_probe.py": "db464b964fa461e6c0903a913da3cdf765f09be85a375a49c493a113ef0596ec"
+  }
+}

@@ -9,7 +9,7 @@ import subprocess
 import sys
 
 from ba_dit.config import ROOT
-from scripts.online_face_ba import verify, write
+from scripts.online_face_ba import verify, write, validation_steps
 
 
 def main(run):
@@ -17,7 +17,7 @@ def main(run):
     lock=(ROOT/'runs/face_flow_gpu.lock').open('a')
     fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
     (run/'controller.pid').write_text(str(os.getpid())+'\n')
-    steps=[0,500,1000,2000]
+    steps=validation_steps(config)
     assert config['training']['steps']==steps[-1]
     completed_path=run/'completed_commands.json'
     completed=json.loads(completed_path.read_text()) if completed_path.exists() else []

@@ -484,3 +484,16 @@ was performed; machine lifecycle remains under user control.
 
 
 User-requested GB10 stop verified 2026-10-05 14:08UTC: Vast53994096 now actual_status=exited, intended_status=stopped. Instance was stopped, not terminated; files preserved. FLUX1a monitoring automation was already deleted after verified completion.
+
+
+### 2026-10-05 — Local FLUX2 one-ID pilot
+
+AICODE-NOTE: Local RTX 4090 Laptop GPU (16376 MiB), authorized for FLUX2 Lite
+4B full768 training, 2,000 optimizer updates, fixed24 validation every 500
+including step 0. No Vast/HSE job is part of this launch.
+Run: `runs/FLUX2_local_4b_one_id_20261005` (ignored symlink to Windows storage).
+Comet: `7c88a5c362164fdbad2df18c2f629153`, project `rsrch_new`.
+Accepted accumulated-memory measurement: 11.561 GiB reserved (72.29%).
+Requires `PYTORCH_ALLOC_CONF=expandable_segments:True` and frozen K/V buffer
+CPU offload. Controller: `scripts.run_online_face_ba`; serial inference/decode/
+scoring; stop after final step-2000 validation. Status and PID are in the run.

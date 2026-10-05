@@ -13,6 +13,9 @@ from ba_dit.nn.reference_read_delta import LowRankProjection
 
 
 def parameter_count(config):
+    if config['branch'].get('kind') == 'flux2_face':
+        from ba_dit.nn.flux2_face import parameter_count as flux2_count
+        return flux2_count(config)
     from ba_dit.backends.flux2_native import SITES
     arch = config['model']['arch']
     width = {'flux2_klein_4b':3072, 'flux2_klein_9b':4096}[arch]

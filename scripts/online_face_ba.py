@@ -38,7 +38,9 @@ NATIVE_SOURCE = ROOT/'runs/flux4b_deep_identity1024_det_20261001'
 
 
 def followup_sources(config):
-    sources = ()
+    sources = ('ba_dit/nn/flux2_face.py', 'ba_dit/data/flux2_memory.py',
+               'scripts/prepare_flux2.py', 'ba_dit/data/conditioning.py',
+               'scripts/check_online_face_ba.py', 'tests/test_flux2_face.py') if config['branch'].get('kind') == 'flux2_face' else ()
     if config['branch'].get('reference_bank') == 'isolated_image':
         sources += ('ba_dit/nn/isolated_reference.py', 'scripts/run_flux1_experiment.py')
     if config['training'].get('identity_loss', {}).get('weight', 0) > 0:
@@ -48,7 +50,7 @@ def followup_sources(config):
 
 
 def variant(config):
-    return config['name'] if config['branch'].get('reference_bank') == 'isolated_image' else 'online_masked_qkvo_v1'
+    return config['name'] if config['branch'].get('reference_bank') == 'isolated_image' or config['branch'].get('kind') == 'flux2_face' else 'online_masked_qkvo_v1'
 
 
 def loss_description(config):
@@ -75,13 +77,13 @@ def memory():
 def experiment(config, run):
     exp = connect(config, run, name=run.name)
     exp.log_parameters({'experiment/variant':variant(config),
-        'trainable_scope':'branch Q/K/V/output LoRA only', 'trainable_parameters':parameter_count(config),
+        'trainable_scope':('face ID/detail reads and identity modulation' if config['branch'].get('kind') == 'flux2_face' else 'branch Q/K/V/output LoRA only'), 'trainable_parameters':parameter_count(config),
         'native_lora_enabled':False, 'full_denoiser_each_microbatch':True,
         'fresh_noise_and_timesteps':True, 'cached_target_hidden_states':False,
         'training/microbatch':config['training'].get('microbatch_size',1), 'training/world_size':config['training'].get('world_size', 1),
         'training/effective_batch':config['training']['grad_accum']*config['training'].get('world_size', 1)*config['training'].get('microbatch_size',1),
         'loss':loss_description(config),
-        'reference_bank':config['branch'].get('reference_bank','joint'),
+        'reference_bank':('frozen_arcface_dinov2' if config['branch'].get('kind') == 'flux2_face' else config['branch'].get('reference_bank','joint')),
         'token_ownership':config['branch'].get('token_ownership','soft'),
         'validation/images':config['validation']['limit'],
         'validation/checkpoints':validation_steps(config),
@@ -192,7 +194,7 @@ def initialize(run, config_path, admission, native_source=None, cached_training_
         'routing_masks_sha256':file_hash(run/'routing_masks.json'),
         'native_source':str(native_source), 'admission':str(admission),
         'split_policy':'identity_disjoint' if multi_id else 'one_id_diagnostic',
-        'trainable_parameters':parameter_count(config),'trainable_tensors':64,
+        'trainable_parameters':parameter_count(config),'trainable_tensors':native_check['trainable_tensors'],
         'loss':loss_description(config),
         'validation_targets':False,'mask_feather_pixels':16,
         'training_masks':{r['sample_id']:{'target_hash':r['target_hash'],
@@ -200,7 +202,7 @@ def initialize(run, config_path, admission, native_source=None, cached_training_
     if config['training'].get('identity_loss', {}).get('weight', 0) > 0:
         from ba_dit.nn.online_identity_loss import supervision_identity
         identity['identity_supervision'] = supervision_identity(config)
-    identity['reference_bank'] = config['branch'].get('reference_bank', 'joint')
+    identity['reference_bank'] = 'frozen_arcface_dinov2' if config['branch'].get('kind') == 'flux2_face' else config['branch'].get('reference_bank', 'joint')
     identity['token_ownership'] = config['branch'].get('token_ownership', 'soft')
     write(run/'identity.json',identity)
     torch.manual_seed(config['training']['seed']);random.seed(config['training']['seed'])
@@ -260,7 +262,12 @@ def infer(run,config,step):
             native=torch.cat([load_file(run/'native'/path.name)['latent'] for path in paths]).cuda()
             alpha=torch.cat([routing_token_alpha(face_alpha((width,height),masks[row['sample_id']]['face_bbox'],config['branch']['mask_feather_pixels']),config) for row in group]).cuda()
             tensors['target_face_mask']=alpha.flatten(1)
+            if config['branch'].get('kind') == 'flux2_face':
+                from ba_dit.data.flux2_memory import load_memory
+                tensors.update(load_memory(config, group[0], device='cuda'))
+                native = tensors['flux2_context']
             noise=torch.cat([torch.randn(native[i:i+1].shape,generator=torch.Generator().manual_seed(row['seed']),dtype=native.dtype) for i,row in enumerate(group)]).cuda()
+            tensors['flux2_context_noise'] = noise
             face=noise.clone()
             for current,following in zip(times[:-1],times[1:]):
                 sigma=torch.tensor([current],device='cuda',dtype=face.dtype)
@@ -289,7 +296,7 @@ def infer(run,config,step):
         print(f'Validation {step}: {len(samples)}/{len(rows)}; {time.monotonic()-started:.0f}s',flush=True)
     write(run/f'inference_audit_{step}.json',{'checkpoint_sha256':sha,'samples':len(rows),
         'full_denoiser':True,'target_photos_loaded':False,'exact_latent_exterior':True,
-        'reference_bank':config['branch'].get('reference_bank','joint'),
+        'reference_bank':('frozen_arcface_dinov2' if config['branch'].get('kind') == 'flux2_face' else config['branch'].get('reference_bank','joint')),
         'token_ownership':config['branch'].get('token_ownership','soft'),**memory()})
 
 
@@ -336,7 +343,7 @@ def summarize(run,config,step):
     native_quality=run/'native/quality_summary.json'
     native_score=json.loads(native_quality.read_text())['metrics']['id_sim'] if native_quality.exists() else .3313986754
     write(run/'comparison_summary.json',{'metrics':scores,'best_step':best,'latest_step':step,
-          'native_panel_id_sim':native_score,'step0_is_untrained_native_initialized_branch':True})
+          'native_panel_id_sim':native_score,'step0_is_untrained_native_initialized_branch':config['branch'].get('kind') != 'flux2_face'})
     rows=read_manifest(config['data']['validation_manifest'])
     masks=json.loads((run/'routing_masks.json').read_text())['samples']
     columns=[('Native',run/'native'),('Untrained BA',run/'validation-000000')]

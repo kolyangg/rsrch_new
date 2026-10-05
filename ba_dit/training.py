@@ -89,14 +89,14 @@ def train_segment(config, mode, run_dir, until, resume=None, init_adapter=None, 
         if mode != 'branch_only':
             raise ValueError('Batched face training requires branch_only mode')
         from ba_dit.nn.batched_face_attention import collate, reference_batch, training_loss as batch_loss
-    if config['branch'].get('kind') == 'masked_face_qkvo':
+    if config['branch'].get('kind') in {'masked_face_qkvo', 'flux2_face'}:
         from ba_dit.nn.masked_face_attention import training_mask
     def face_mask_for(row):
         if row['sample_id'] not in face_masks:
             face_masks[row['sample_id']] = training_mask(row, config)
         return face_masks[row['sample_id']].to('cuda')
     print(json.dumps({"cuda_modules": [type(model).__name__], "frozen_encoder_loaded": conditioner.online,
-                      "vae_loaded": conditioner.online, "conditioning":config['data'].get('conditioning','cached'),
+                      "vae_loaded": hasattr(conditioner, "vae"), "conditioning":config['data'].get('conditioning','cached'),
                       "trainable_parameters": sum(parameter.numel() for parameter in trainable.values()), "mode": mode}), flush=True)
     model.train()
     torch.cuda.reset_peak_memory_stats()
@@ -129,7 +129,7 @@ def train_segment(config, mode, run_dir, until, resume=None, init_adapter=None, 
                         continue
                     row = sample_at(rows, cursor, config["training"]["seed"])
                     tensors, metadata = conditioner(row)
-                    if config['branch'].get('kind') == 'masked_face_qkvo':
+                    if config['branch'].get('kind') in {'masked_face_qkvo', 'flux2_face'}:
                         tensors['target_face_mask'] = face_mask_for(row)
                     extra = {'identity_objective': identity_objective, 'row': row, 'step': step} if identity_objective else {}
                     loss = backend.training_loss(model, tensors, config, branch_enabled, **extra)

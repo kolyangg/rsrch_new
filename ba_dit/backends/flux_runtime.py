@@ -91,6 +91,9 @@ def _predict(model, tensors, noisy, sigma, config, branch=True, negative=False, 
         noisy = noisy.to(model_dtype(config))
         tensors = {k: v.to(model_dtype(config)) if k in {'reference_tokens', 'prompt_embeds', 'negative_prompt_embeds'} else v
                    for k, v in tensors.items()}
+    if branch and config['branch'].get('kind') == 'flux2_face' and tensors['target_face_mask'].any():
+        from ba_dit.nn.flux2_face import predict as face_predict
+        return face_predict(model, tensors, noisy, sigma.to(noisy.dtype), negative)
     packed, _ = batched_prc_img(noisy)
     prefix = "negative_" if negative else ""
     extra = {}
@@ -121,6 +124,8 @@ def training_loss(model, tensors, config, branch=True, identity_objective=None, 
     if 'dtype' in config['model']:
         target = target.to(model_dtype(config))
     noise = torch.randn_like(target)
+    if config['branch'].get('kind') == 'flux2_face':
+        tensors = {**tensors, 'flux2_context_noise':noise}
     noise_schedule = scheduler()
     # Pinned Toolkit defaults: sigmoid timesteps, balanced index sampling, MSE velocity target.
     times = noise_schedule.set_train_timesteps(1000, device=target.device, timestep_type="sigmoid", latents=target, patch_size=1)
@@ -130,7 +135,7 @@ def training_loss(model, tensors, config, branch=True, identity_objective=None, 
     # Toolkit casts to the backbone dtype before dividing; BF16 rounding order matters.
     prediction = predict(model, tensors, noisy, timestep.to(target.dtype) / 1000, config, branch)
     error = (prediction.float() - (noise - target).float()).square()
-    if config['branch'].get('kind') == 'masked_face_qkvo':
+    if config['branch'].get('kind') in {'masked_face_qkvo', 'flux2_face'}:
         mask = tensors['target_face_mask'].reshape(target.shape[0], 1, *target.shape[-2:])
         if not mask.sum() > 0:
             raise ValueError('Empty face supervision')

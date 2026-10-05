@@ -2895,3 +2895,35 @@ remain unmeasured; proposed_profiles.json is explicitly design-only. The PDF
 was rendered and inspected, with no text-bounds violations. Historical model
 sources/checkpoints were preserved; no training, GPU lifecycle action, commit
 or push was performed.
+
+
+## 2026-10-05 — FLUX2 Lite 4B local implementation and admission
+
+AICODE-NOTE: User explicitly authorized committing/pushing the existing baseline,
+implementing FLUX2, committing verified code, then launching a local 16GB one-ID
+2,000-update pilot with validation every 500. Baseline `b5ee039` was pushed first.
+FLUX2 now implements persistent directed face states at all 25 blocks, separate
+ArcFace/DINO reference attention, face-only identity modulation, RGB-erased
+context, binary ownership and the existing differentiable identity auxiliary.
+Native/empty-mask dispatch and the upstream patch are preserved.
+
+Actual admission: 32 focused tests; pretrained parity/isolation/gradient/frozen
+checks; all 19 training pairs with forced identity backward; exact 2-update
+fresh-process optimizer/scheduler/RNG replay; one 20-step generation/decode
+with exact exterior. The nearly untrained probe face is poor/patchy; no claim
+of improved ID_sim has been established. See `docs/FLUX2_LOCAL.md` and
+`docs/FLUX2_ADMISSION.json` for implementation scope and evidence hashes.
+
+Actual failure: default allocation exceeded the 90% memory gate. With expandable
+segments alone, accumulated training still reached 14.763671875 GiB reserved
+(92.32%) and was rejected after one smoke update. Exact frozen K/V buffer CPU
+offload reduced accumulated-training peak to 11.560546875 GiB (72.29%).
+The accepted configuration retains full 768px training; no ROI fallback used.
+
+Run `runs/FLUX2_local_4b_one_id_20261005`; 30,482,432 trainable parameters,
+179 tensors, accumulation 4, LR 5e-5, identity weight .05, sigma≤.5, every 4
+updates from the first update. Existing 19-pair/fixed24 manifests and metric
+definitions remain unchanged. Serial validation at 0/500/1000/1500/2000.
+Comet project `rsrch_new`, immutable key `7c88a5c362164fdbad2df18c2f629153`.
+New ignored caches/weights/run artifacts reside on `/mnt/c/Users/ogure/rsrch_flux2`
+because Linux had only ~250MB free. No historical artifacts were removed.
