@@ -3,8 +3,27 @@
 from collections import deque
 from datetime import datetime
 from pathlib import Path
+import os
+import json
+import time
 
 import yaml
+
+
+def stage_progress(stage, completed, total, started):
+    """Optional executor-facing progress; console/Comet use the same receipt."""
+    destination = os.getenv('BA_STAGE_PROGRESS')
+    if not destination:
+        return
+    elapsed = time.monotonic() - started
+    record = {'stage': stage, 'completed': completed, 'total': total,
+              'action': os.getenv('BA_STAGE_ACTION'), 'checkpoint': int(os.getenv('BA_STAGE_STEP','0')),
+              'elapsed_seconds': elapsed, 'eta_seconds': elapsed*(total-completed)/completed if completed else None,
+              'updated_unix_seconds': time.time()}
+    path = Path(destination)
+    temporary = path.with_suffix('.tmp')
+    temporary.write_text(json.dumps(record)+'\n')
+    temporary.replace(path)
 
 
 def total_steps(run_dir):

@@ -26,9 +26,21 @@ def bbox_iou(a, b):
 
 class LegacyFaces:
     def __init__(self, recognition=True):
+        import os
+        import onnxruntime
+        from unittest.mock import patch
         from insightface.app import FaceAnalysis
+        from insightface.model_zoo.model_zoo import ModelRouter
         modules = ["detection", "recognition"] if recognition else ["detection"]
-        self.detector = FaceAnalysis(name="buffalo_l", providers=["CPUExecutionProvider"], allowed_modules=modules)
+        if os.getenv('BA_ORT_THREADS'):
+            options=onnxruntime.SessionOptions()
+            options.intra_op_num_threads=int(os.environ['BA_ORT_THREADS'])
+            options.inter_op_num_threads=1
+            original=ModelRouter.get_model
+            with patch.object(ModelRouter,'get_model',lambda router,**kw:original(router,sess_options=options,**kw)):
+                self.detector=FaceAnalysis(name='buffalo_l',providers=['CPUExecutionProvider'],allowed_modules=modules)
+        else:
+            self.detector = FaceAnalysis(name="buffalo_l", providers=["CPUExecutionProvider"], allowed_modules=modules)
         self.detector.prepare(ctx_id=-1, det_size=(640, 640))
 
     def detect(self, image):
@@ -48,7 +60,7 @@ class LegacyFaces:
 
 
 @torch.no_grad()
-def evaluate(directory, ownership_boxes=None, with_clip=True, no_comet=False, log_dir=None, step=0):
+def evaluate(directory, ownership_boxes=None, with_clip=True, no_comet=False, log_dir=None, step=0, device="cpu"):
     directory = Path(directory)
     config = load_config(directory / "resolved_config.yaml")
     if no_comet:
@@ -76,7 +88,10 @@ def evaluate(directory, ownership_boxes=None, with_clip=True, no_comet=False, lo
     if with_clip:
         import clip
         clip_model, preprocess = clip.load("ViT-L/14@336px", device="cpu")
-        clip_model.eval()
+        clip_model.float().to(device).eval()  # Preserve CPU FP32 weights/scoring on GPU.
+    import time
+    from ba_dit.progress import stage_progress
+    started = time.monotonic()
     rows = []
     for sample in report["samples"]:
         identity, sample_id = sample["identity_id"], sample["sample_id"]
@@ -101,9 +116,10 @@ def evaluate(directory, ownership_boxes=None, with_clip=True, no_comet=False, lo
                           id_sim_mask_iou=iou, id_sim_unowned=float(iou < 0.05), output_mask_missing=float(box is None),
                           id_sim_ambiguous=float(len(ranked) > 1 and ranked[1][0] >= 0.05 and abs(iou - ranked[1][0]) <= 0.02))
         if with_clip:
-            _, logits = clip_model(preprocess(image).unsqueeze(0), clip.tokenize([sample["prompt"]], truncate=True))
+            _, logits = clip_model(preprocess(image).unsqueeze(0).to(device), clip.tokenize([sample["prompt"]], truncate=True).to(device))
             values["text_sim"] = float(logits.mean())
         rows.append(values)
+        stage_progress('validation/ID+CLIP',len(rows),len(report['samples']),started)
         print(json.dumps(values), flush=True)
     summary = {key: float(np.mean([row[key] for row in rows])) for key in rows[0] if key not in {"sample_id", "identity_id"}}
     with (directory / "quality_per_image.csv").open("w", newline="") as stream:
@@ -113,6 +129,7 @@ def evaluate(directory, ownership_boxes=None, with_clip=True, no_comet=False, lo
     (directory / "quality_summary.json").write_text(json.dumps({"metrics": summary, "identity_embedding_sha256": hashes,
         "ownership_boxes_sha256": file_hash(ownership_boxes) if ownership_boxes else None,
         "output_mask_set_sha256": file_hash(mask_manifest) if mask_manifest else None,
+        "clip_device": device, "clip_dtype": "float32",
         "definitions": "rsrch_apr_test IDSimBest, IDSimMaskMatched (IoU .05/margin .02), CLIP ViT-L/14@336px logits"}, indent=2) + "\n")
     experiment = connect(config, log_dir or directory)
     if experiment:

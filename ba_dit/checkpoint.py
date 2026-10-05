@@ -29,6 +29,10 @@ def training_code_digest(config):
         files += ['distributed_training.py', 'checkpoint.py']
     if 'compute_precision' in config['model']:
         files += ['precision.py', 'checkpoint.py']
+    if config['branch'].get('reference_bank') == 'isolated_image':
+        files += ['nn/isolated_reference.py', 'nn/masked_face_attention.py']
+    if config['training'].get('identity_loss', {}).get('weight', 0) > 0:
+        files += ['nn/online_identity_loss.py', 'nn/arcface_identity.py', 'data/conditioning.py']
     return hashlib.sha256(b"".join((ROOT / "ba_dit" / name).read_bytes() for name in files)).hexdigest()
 
 

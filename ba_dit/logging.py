@@ -11,9 +11,32 @@ from ba_dit.progress import progress_line, progress_metrics, recent_seconds, tot
 _progress = {}
 
 
+class RelayExperiment:
+    """Cluster artifacts are published by the verified workstation relay."""
+    def __init__(self, key):
+        self.key = key
+
+    def get_key(self):
+        return self.key
+
+    def log_parameters(self, *args, **kwargs): pass
+    def log_metric(self, *args, **kwargs): pass
+    def log_metrics(self, *args, **kwargs): pass
+    def log_asset(self, *args, **kwargs): pass
+    def log_image(self, *args, **kwargs): pass
+    def log_other(self, *args, **kwargs): pass
+    def set_name(self, *args, **kwargs): pass
+    def end(self): pass
+
+
 def connect(config, run_dir, name=None):
     if not config["logging"]["enabled"]:
         return None
+    if os.getenv('BA_COMET_RELAY') == '1':
+        record = Path(run_dir)/'comet_experiment.json'
+        if not record.exists():
+            record.write_text(Path(os.environ['BA_COMET_IDENTITY_FILE']).read_text())
+        return RelayExperiment(json.loads(record.read_text())['experiment_key'])
     env = ROOT / ".env"
     if env.is_file():
         for line in env.read_text().splitlines():

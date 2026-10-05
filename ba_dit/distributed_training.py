@@ -18,6 +18,7 @@ from ba_dit.data.conditioning import TrainingConditioner
 from ba_dit.data.manifest import assert_disjoint, read_manifest
 from ba_dit.logging import connect, log_metrics
 from ba_dit.runtime import backend_module
+from ba_dit.precision import make_scaler
 
 
 def rank_rng():
@@ -81,7 +82,11 @@ def train_segment(config, mode, run_dir, until, resume=None, init_adapter=None, 
         warmup = config['training']['warmup']
         schedule = torch.optim.lr_scheduler.LambdaLR(optimizer, lambda step: min(1., (step + 1) / max(1, warmup)))
         conditioner = TrainingConditioner(config, backend)
-        scaler = torch.amp.GradScaler('cuda', enabled=config['model'].get('dtype') == 'float16', init_scale=32.)
+        identity_objective = None
+        if config['training'].get('identity_loss', {}).get('weight', 0) > 0:
+            from ba_dit.nn.online_identity_loss import OnlineIdentityObjective
+            identity_objective = OnlineIdentityObjective(config, conditioner.vae)
+        scaler = make_scaler(config)
         parameters = trainable_parameters(model)
         run_dir = Path(run_dir)
         if rank == 0:
@@ -114,17 +119,21 @@ def train_segment(config, mode, run_dir, until, resume=None, init_adapter=None, 
                 optimizer.zero_grad(set_to_none=True)
                 restore_rng(rng)
                 losses = []
+                identity_metrics = []
                 for micro, offset in enumerate(sample_offsets(cursor, rank, world, accumulation)):
                     row = sample_at(rows, offset, config['training']['seed'])
                     tensors, metadata = conditioner(row)
                     tensors['target_face_mask'] = training_mask(row, config).to(device)
                     context = ddp.no_sync() if micro + 1 < accumulation else nullcontext()
                     with context:
-                        loss = backend.training_loss(ddp, tensors, config, True)
+                        extra = {'identity_objective': identity_objective, 'row': row, 'step': step} if identity_objective else {}
+                        loss = backend.training_loss(ddp, tensors, config, True, **extra)
                         if not all_true(torch.isfinite(loss).item(), device):
                             raise RuntimeError(f'Nonfinite forward loss at update {step + 1}; no dtype fallback')
                         scaler.scale(loss / accumulation).backward()
                     losses.append(float(loss.detach()))
+                    if identity_objective:
+                        identity_metrics.append(dict(identity_objective.last_metrics))
                     del tensors, loss
                 scaler.unscale_(optimizer)
                 finite = all(p.grad is not None and torch.isfinite(p.grad).all() for p in parameters.values())
@@ -146,7 +155,7 @@ def train_segment(config, mode, run_dir, until, resume=None, init_adapter=None, 
             torch.cuda.synchronize(device)
             peak = torch.cuda.max_memory_reserved(device)
             local_stats = [sum(losses)/accumulation, time.monotonic()-started, peak/2**30, peak/capacity,
-                           torch.cuda.max_memory_allocated(device)/2**30]
+                           torch.cuda.max_memory_allocated(device)/2**30, identity_metrics]
             stats = [None] * world
             dist.all_gather_object(stats, local_stats)
             memory_failed = max(s[3] for s in stats) >= config['training']['max_reserved_fraction']
@@ -159,6 +168,11 @@ def train_segment(config, mode, run_dir, until, resume=None, init_adapter=None, 
                            'hardware/reserved_fraction': max(s[3] for s in stats)}
                 metrics.update({f'hardware/rank{i}_peak_reserved_gib': s[2] for i, s in enumerate(stats)})
                 metrics.update({f'hardware/rank{i}_peak_allocated_gib': s[4] for i, s in enumerate(stats)})
+                auxiliary = [m for s in stats for m in s[5]]
+                if auxiliary:
+                    for key in set().union(*(m.keys() for m in auxiliary)):
+                        values = [m[key] for m in auxiliary if key in m]
+                        metrics[key] = sum(values)/len(values)
                 if step == 1:
                     metrics['train/updated_b_matrices'] = sum(int(p.count_nonzero() > 0) for n,p in parameters.items() if n.endswith('.b'))
                 log_metrics(experiment, run_dir, metrics, step)
@@ -167,7 +181,7 @@ def train_segment(config, mode, run_dir, until, resume=None, init_adapter=None, 
                 dist.all_gather_object(states, rank_rng())
                 if rank == 0:
                     checkpoint = save_training(model, optimizer, schedule, config, mode, run_dir, step, cursor,
-                                               data_digest, {'world_size': world, 'ranks': states, 'scaler': scaler.state_dict()})
+                                               data_digest, {'world_size': world, 'ranks': states, 'scaler': scaler.state_dict()}, scaler=scaler)
                     (run_dir/'latest_checkpoint.txt').write_text(str(checkpoint)+'\n')
                 dist.barrier()
             if memory_failed:

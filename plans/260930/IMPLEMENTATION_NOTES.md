@@ -1803,3 +1803,1095 @@ Using normalized names and uncached API reads verified90048 metric points and
 The authorized controller then stopped Vast53994096; actualstateexited confirmed
 08:38:26UTC, and its heartbeat was paused. Local full checkpoint/results remain
 verified; no termination occurred.
+
+### 2026-10-04 — FLUX1 architecture and completed 9B results review
+
+Research report: `reports/261004_FLUX1_review/FLUX1_research_report.pdf`
+(linked HTML, reproducible CPU analysis, per-image CSV, source hashes and visual
+appendix in the same directory). The initial artifact audit used CPU analysis
+and read-only Comet retrieval. The subsequent user-requested 2k full96 replay
+is recorded below; no training, host lifecycle operation, commit or push occurred.
+
+The completed full96 comparison is almost neutral: native owner-matched ID_sim
+**0.27418510**, FLUX1 8k **0.27621790**, paired change **+0.00203281**;
+47 images improve and 49 regress. Only Jensen and Keanu improve on their
+12-prompt identity means. A descriptive bootstrap over the eight identity
+groups gives a 95% interval of **[-0.02233, +0.03245]**. CLIP changes from
+29.44020426 to 29.36709690. No missing/unowned faces are reported in either lane.
+
+The fixed12 pilot falls from 0.43407627 at 2k to 0.41646561 at 8k, with
+5 gains / 7 regressions and identity-cluster 95% interval **[-0.06363, +0.02596]**
+for the paired change. Its rows cover only reading and angry-traffic prompts,
+with unequal identity weights and seed0. Within the separate full96 execution,
+the pilot rows gain +0.03075 and the other84 lose 0.00207. Pilot/full96
+overlapping outputs are not bit-identical; comparisons remain within each run.
+The saved 2k adapter has not been scored on full96, so its broad superiority
+and a causal diagnosis of overfitting remain unestablished.
+
+All 8,000 logged updates are finite. Late loss continues to fall; peak reserved
+memory is **52.285 GiB (42.99% of reported capacity)**. All64 BA tensors change
+from 2k to 8k and remain finite, with33,554,432 trainable parameters. The run
+has seen8,000 of47,341 pairs (16.9% of its first shuffled traversal), rather
+than multiple dataset epochs. Full96 inference recorded20.373 GiB reserved
+and exact exterior pixels. Those pixels are preserved by composition, not
+evidence that locality was learned.
+
+CPU reference re-embedding matches all eight `subject_v2` identity prototypes
+at cosine approximately1.0. The older legacy-best Eddie prototype does not
+match the intended reference face (cosine -0.0078); the current owner-matched
+`id_sim` uses the corrected prototype. Reference-face supports contain63–252
+tokens, below the512-key cap. Full96 image hashes, current prototype hashes,
+parent source snapshot and8k checkpoint receipts were checked.
+
+Prioritized proposals: score2k on the unchanged full96 bundle; add a BA-off
+second-pass and branch-only reference-swap control; test matched lower-LR
+continuation, identity supervision, identity K/V tokens inside the existing
+reference read, and higher-detail reference-face tokens separately. The user
+requested preserving native attention and refraining from native/reference
+output blending. The report follows that constraint; residual output fusion
+is not a recommended follow-up. HSE-cluster4B and the earlier local4B one-ID
+run remain distinct from Vast9B evidence.
+
+### 2026-10-04 — requested FLUX1 Vast9B 2k fixed96 replay
+
+The user restarted GB10 instance53994096 and requested evaluation of the saved
+2k checkpoint, with results in the existing 8k full96 Comet run. New supervised
+job `rsrch_9b_2k_fixed96` uses `/workspace/rsrch_9b_8k` and writes
+`runs/FLUX1_vast9B_2000_fixed96_20261004`. It reuses the exact completed8k
+native PNGs/latents, masks, owner boxes, fixed96 manifest/order, prompts,
+references, seeds,768px/20steps/CFG4 and batch2 grouping. Only the descriptive
+config name changes; all frozen inference/scoring source hashes passed.
+The2k adapter SHA256 is
+`eb27ca1c63780a50ae090cc65c746b6a7225ea66e776400f1b5bd131606857fd`.
+
+`scripts/validate_flux1_2k_fixed96.py` runs inference, decode and scoring
+serially under the shared GPU lock. It logs96 images and `validation/*`
+metrics at step2000 into existing Comet
+`2b3eda1b1f364ecfaa584ffe273102a1`, verifies read-back, preserves its8k metric
+points, audits exterior pixels and writes a completion receipt. Startup
+provenance is already uploaded; first4/96 latents completed in175 seconds.
+This is progress evidence, not a completed quality result.
+
+The one-off local service `rsrch-flux1-2k-collect` runs
+`scripts/collect_flux1_2k_fixed96.py`: after remote completion it downloads
+and verifies every result hash, then mirrors full96 at step2000 into original
+training Comet `cfbd6f879e3d4158959bbbef7fb8e894` under `validation96/*` and
+`fixed96_2k/*`, matching the previous8k consolidation. It preserves the
+existing pilot12 `validation/*` values and verifies the uploads. Neither
+controller starts training, stops the machine, or changes old run files.
+
+### 2026-10-04 — TaskMaster idle-resource cancellation and two-worker repair
+
+The user's TaskMaster notice identifies job4374072 and00:03–03:03MSK as the
+idle-resource interval. Slurm confirms `CANCELLED by 0`, start00:01:21 and
+end03:03:17MSK, allocation2V100/8CPU. It did not time out or report CUDA OOM.
+The allocation was inefficient by construction: `world_size: 1` trained only
+on GPU0; GPU1 held the frozen encoder (measured0.33555s out of3.619s/update,
+about 9.3% duty). The same allocation retained both GPUs for serial inference,
+CPU ID/CLIP/face-quality scoring and repeated full47,341-pair image hashing.
+Original receipts show inference0 ended01:23:13MSK, decode01:26:03, ID/CLIP
+01:37:54, face-quality 02:00:34 and summarize 02:00:50. Thus the first two hours
+already contained substantial unused allocated GPU capacity. These observations
+explain the resource mismatch; the site's precise TaskMaster thresholds are not
+known. No monitoring threshold or activity spoofing is changed.
+
+The resumed old allocation4374962 reproduced the problem: ~33 minutes from
+startup to its first logged updates; sampled GPU0 was100%/18,778MiB/175.54W,
+GPU1 was0%/16,308MiB/69.26W. It was stopped by our one-time watcher at13:06:43MSK
+only after atomic checkpoint 1000 completed. Parent files remain intact.
+The original cancelled attempt's last durable checkpoint was 500 (702 updates
+had been logged); the second attempt successfully restored it and reached 1000.
+
+User explicitly requested useful work on **both GPUs**. The isolated runtime
+`/home/nasilaev/rsrch_new_staged` preserves frozen cluster source from archive
+`FLUX1-cluster-runtime`8da85381b1c1f90ac086a269805267e7b932a7d1 and adds:
+
+- Two DDP workers with separate samples and averaged gradients; microbatch 1,
+  accumulation1, global batch2. This is a recorded batch/world-size transition
+  at step 1000, not bitwise continuation of the old batch 1 trajectory. Preserve
+  the optimizer/scaler, rank0 RNG and global data cursor; start rank1 at seed143.
+- Correct mixed-precision GradScaler creation and persistence in DDP. The old
+  DDP code inferred scaling only from master dtype and omitted scaler from its
+  mixed-precision save call. Native FP16/FP32 policy and branch math are unchanged.
+- Explicit rank CUDA index for cached tensors. Safetensors interprets bare
+  `cuda` as GPU0; the previous cached loader could feed rank1 on the wrong GPU.
+- CPU-only full-data verification once, then verified normalized manifest input
+  to training; one-GPU frozen conditioning for only the next <=4,000 pairs;
+  two-GPU training; one-GPU fixed96 inference/decode; zero-GPU CPU scoring.
+  Consumed continuation-owned caches are deleted after that window's validation.
+  A100GiB window cap/free-space check avoids the ~689GiB full text cache.
+- Strict admission: bit-exact fixed 96 conditioning against parent; two pretrained
+  DDP updates, all 64 adapters changed, finite gradients, each GPU below 90%
+  reserved memory; exact full-state replay in fresh processes before production.
+
+The bounded `afterok` Slurm chain is recorded in
+`scratch/pipeline_FLUX1_cluster_4b_ddp_20261004.json` on cluster. CPU preparation
+4375079, one-GPU probe4375080, two-GPU admission4375081,
+first cache4375082 and first training4375083 precede the remaining2k windows;
+final summary4375151. Each successor cancels on failed dependency. No automatic
+resubmission. The new run is `runs/FLUX1_cluster_4b_ddp_20261004`; its generated
+resolved config and `execution_transition.json` record the source/data/checkpoint
+identities. The old encoder-GPU launcher is disabled in main; the archive retains
+its historical version. Operations: `docs/FLUX1_CLUSTER_DDP.md`.
+
+Comet key remains5d31de48010446248639e65a65236cbe under rsrch_new. Workstation
+service `rsrch-clust-ddp-comet-4375151` publishes scheduler stage/worker ID and
+`ddp_4375151/*` metrics without reserving a Slurm logging allocation. Historical
+steps 1–1000 in that curve are explicitly batch 1. API read-back at 10:17UTC
+confirmed `running: true`, stage`prepare_1000`, worker4375079. This indicates
+preparation, not completed DDP training. Fixed96 validation remains0/every2,000.
+
+Local checks: ten config/scaler/checkpoint/relay tests passed; the additional
+rank-device regression passed; the existing real two-process CPU/Gloo check
+passed averaged-gradient, distinct-sample and exact fresh-process resume checks.
+Shell syntax and diff whitespace checks passed. At 10:20UTC cluster CPU data
+verification was still running (7.67GB read); pretrained DDP admission and
+production throughput were not yet measured. Further results follow below.
+
+### 2026-10-04 — FLUX1 shortcut audit and three prepared Vast9B follow-ups
+
+AICODE-NOTE: The user requested checking native-to-reference shortcuts and
+three prioritized recipes, preserving native attention without output fusion.
+No new training was launched. Historical Vast and cluster checkouts were not
+modified for these recipes; all results below are local audits unless stated.
+
+The current joint reference stream is target-dependent. A CPU random-weight,
+full-depth Klein9B topology (width16) changes reference Q/K/V at all eight sites
+when only target tokens change; mean absolute change is0.004365 at double2 and
+0.010972 at single22. These are structural measurements, not pretrained9B
+activation magnitudes or proof of exploitation by the trained checkpoint.
+The independent reference-image-only bank has exactly zero K/V change for the
+same perturbation. A donor-bank swap changes the target output while the native
+inputs remain byte-identical. Detaching the old joint tensors would not remove
+their target information.
+
+All96 saved native/8k face pairs were matched to their original owner boxes:
+native-to-trained ArcFace cosine mean0.570848, median0.590212, range0.234137–
+0.802313. This is distinct from target-ID similarity (native0.274185 versus
+8k0.276218). The saved mask geometry puts25.5122% of face-box pixels in
+fractional latent cells; the mean native-clean coefficient there, averaged
+over all face-box pixels at sigma0, is0.0255127. The final pixel compositor's
+native coefficient inside the face rectangle is exactly0. These values do
+not estimate causal identity influence.
+
+Prepared fresh-run configs and shell entry points, all on Vast9B BF16:
+
+1. **FLUX1a, recommended first:** isolated reference bank, binary token support,
+   rank128/alpha128 Q/K/V/output BA (33,554,432 parameters), identity auxiliary
+   weight0.05 at sigma<=0.5 plus unchanged native flow objective over that mask.
+2. **FLUX1b:** same architecture/ownership/rank, flow-only objective; measures
+   the contribution of identity supervision.
+3. **FLUX1c:** FLUX1a with rank256/alpha256 (67,108,864 parameters); tests capacity.
+
+All three preserve the native attention operations and conditioning. The
+separate frozen bank uses only original reference-image tokens, original RoPE
+coordinates and current sigma, with zero text/target tokens; no hidden features
+from the live joint stream enter it. Native target queries, residuals, MLPs and
+unmodified attention sites remain. Every latent token touched by the original
+pixel mask is entirely BA-owned; only final exterior pixel feathering remains.
+Proposed training: 4,000 updates, seed142, full pinned Large order, microbatch1,
+lr5e-5/warmup100, saves every500, original fixed96 at0/2000/4000 with frozen
+native bundle,20 steps/CFG4/768px/reference512 and original ID/CLIP definitions.
+
+Identity labels are prepared only from training targets with frozen buffalo_l
+landmarks/embeddings and hashed geometry/code/weights; rejected labels retain
+their flow rows. The differentiable auxiliary checkpoints the frozen VAE decode
+and uses deterministic target-landmark alignment. It reconstructs the clean
+estimate with the actual FP32 noising coefficient while retaining native BF16
+conditioning rounding. The new diagnostic `scripts/probe_flux1_reference.py`
+has BA-off/own-bank/donor-bank arms on a separately named eight-image panel.
+
+Local verification: six new information-flow tests, seven existing FLUX core
+invariants and five additional masked-routing/alignment/identity-gradient tests
+passed (18 total). Two real training targets passed CPU label preparation;
+real differentiable ArcFace matched ONNX within3.34e-6. A surrogate decoder
+produced a finite nonzero prediction gradient0.00455; this was not pretrained
+VAE/FLUX admission. All three plan commands, Python/shell syntax and whitespace
+checks passed. Admission additionally requires actual pretrained parity,
+identity/flow gradient ratio, all64 branch updates, largest-layout memory below
+85%, and exact fresh-process save/resume. New GPU memory, throughput and image
+quality are **unmeasured**; no fit or improvement claim is made.
+
+Entry points: `scripts/run_FLUX1a.sh`, b/c counterparts, and
+`scripts/run_flux1_experiment.py`. Operational setup is appended to
+`docs/FLUX1_DEPLOYMENTS.md`. Report:
+`reports/261004_FLUX1_review/FLUX1_shortcut_audit_and_next_experiments.pdf`
+(7 pages), with HTML, vector chart and JSON evidence/source hashes alongside.
+Image-only bank distribution shift, decoder cost, spatial-boundary changes and
+shared-recognizer overfitting remain explicit experimental risks. FLUX1a is a
+highest-potential hypothesis, not a measured winner.
+
+Follow-up results for this repair: preparation4375079 completed with exit0:0
+in26m02s, using **one CPU and zero GPUs**. It verified all data against the
+parent checkpoint, preserved28 run-source files, migrated full state at1000 and
+estimated a66.377GiB maximum cache window. The one-V100 conditioning check
+4375080 completed in4m14s with exit0:0: **all96 encoder tensors and all96 VAE
+entries are bit-identical to the parent**, including unchanged native geometry.
+Its `conditioning_parity.json` records this admission. Source/config/transition
+provenance was downloaded to `scratch/clust_ddp_audit_20261004/`.
+
+Comet read-back verified the full inherited history through1000 (501 chart
+points at the declared interval) and109 step-zero/mask/paired images. The relay
+publishes continuation batch2/start1000 parameters separately from historical
+batch1 parameters. Its current service remains active.
+
+As of10:42UTC, two-V100 admission4375081 is **PENDING (Priority)**; Slurm predicts
+14:46:49MSK /12:46:49London, an estimate rather than a reservation guarantee.
+The scheduler-only20-minute alternative did not improve that estimate, so the
+original30-minute allocation is unchanged. A proposed move of probe4375080 to
+`test` was rejected because it had already started in `rocky`; the recorded
+scheduler attempt explicitly says not applied. No duplicate jobs were submitted.
+**Real DDP replay, per-rank peak memory, sustained GPU utilization and production
+throughput are still unmeasured.** The dependency chain can proceed automatically
+only after its DDP admission succeeds; production4375083 then resumes1000 toward
+2000, followed by the unchanged fixed96 and the remaining20k-target windows.
+
+### 2026-10-04 — repair the failed DDP launch and restore Comet visibility
+
+After the preceding queued handoff, admission job4375081 failed before starting
+its workers: torchrun parsed the worker's `--run` as an ambiguous abbreviation
+of its own `--run-path`. Its dependency chain cancelled correctly and the relay
+marked Comet crashed. The user reported the missing running experiment. The
+cause was an actual launch failure, not an absence of historical Comet data.
+
+Added `--` between torchrun options and the worker module. A regression now
+runs this exact command shape with two real CPU workers and confirms both
+receive `--run` and `--until`. Three focused staged-launch tests passed. No
+pretrained checkpoint existed in either failed probe directory. The remote
+repair archives old/new executor hashes and the prior identity in
+`runs/FLUX1_cluster_4b_ddp_20261004/execution_repairs/torchrun_separator/`.
+Model/optimizer/config/data/checkpoint contents are unchanged.
+
+The replacement chain starts with cache job4375267, then combined admission
+and first training job4375268, with final summary4375337. This lets a successful
+DDP test continue directly into real training using the same two-V100 allocation.
+Only the first 1,000-update window has reduced allocation limits: one hour for
+2,000 cached pairs, two hours for admission plus training. Later 2,000-update
+windows retain their earlier limits. Old completed prerequisites were verified
+from receipts/accounting; Slurm rejected their expired controller IDs as new
+dependencies, so the first replacement job has no such dependency. Old pipeline
+receipts remain preserved; no duplicate jobs are active.
+
+Workstation relay `rsrch-clust-ddp-comet-4375337` keeps the same immutable Comet
+key and `ddp_4375151/` curve. Added an independent acknowledged heartbeat using
+the server interval (5s locally), so artifact transfers/API reads cannot make
+an active experiment appear stopped. It clears the crashed flag while the
+pipeline is active and stops on terminal pipeline state. Five uploader tests
+passed. API confirmed running=true/hasCrashed=false; added searchable tags
+FLUX1/HSE-cluster/2xV100/DDP. The historical experiment display name remains
+`flux4b_clust_2v100_amp_qkvo_r128_20k_20261003`. The VPN tunnel had also expired;
+it was re-established through the existing isolated wrapper.
+
+At11:18UTC the one-V100 cache stage was running oncn-004, with201/2,000 text
+inputs prepared. Actual DDP proof and fresh production metrics remain pending;
+the agent continues verification rather than treating the live UI as training.
+
+### 2026-10-04 — full96 at2k completed; FLUX1a launched into startup
+
+The requested historical2k replay completed96 generations/decodes and original
+ID/CLIP scoring. The final Comet check initially failed because some image
+names had a duplicate suffix `(1)` without `.png`; all96 images were present.
+`scripts/reconcile_flux1_2k_comet.py` normalizes that API presentation in a
+separate helper, preserving every frozen inference/scoring file. Dedicated
+Comet2b3eda1b1f364ecfaa584ffe273102a1 now verifies96 images and all metrics at
+2000 with8k points intact. The resumed local collector verified523 downloaded
+files and mirrored the panel into cfbd6f879e3d4158959bbbef7fb8e894 under
+`validation96/*`/`fixed96_2k/*`, preserving pilot12. Collection is complete.
+
+Measured full96 owner-ID: native0.274185,2k0.317432,8k0.276218. The8k-minus-2k
+paired mean is-0.041214, descriptive identity-cluster95% interval
+[-0.067432,-0.013783] (50,000 resamples, seed142); seven of eight identity means
+fall, with31/96 image wins at8k. Thus the larger panel supports the decline;
+it does not establish its causal mechanism. CLIP is29.353265 at2k versus
+29.367097 at8k. All96 faces remain detected/owned, with no ambiguous ownership.
+Receipt: `reports/261004_FLUX1_review/evidence/full96_2k_8k_comparison.json`.
+
+The user authorized FLUX1a training immediately after that validation. New
+checkout `/workspace/rsrch_FLUX1abc` has218 verified deployed source files,
+a separate pinned Toolkit checkout with the new patch, and an isolated Python
+overlay. Original model packages, historical runtime, weights and baseline
+outputs remain intact. Added ONNX1.23.1/protobuf7.36.2/ml_dtypes0.5.4 match the
+local tested executor. GB10 has about127GiB filesystem space free at deployment.
+
+Supervisor `rsrch_flux1a` runs `scripts.launch_flux1a_gb10`, with immutable Comet
+key2018ec7a730243bc98d922178e58aa5c and runFLUX1a_vast9B_20261004. It prepares
+training-only identity labels, waits for the preceding validation's verified
+receipt, then runs the reviewed admission and serial0/2k/4k full96 pipeline.
+No new rental or automatic machine stop is configured.
+
+The first CPU preparation was narrowed from all47,341 possible targets to the
+exact4,000 scheduled samples to avoid preparing labels never used in this run.
+This changes no training pair/order, noise draw, objective, model or resolution.
+The label manifest explicitly records scheduled scope; coverage is verified
+using the same trainer's sample_at/epoch_order, including epoch boundaries.
+Four worker processes with two ONNX threads each replace serial preparation.
+Two-target parity gave exactly equal embeddings/landmarks, and the prepared
+scheduled manifest passed the loader coverage/geometry/weight/hash checks.
+The earlier partial full-preparation directory was archived, not deleted.
+
+At11:26UTC the new supervisor was running CPU label preparation with792/4,000
+receipts; pretrained memory/parity/resume admission and optimizer updates were
+still pending. Do not describe that state as completed admission or trained
+quality. Startup record: scratch/FLUX1a_deploy/launch_verified.json locally;
+remote controller log: runs/FLUX1a_controller.log; setup status/preparation log:
+runs/FLUX1a_vast9B_20261004_setup/. The existing shared GPU lock serializes work.
+
+For discoverability, the existing Comet entry's **display label only** was changed
+to `FLUX1_cluster_4b_2V100_DDP`. Its key, data history, filesystem run names and
+checkpoint identities are unchanged. `cluster/original_display_name` records
+the former label. A fresh API read confirmed the new label, running=true and
+hasCrashed=false. This supersedes the preceding note about retaining the old
+Comet display label.
+
+### 2026-10-04 — FLUX1a GB10 apparent-stall investigation
+
+The supervised job was progressing through CPU identity preparation and real
+pretrained admission; no deadlock or model failure was found. All4,000 scheduled
+training labels finished, with3,944 accepted (98.6%). Admission completed at
+11:53UTC: native BA-off and zero-mask outputs exact, all64 branch tensors updated,
+frozen backbone unchanged, and fresh-process parameters/optimizer/scheduler/RNG/
+cursor replay exact. The BF16 run has no active gradient scaler; the receipt's
+`exact_gradient_scaler:false` denotes that non-AMP case, not failed replay.
+
+Measured largest-layout peak CUDA reserved60.667969GiB (49.881% of device), below
+the recipe85% gate. Forced identity-gradient norm0.002956365; matched flow-gradient
+norm0.066533527; weighted identity/flow ratio0.0444342. ArcFace GPU-versus-ONNX
+max-absolute embedding difference0.00153184 passed the declared0.01 bound.
+These are admission checks, not measured identity-quality improvements.
+
+The existing controller moved automatically through initialization into full96
+step0 inference. At12:00UTC the first2/96 latents were written (99seconds for
+the first pair), with96% observed GPU utilization. Main-run optimizer step remains
+0 until this required panel is generated, decoded and scored; the admission's
+two-update replay must not be reported as production training progress.
+
+Comet's launch/stage had remained at CPU preparation, creating misleading stale
+status. Added a separate `scripts/publish_flux1a_progress.py` REST publisher under
+supervisor `rsrch_flux1a_progress`: every60seconds it publishes controller stage,
+real optimizer step, validation latent/image counts and heartbeat to the existing
+2018ec7a730243bc98d922178e58aa5c key. It does not open/end the training SDK session
+or alter any frozen model/config/checkpoint source. It exits when the supervised
+job terminates, and reports stopped/failed status instead of inferring success.
+Remote source hash is recorded in setup/progress_publisher_deployment.json.
+Local setup/validation/partial-metric snapshot checks passed; Comet read-back
+confirmed runtime/live_progress. Admission receipts were downloaded to
+runs/FLUX1a_gb10_healthcheck_20261004/. No restart or scientific change was needed.
+
+### Cluster DDP restart verified — 2026-10-04, 12:02 UTC
+
+Job4375268 started oncn-004 with two V100s after conditioning4375267 completed
+in26m48s. The repaired launcher reached both actual pretrained workers.
+Continuous1000→1002 and fresh-process1000→1001→1002 matched bit for bit for
+all adapter tensors, optimizer, scheduler, scaler, per-rank RNG and cursor.
+All64 adapter tensors changed; both updates had finite gradients and no loss-scale
+retry. The admission receipt is `execution_admission.json` in the continuation.
+
+Production resumed from1000 and reached1041 with finite loss1.0119128525.
+Measured updates1003–1041 averaged3.0394s; maximum CUDA reserved was17.3398GiB
+(under55% of device capacity), with zero overflow retries. A60-second sample
+of GPUs mapped to this run's two actual training-worker PIDs measured mean
+utilization89.607%/86.750%, mean power222.14W/210.19W, and process/device memory
+peaks18324/18304MiB. The measurement is `gpu_utilization_training.json`; CUDA
+reserved figures come separately from the trainer. This establishes real use
+of both V100s, not merely two allocated GPU resources. Effective batch remains2.
+
+The workstation relay independently read back new Comet loss through1028,
+value1.0321552157, matching the local mirrored metrics. Comet metadata reported
+`FLUX1_cluster_4b_2V100_DDP`, running=true, hasCrashed=false under the unchanged
+key5d31de48010446248639e65a65236cbe. The active chart is
+`ddp_4375151/train/loss`; the old unprefixed curve is historical. The verified
+first new point was1004. Publisher receipt and independent readback live in
+`runs/clust_comet_mirror/FLUX1_cluster_4b_ddp_20261004/`. Fixed96 step2000 and
+completion through20k remain outstanding; queue delays and later validation
+time are not included in the measured optimizer-step speed.
+
+The user then explicitly prioritized immediate training over remaining initial
+checks. The healthy step0 inference was stopped at a pair boundary/partial panel,
+preserving checkpoint0 and completed latents. The new isolated orchestration
+wrapper `scripts/resume_flux1a_train_first.py` takes the same GPU lock and starts
+the unchanged trainer from checkpoint0 to2000 immediately. It reuses completed
+admission without rerunning it. After2000 it returns to the original controller,
+which finishes the preserved step0 panel, evaluates2000 and proceeds to4000.
+This is an explicit user-authorized scheduling deviation from initial validation
+before training; fixed96 content, metrics, model, loss, sample order and checkpoints
+are unchanged. setup/training_first_authorization.json records the request,
+controller hash and preserved output count. Actual optimizer advancement is being
+checked before reporting training as running.
+
+At12:06UTC production training was verified advancing through steps1–4 in the
+main run (not admission). Step4 included the active identity auxiliary with
+finite loss1.078796 and gradient norm0.103000; peak reserved59.416GiB/48.85%.
+Observed updates took5.3–7.5seconds. Supervisor8576/trainer8593 remain running;
+Comet keeps2018ec7a730243bc98d922178e58aa5c. The training-start evidence is
+runs/FLUX1a_gb10_healthcheck_20261004/production_start.json locally.
+
+### 2026-10-04 — FLUX1a cluster4B setup and submitted schedule
+
+The user explicitly requested FLUX1a on two V100s for20,000 updates, validation
+every2,000, and concise progress/ETA/results with Comet metrics/images. New
+config `configs/clust/FLUX1a_cluster_4b.yaml` preserves the FLUX1a isolated-image
+bank, binary ownership and identity auxiliary0.05/sigma<=0.5. Cluster variant
+uses4B/768px/rank128,25,165,824 trainable parameters, effective batch2 and the
+existing V100 selective-FP16/FP32-master policy. It starts fresh; neither the
+FLUX1 cluster checkpoint nor Vast9B adapters are relabelled or resumed.
+
+Implementation changes: allow the explicit V100/two-worker FLUX1a configuration;
+keep a live frozen VAE for differentiable identity loss with cached conditioning;
+run the isolated no-grad reference pass through the underlying module and the
+target pass through DDP; pass/reduce identity metrics on both ranks; cover the
+full40,000 global sample positions in identity preparation. Checkpoint code
+identity now covers the isolated-bank/identity objective modules. Existing
+frozen deployments were not changed.
+
+Seventeen focused tests passed, including an actual two-process CPU DDP test
+of repeated checkpointed reference/target passes, synchronized finite gradients,
+label coverage, native/zero-mask parity and Comet relay regressions. A further
+successor-submission test passed, proving repeated completion handling queues
+only one next stage. These are not pretrained V100 admission or quality results.
+
+Preparation4375592 was deliberately cancelled after8m22s: InsightFace0.7.3
+dropped sess_options before constructing ONNX sessions, creating270 threads per
+worker on16 allocated cores; no target receipts completed. The discarded
+thread parameter is now injected at ModelRouter, and actual session limits are
+asserted. Original diagnostic output/preparation directory were archived. New
+preparation4375612 runs with16 one-thread workers and reached11,576/40,000
+labels with~22min ETA. The prepared data rows reuse the existing CPU-verified
+manifest and are bound to its exact hashes; consumed image bytes are rehashed
+before caching. Validation identities/images remain disjoint.
+
+The first attempt to submit all79 stages reached the students MaxSubmitJobsPU=100
+limit after35 accepted records (the other FLUX1 pipeline already occupied65
+slots). Only34 new pending FLUX1a jobs were cancelled; active preparation and
+all existing FLUX1 jobs remained. The archived receipt records these jobs. The
+replacement finite plan now has preparation4375612 followed by plan4375658;
+each successful stage submits exactly one afterok successor. Failures halt the
+chain. Remaining stages explicitly include all checkpoints/validations through20k.
+
+Runtime `/home/nasilaev/rsrch_new_FLUX1a` has207 verified source hashes based on
+local commit a08197950a036cbf858a1d1466993f04b99e3f5a plus dirty sources, with a
+separate Toolkit checkout pinned to ecee894ed2b1f3716d9d7326693061ec1a3105bb.
+The original FLUX conda env is activated and a private training overlay adds
+ONNX1.23.1/protobuf7.36.2/ml_dtypes0.5.4. The training memory/throughput and
+identity-gradient admission on V100 have not yet been measured.
+
+Separate Comet key9a4c6ef2e160413dad596a3dea2dc451 is created, display label
+`FLUX1a_cluster_4b_2V100`. The user service
+`rsrch-clust-FLUX1a-comet-4375612` is active and prints concise stage/count/ETA.
+Framework/SSH/offline-SDK noise is excluded from the new console; detailed
+diagnostics remain in setup files. Training publishes every second update to
+avoid the per-metric point cap, preserving full JSONL locally. All96 validation
+images, comparison panels and original ID/CLIP/face-quality summaries are
+published. Summary publication now checks metric history, avoiding repeated
+re-upload of older panels when a later summary exists. GPU admission/step0
+validation/production training are still pending at this record.
+
+Final startup verification: remote CPU allocation imported the exact deployed
+runtime successfully with torch2.7.1+cu126 and the pinned ONNX overlay; normalized
+data contains47,341 training pairs and96 validation items. All207 deployed hashes
+were rechecked after the final executor changes. Compute-node sbatch is available
+and accepted the two-V100 admission dry run. Its latest scheduler-only estimate
+was2026-10-07T02:23:17MSK; this is not an actual allocated GPU start. Preparation
+4375612 reached19,544/40,000 labels at15m09s, ETA15.7min; plan4375658 is pending
+on that dependency, with77 subsequent stages saved through summarize20000.
+Comet API independently confirmed the intended display name, running=true,
+hasCrashed=false and structured preparation/count/ETA status. Evidence is in
+`runs/FLUX1a_cluster_launch/comet_startup_readback.json`. The live status denotes
+CPU preparation, not production optimizer updates. The new relay also stays on
+the setup identity until initialization has written the main-run Comet record.
+
+### 2026-10-04 FLUX1a cluster preflight OOM and recovery
+
+At 17:50:23 MSK, admission4375704 failed before production initialization.
+The cache probe4375699 completed successfully, including exact fixed96 encoder
+and VAE conditioning parity. The admission traceback is a CUDA OOM in the FP32
+VAE decoder during the forced identity-gradient backward:31.73GiB device,
+31.16GiB PyTorch allocated,288MiB requested. No production optimizer checkpoint
+was created. This was not an HPC TaskMaster idle cancellation.
+
+The outer whole-decoder checkpoint recomputed without internal block
+checkpointing, retaining full-resolution decoder intermediates during backward.
+OnlineIdentityObjective now enables the pinned native decoder's block
+checkpointing when training gradient_checkpointing is enabled. A small native
+FP32 decoder regression verified bit-exact outputs and input gradients, with
+frozen weights. This is CPU evidence, not a measured V100 fit claim. Failed
+admission/source/deployment records are archived remotely under
+`scratch/recovery_4375704` and setup/admission_failed_4375704. One deployed source
+hash was changed with a before/after audit entry; no existing production identity
+or checkpoint was rewritten. Resolution, objective, two-worker batch2 and fixed96
+validation contract are unchanged.
+
+Replacement two-V100 admission4375739 is queued. A separate15-minute one-V100
+`test` allocation4375743 runs the full pretrained native/identity/memory stress
+probe first;4375739 depends on its success, so these allocations do not overlap.
+The pipeline records both and the previous failure. At18:10MSK both were pending;
+Slurm estimated18:33:10MSK for the test, with no reliable two-GPU start after that.
+Production remains at zero updates until admission and step0 validation succeed.
+
+The workstation VPN also lost its tunnel, causing the Comet publisher to fail
+before it could fetch the real Slurm failure. Restored via the existing VPN
+controller, then recreated the same publisher service and immutable Comet key
+9a4c6ef2e160413dad596a3dea2dc451. The publisher now records transport failures as
+unreachable/stale, clears its explicit liveness heartbeat and retries observation;
+it does not infer a worker crash from an SSH failure. An outage-then-recovery
+regression passed. Four identity/executor tests and six Comet tests passed.
+Comet API readback confirmed connected monitoring and pending scheduler status;
+`running=true` reflects the open experiment, not production optimizer progress.
+
+Recovery GPU measurement: memory probe4375743 completed0:0 on cn-020 at
+18:13:31MSK after5m40s. The actual pretrained V100 run passed native/BA-off and
+zero-mask parity, frozen-weight equality, nonzero finite identity gradients,
+two adapter updates, and full-routing stress at1024 reference tokens/2304 target
+queries. Peak CUDA reserved was23.138671875GiB (72.9178%), below90%; identity
+branch-gradient norm0.00401904, weighted auxiliary loss0.00916606. This verifies
+the decoder fix on one V100; two-rank exact save/resume remains the next gate.
+Receipt copied to `runs/FLUX1a_cluster_launch/recovery_native_checks.json`.
+Admission4375739 is now pending Priority, with latest scheduler estimate
+21:29:12MSK (19:29:12BST); this is not a guaranteed start. Production is still0
+updates. Ten focused local tests passed across identity, executor and Comet.
+
+### 2026-10-04 16:57UTC — FLUX1a 2k backup and validation follow-through
+
+User requested a local2k checkpoint, verified2k Comet validation, continuation
+to4k and verified4k validation/publication. The job had not failed: checkpoint
+2000 completed at15:31UTC; the existing serial controller was finishing deferred
+step0 inference. Progress advanced78→84/96 during inspection; GPU96% busy.
+No healthy model process was restarted, and frozen scientific sources/configs
+remain unchanged. The original controller still performs full96 at0/2000/4000,
+with optimizer-state-preserving continuation from2000 to4000.
+
+Copied the complete checkpoint002000 to local
+runs/FLUX1a_vast9B_20261004/checkpoint-002000, including optimizer/scheduler/RNG
+state and configs. All five files matched remote SHA256; adapter hash
+cdb834539c64b05243df637ab3d00906f8e3b76526e42267987d48fe9641efb0.
+Receipt: runs/FLUX1a_vast9B_20261004/checkpoint_002000_download_verified.json.
+Local disk is nearly full; avoid unrequested large result copies.
+
+The separate progress publisher now writes real stage/count transitions into
+Comet console output and excludes raw decode intermediates from its96-image
+count. It also runs scripts.verify_flux1a_validation after summarize receipts
+at2000 and4000. That helper verifies original96 order/prompts/seeds, checkpoint
+and panel hashes, complete per-image scoring, exact background audits and
+Comet read-back for all96 images and metric values. Missing uploads may be
+repaired via REST; mismatched existing values fail rather than get overwritten.
+Per-step receipts are comet_verified_002000.json/comet_verified_004000.json.
+Publication verification is still pending until panels actually finish.
+Only rsrch_flux1a_progress was restarted; model controller PID8576 stayed live.
+Deployment hashes are in setup/publication_verifier_deployment.json.
+
+Created thread heartbeat verify-flux1a-validation-and-finish-4k, every30minutes,
+to verify advancement, handle evidence-backed failures, and confirm both Comet
+receipts plus completed4000 before pausing itself. It forbids unrelated HSE
+changes, duplicate GPU jobs, repeated admission, rental/stop/termination or Git
+publication. This extends follow-through; it is not a claim that2k validation
+or4k training has completed already.
+
+### 2026-10-04 — live Comet lifecycle and streamed FLUX1a validation
+
+The user required the experiment to stay RUNNING across all active stages,
+console logs during validation, and images uploaded immediately after generation.
+The previous REST-only publisher did not own experiment lifetime; stage SDK
+sessions ended independently, and generation/decoding were separate full-panel
+passes. Both caused misleading idle status and delayed images.
+
+The new scripts.flux1a_live entry point wraps the frozen serial controller. Its
+workers retain normal SDK flush/close but suppress only their run-ended signal;
+the long-lived supervised progress publisher now owns one ExistingExperiment
+session until the job and publication checks finish. It tails current stage logs
+every5seconds through SDK console capture. Comet API read-back after deployment
+confirmed running=true and hasCrashed=false, with current validation log lines
+at the end of console output.
+
+For inference, a report-write hook decodes each completed pair with the same
+frozen VAE and native-background composition, and immediately uploads each image
+synchronously to fixed96/<sample> at the actual checkpoint step. It preserves
+partial latents and an acknowledged per-image upload receipt, then the normal
+scoring stage follows after96. The later decode stage verifies receipts and
+skips duplicate decoding/uploads. A real existing step0 latent provides exact
+raw/composed pixel parity before first streamed output; decoder loading preserves
+RNG state. The original denoiser, masks, sample order, sampler, training sources,
+configs and checkpoint identities are unchanged. New wrapper/publisher sources
+are archived with hashes under the run setup/live_streaming_source_* directory.
+
+Supervisor rsrch_flux1a was switched from resume_flux1a_train_first to
+scripts.flux1a_live at17:25UTC, preserving10 completed checkpoint2000 latents.
+No admission was repeated. Supervisor rsrch_flux1a_progress retains the existing
+2k/4k full96 Comet verifier and the follow-up heartbeat remains active. The
+runtime is still /workspace/rsrch_FLUX1abc, key2018ec7a730243bc98d922178e58aa5c.
+
+Live-streaming verification at17:28UTC: Comet API reports running=true and
+hasCrashed=false; ten checkpoint2000 fixed96 images are already present while
+inference is still incomplete. API console read-back includes current generated/
+decoded counts and per-image upload acknowledgements in chronological order.
+The streaming decoder's pretrained check passed exact raw and composed RGB pixel
+parity against saved step0 sample00. Evidence:
+runs/FLUX1a_gb10_healthcheck_20261004/live_streaming_comet_verified.json locally,
+and live_decode_parity_002000.json / live_decode_002000.json in the remote run.
+
+The user's follow-up required batched validation as in rsrch_apr_test. Read-only
+inspection of that project's base_trainer evaluation loop, sdxl_trainers batch
+pipeline call and _log_batch, and CL39r4 saved config confirms batched denoising
+with per-sample generators and image logging after each batch. The saved CL39r4
+manual_val batch size is12 (its generic clean_full dataloader default is1).
+FLUX1a preserves its existing same-reference batch2 denoising and now follows
+the same generate-batch→decode/upload-batch order. No batch-size change or new
+scientific panel was silently introduced; fixed96 is48 generation batches.
+Reference implementation paths:
+/home/kolyangg/rsrch_apr_test/diffusion_template/src/trainer/base_trainer.py
+/home/kolyangg/rsrch_apr_test/diffusion_template/src/trainer/sdxl_trainers.py
+/home/kolyangg/rsrch_apr_test/diffusion_template/artifacts/checkpoints/CL39_cosmic_null_key_confidence_router_24k_full96_r4/config.yaml.
+
+Heartbeat17:32UTC: FLUX1a supervisors healthy; GPU96% active in checkpoint2000
+inference. Comet API running=true/hasCrashed=false and live console output verified.
+The complete step0 panel passed the new verifier: all96 image uploads and all
+metrics match local scoring, exact panel/checkpoint/background checks passed.
+Copied comet_verified_000000.json and the small quality summary locally. Step0
+owner-ID0.02638946 is the untrained isolated-branch result, not native or2k.
+Checkpoint2000 generation/upload was advancing beyond the first12 images; its
+complete scoring/publication and subsequent2000→4000 training remain pending.
+No GPU process was interrupted or scientific source changed on this heartbeat.
+
+### 2026-10-04 cluster Comet delivery and streaming validation repair
+
+Live inspection around20:25MSK found no training process waiting on a network
+upload: FLUX1 train4000/job4375275 and FLUX1a admission4375739 were both pending
+Priority with no unsatisfied dependency. FLUX1 had completed step2000 inference
+(41m01s), decode(3m28s), scoring, summary, and cache4000(55m06s). Those are actual
+Slurm timings; current production progress is2000 for FLUX1 and0 for FLUX1a.
+
+The workstation publisher had two independent faults. It looked for image names
+with an appended `.png`, but Comet's logical names were extensionless; one
+sample had25 duplicate copies at step0 and25 at step2000. Its full-experiment
+asset-list calls then timed out. It also withheld images until decode_N.done,
+and serialized scheduler polling behind rsync, upload flush and acknowledgement.
+The fix uses per-name/step lookups, durable enqueue/acknowledgement receipts,
+bounded batches and retries without restarting or re-enqueueing pending images.
+New upload names include their checkpoint; old logical names are recognized.
+Scheduler polling now runs independently of the publication worker. Complete
+PNGs are eligible before all96 images finish, and truncated PNGs are retried.
+All217 existing FLUX1 images, all required assets, loss through2000 and validation
+summaries were confirmed with zero pending work. Named-image readback confirmed
+old duplicate counts stopped growing; historical duplicate assets were retained.
+
+The VPN tunnel's IPinfo country check returned HTTP429. Added an HTTPS ipwho.is
+fallback inside the existing isolated namespace, retaining IP/country validation
+and refusing a reported country mismatch. Provider failure never triggers bare
+SSH. The installed and maintained controller sources match. The encrypted local
+OpenVPN test passed with unchanged host routes/DNS and fail-closed IPv4/IPv6;
+focused tests covered429 recovery, mismatch and both providers unavailable.
+A real reconnect independently verified RU and nasilaev@login-02. Both relay
+services were recreated with current WSL interop settings, then successfully
+read and published fresh Slurm states under their original experiment keys.
+
+For images during inference, scripts/clust_stream_decode.py observes the pinned
+sampler's completed validation reports and immediately decodes each new latent
+with the same VAE, generated mask and preserve_background operations. PNGs are
+atomically renamed into visibility; decoder construction/decoding preserve CPU
+and CUDA RNG states. No network calls run on the compute worker. Later decode
+stages verify completed images instead of decoding them again. Fixed96 order,
+seeds, prompts, native backgrounds, inference equations, training/checkpoint
+contents and metrics definitions are unchanged. Original executor/identity files
+were archived in each remote scratch/stream_decode_change_20261004, with explicit
+before/after source records; the FLUX1 source identity and FLUX1a deployment
+include the new helper. Checkpoint/config/training-code digests were not changed.
+
+Sixteen focused tests passed, including pixel/RNG preservation, restart safety,
+partial-PNG publication, delayed Comet acknowledgement without re-enqueueing,
+legacy extensionless names and independent scheduler observation during a blocked
+upload. The affected tests were rerun after adding the admission dependency and
+checkpoint-specific upload names. GPU parity/memory probe4376019 started on
+cn-002; it compares a real step2000 validation PNG with the full FLUX1 backbone
+and adapters resident. Streaming inference is gated on its success: FLUX1's next
+infer4375276 depends on train4375275 and probe4376019; FLUX1a's rolling executor
+adds the same probe dependency to inference stages. Production jobs remain queued.
+
+GPU streaming admission completed:4376019 exited0:0 after4m05s on cn-002.
+With the actual4B backbone and step2000 adapters resident, the streaming decoder
+produced pixel-identical output to the original saved step2000 validation image.
+Peak CUDA reserved17.537109375GiB (55.2654%); first decode including VAE loading
+11.19s. This qualifies the shared decode execution change; it is not a new
+training/quality result. Passed receipts are saved in both deployments. The
+rolling FLUX1a plan now records the passed result instead of retaining a future
+dependency on a Slurm job ID that could expire. Both production jobs remain
+pending Priority; neither is waiting on Comet or the completed probe. Final
+publisher state:217/217 FLUX1 images confirmed,0 pending assets/metric updates,
+and connected monitoring for both immutable Comet experiments.
+
+
+### 2026-10-04 FLUX1a Vast9B validation throughput qualification
+
+The user requested larger/faster validation batches. Real checkpoint2000 GPU
+probes on the largest reference layout tested batches2,6,12 with the original
+20-step/CFG4/BF16 protocol. With paired-CFG reference reuse, the measured
+seconds per image per denoising step were2.850,2.903,3.032 respectively; peak
+reserved20.85,27.85,38.29GiB. Larger batches fit but did not increase throughput.
+They also changed BF16 predictions (relative RMS0.006824/0.006688), so batch2
+was retained. These are throughput probes, not quality or full-panel results.
+
+A separate inference-only operational wrapper now caches the frozen image-only
+reference bank by exact reference tokens/positions/mask, frozen model identity,
+maximum selected keys, and exact sigma. It reuses features for positive/negative
+CFG and subsequent prompt batches with identical references, retaining at most
+24 timesteps and invalidating on reference changes. No target or prompt enters
+this cache; training never installs it. Pinned model/training sources and root
+resolved config remain unchanged. Deployment snapshots and source hashes are in
+runs/FLUX1a_vast9B_20261004_setup/validation_speed_* on the existing Vast host.
+
+After extending reuse across prompt batches, real-model batch2 measurements were
+6.35165s per positive/negative CFG pair without caching,5.70673s with a cold
+reference cache, and5.06743s with a warm reference. Both cached predictions were
+bitwise equal to the uncached baseline. Six batches per reference imply a
+predicted1.228x denoising throughput (18.5% less denoising time); this is not yet
+an end-to-end panel timing. The probe's peak reserved was20.8965GiB/17.18%; the
+full20-timestep cache's production peak will be reported by the inference audit.
+A focused cache check also covered exact-reference clones, sigma changes,
+in-place reference mutation and rejection of gradient-enabled execution.
+
+Execution resumed checkpoint2000 validation with28 completed images retained;
+each new pair still decodes/uploads immediately and the independent Comet owner
+remains active. The same cache policy will apply at4000 in a fresh process with
+its own checkpoint, without reusing checkpoint2000 features. Small benchmark
+receipt copied locally to runs/FLUX1a_vast9B_20261004/validation_execution_policy.json.
+Full2k scoring/publication, resumed training and4k validation remain pending.
+
+Live execution after deployment advanced28→30/96, with both new images decoded
+and acknowledged by Comet immediately. The first cold-cache generation pair,
+including streamed decode/upload, took122s. Main supervisor and progress owner
+remained RUNNING. This establishes resumed production inference rather than
+only a successful isolated probe; warm-cache/end-to-end panel timing is pending.
+
+
+FLUX1a Vast9B milestone19:01UTC: full96 step2000 generation, scoring and Comet
+publication completed. The verifier confirmed all96 images, all9 metrics,
+original panel order/prompts/seeds, checkpoint provenance, per-image scoring and
+background audits. Receipt comet_verified_002000.json and quality_summary.json
+are copied locally. Owner-ID0.28100960698; CLIP29.32846971353; no-face/unowned/
+ambiguous rates0. The controller entered train_4000 from checkpoint2000; actual
+resumed updates will be checked separately. Step4000 validation remains pending.
+
+At19:05UTC actual resumed training advanced through2006 with finite loss and
+gradients; peak reserved59.785GiB/49.16%, ~6.16s average/update. The local receipt
+runs/FLUX1a_gb10_healthcheck_20261004/resumed_above_2000.json records a subsequent
+live update. No restart or repair was needed during this milestone check.
+
+
+FLUX1a Vast9B interruption21:01UTC: instance53994096 reports actual_status=exited,
+intended_status=stopped; SSH refuses connections. Comet is no longer running;
+last logged update2980 at20:44:17UTC. The old8k stop service is inactive and its
+last stop receipt is from this morning; no evidence it caused this interruption.
+The stop's initiator is unknown. Asked the user whether to restart the existing
+instance because its explicit stopped state may be intentional; do not override
+that state until clarified. Fixed96 step2000 and local2k checkpoint remain
+verified; no4k checkpoint/publication is verified. Remote checkpoint inventory
+cannot currently be inspected. No machine operation was issued by this check.
+
+The user confirmed the interruption was exhausted Vast credit. The saved2k
+resolved config uses checkpoint_every=500 (validation remains every2000), so
+checkpoint-002500 is expected to be the latest remote save after logged step2980.
+This has not been directly inspected on the stopped host; only checkpoint2000
+is downloaded and SHA256-verified locally. Inspect latest_checkpoint.txt and
+complete checkpoint manifests on restoration before choosing a resume step.
+
+
+FLUX1a restoration22:02UTC: existing Vast53994096 became running/accessibile
+again; both experiment supervisors were stopped and no GPU compute process was
+present. Verified checkpoint002500 has all five nonempty files, SHA256 hashes,
+and matching config/data/training-source/parameter manifests against002000.
+The last local remote-metrics row was2981 (Comet had2980); updates2501–2981 were
+not checkpointed and must be replayed. The original controller already selects
+the latest complete checkpoint and archives rolled-back local metric rows.
+Started rsrch_flux1a and rsrch_flux1a_progress using their unchanged commands;
+no source changes, new rental or machine lifecycle command. Confirmation of new
+optimizer updates remains pending initialization. Remote checkpoint verification
+receipt is local runs/FLUX1a_gb10_healthcheck_20261004/checkpoint_2500_remote_verified.json.
+
+At22:06UTC resumed production updates2501/2502 were verified with finite loss
+and gradients. Controller1407/trainer1550 and progress publisher1428 are active;
+Comet Running=true. The original checkpoint restore completed successfully.
+This supersedes the credit/stopped blocker and pending initialization status.
+
+
+### FLUX1a6k continuation and automatic local checkpoint transfer —2026-10-04
+
+The user requested4k and6k checkpoints locally after reviewing the remaining
+credit budget. Main rsrch_flux1a continues uninterrupted through4k/full96.
+New rsrch_flux1a_6k is a CPU-only waiting supervisor: after4k validation and main
+exit, it acquires the shared GPU lock, resumes the latest complete checkpoint,
+trains to6000 and runs full96 inference/decode/score/summarize. The separate
+continuation config changes only training.steps; strict verify_extension passed
+against checkpoint2500 and frozen source guards passed. Original root config,
+model/training source hashes and checkpoint contents remain unchanged. Worker
+config for6000 is explicit in resolved_config_6000.yaml when continuation starts;
+continuation_6000.json records authorization and operational source hashes.
+
+The existing live wrapper supports6000; Comet publisher follows both supervisors
+and verifies2000/4000/6000. It remains the sole lifecycle owner and preserves
+immediate per-batch images. Operational files were archived before/after under
+setup/continuation6k_*; the main GPU trainer was not restarted. Production had
+advanced to2635 while the queue and publisher were confirmed active.
+
+Local user service rsrch-flux1a-checkpoint-download runs
+scripts.mirror_flux1a_checkpoints every60s until both filesets are verified. It
+starts downloads as soon as each complete atomic4k/6k checkpoint appears, before
+validation finishes. Destination:
+/mnt/c/Users/ogure/FLUX1a_checkpoints/FLUX1a_vast9B_20261004
+(Windows C:\Users\ogure\FLUX1a_checkpoints\FLUX1a_vast9B_20261004).
+This drive has~100GiB free; Linux has only~1.5GiB. Each checkpoint is~385MiB.
+All five files are SHA256-verified against remote hashes, staged in a .partial
+folder and renamed only after success. Receipts are mirrored beside checkpoints
+and in runs/FLUX1a_checkpoint_transfers. Focused checks passed successful copy,
+receipt-write restart recovery, corruption rejection and incomplete checkpoint
+waiting. Live one-shot and daemon checks correctly show4000/6000 pending.
+
+The heartbeat was updated to finish6000, verify4k/6k Comet publications and both
+local download receipts. Latest budget forecast was~9.3 funded hours, versus
+~8.9hours to6000 including both validations; credit margin remains small. No
+machine stop/termination or extra rental was requested or performed.
+
+
+### 2026-10-04 23:30 BST — cluster progress and CPU verification queue fix
+
+Live checks found FLUX1 checkpoint4000 complete (train4375275:1h55m31s;
+infer4375276:42m12s), all96 step4000 images published, and Comet publisher
+313/313 images acknowledged with no pending metrics/assets at that observation.
+Full validation scoring was still pending. FLUX1a two-V100 admission4375739
+completed; initial fixed96 validation4376512 advanced70→80/96 during inspection
+(~31s/image, ~8min generation remaining). Production optimizer step remains0
+until initial validation/scoring/cache complete. Neither publisher was stuck.
+
+Found a leftover GPU reservation for decode stages after the streaming decoder
+change. These stages now only verify PNG/checkpoint hashes on CPU. FLUX1
+decode4000 had an estimated GPU start03:50MSK despite inference finishing01:22.
+Slurm in-place resource updates retained GPU ReqTRES; replaced only the nine
+pending verification jobs for4000..20000 with CPU-only jobs4376621..4376629,
+rewired each scoring dependency before cancelling its superseded verifier,
+and updated the pipeline ledger. Completed inference dependencies already
+purged from the scheduler were omitted only after sacct confirmed completion.
+The new decode4000 started01:30MSK oncn-031 with AllocTRES=cpu=2,node=1.
+Training/inference jobs and all checkpoint/scientific/source identities remain
+unchanged. Superseded decode cancellation is intentional maintenance.
+
+FLUX1a remaining_stages was atomically updated under its scheduler lock so all
+11 future decode verifiers request0 GPUs. Local fresh-launch stage definitions
+now match. Archives/receipts in each remote root scratch/decode_cpu_20261005.
+
+Verification: CPU decode4376621 completed0:0 in20s, all96 PNG hashes passed;
+score4375278 then RUNNING. Six focused stream/stage tests passed locally
+(pytest cache-write warning only).
+
+
+### 2026-10-05 — GPU scoring and cluster console/queue repair
+
+User reported old Comet throttle/upload warnings and FLUX1a initial validation
+delay. Actual FLUX1 checkpoint4000 and its96 images were complete; CPU
+face_quality4375279 was still advancing. Comet API output is returned with recent
+status entries before historical warning output. Explicit wall-clock timestamped
+console publication now makes current stage/step/count/ETA clear. Comet still
+reports a historical metrics throttle flag for FLUX1; the continuation loss curve
+was independently read at4000 and all313 images were acknowledged. Found a further
+asset acknowledgement bug: run metadata requested stepNone but Comet stored0.
+Two FLUX1a admission JSONs were reuploaded repeatedly. Match run-level assets
+without enforcing an optimizer step, and version changed metadata by SHA256.
+Both relays now show0 outstanding assets once current publications settle.
+
+Both scoring environments were torch2.2.0+cpu. Created isolated metrics-gpu
+(torch2.2.0+cu121, torchvision0.17.0+cu121, numpy1.26.4, Pillow11.1.0), reusing
+pinned CPU scoring dependencies via .pth. Training environments untouched.
+CLIP loads original FP32 weights on CPU before moving to GPU; PyIQA retains
+FP32 and the same crop/model/batch policies. ONNX face detection remains CPU
+with explicitly bounded threads. GPU inference finishes in its own child before
+scoring starts, releasing backbone/VAE memory. Receipts make subsequent CPU
+decode/score/face-quality stages no-ops. GPU scoring activation requires the
+shared environment gpu_verified.json; without proof, CPU scoring is retained.
+
+First diagnostic4376686 exited because the selected generated face crop had no
+TOPIQ-alignable face; ordinary evaluation already treats that as missing. The
+diagnostic now checks matching no-face behavior instead of incorrectly failing
+the execution check. Corrected4376688 completed0:0 on V100cn-004 in2m57s:
+CPU/GPU point comparison max absolute differences TOPIQ0, MUSIQ7.63e-6,
+MANIQA2.98e-8, CLIP9.54e-6. Full96 face-quality evaluation took82.075s;
+MANIQA45.452s GPU versus1352.882s CPU. GPU peak reserved27.939GiB (~88% of
+31.732GiB). Full-panel face coverage exactly matched; maximum absolute
+summary difference7.42e-6. Per-production GPU scoring now also records and
+checks peak reserved memory below90%. No model/loss/data/order change.
+
+CPU postprocessing no longer holds the GPU-stage lock or deletes conditioning
+while the next cache is being built. Cleanup moved to the next cache's start,
+preserving all validation conditioning. FLUX1 cache6000..20000 dependencies
+rewired to prior decoded validation, not CPU summary. FLUX1a initial summary
+and cache submitted as independent branches; cache4376685 then gates training
+4376693. Current cache time limits reduced2h→75min using actual full-window
+55m06s measurement; queue estimates are not guarantees. All111 unreserved
+V100s were allocated at02:07MSK (four additional V100s were reserved for others).
+Training was therefore still pending capacity, not blocked on Comet.
+
+FLUX1a summary4376684 exposed a missing RelayExperiment.log_metric method.
+Added the no-network relay method; replacement4376696 completed0:0 in16s.
+The failed attempt is retained in pipeline superseded_job_id. This did not
+cancel the independently queued cache/training. Its publisher, which had
+correctly stopped on failure, was recreated with the same immutable Comet key.
+Archives/source identity amendments and benchmark receipts are in each root's
+scratch/gpu_metrics_20261005. Training checkpoint code digest was checked
+unchanged for FLUX1a. Eighteen focused relay/executor tests passed in4.7s.
+
+
+FLUX1a Vast9B milestone2026-10-05 01:02UTC: training reached4000 and the complete
+checkpoint was automatically downloaded at00:40:48UTC to
+/mnt/c/Users/ogure/FLUX1a_checkpoints/FLUX1a_vast9B_20261004/checkpoint-004000.
+Recomputed all five local SHA256 hashes against the remote download receipt;
+all match and manifest.step=4000. Receipt:
+runs/FLUX1a_checkpoint_transfers/checkpoint_004000_download_verified.json.
+Full96 step4000 validation is advancing (24generated,25Comet images confirmed
+by the subsequent API read); Comet Running=true/hasCrashed=false. Full scoring
+and publication verification are pending. The6k controller is still waiting for
+completed4k validation; downloader remains active for6000. No repair needed.
+
+
+FLUX1a Vast9B2026-10-05 02:32UTC: complete4k fixed96 scoring/publication verified,
+receipt and quality_summary copied locally. Owner-ID0.2943213313592423,
+CLIP29.38190931081772; all96 Comet images, metrics, provenance and backgrounds
+passed. Main4k controller exited normally around02:09UTC.
+
+The6k continuation failed before update4001 at02:13UTC: OnlineIdentityObjective
+correctly rejected the4000-row label cache for the extended6000-row trajectory.
+The prior continuation check covered config/source compatibility but missed this
+derived-cache coverage requirement. Original4k labels/scientific sources and
+all checkpoints remain unchanged. Repair adds a separate FLUX1_768_to6000 cache,
+seeds all4000 original per-target receipts and parity fixture unchanged, and
+runs the original frozen preparation code only for missing scheduled targets.
+Preparation is serially supervised as prepare_identity_6000 before6k training;
+Comet progress was restarted and logs this stage. Final guard requires full6000
+coverage plus exact metadata/embedding equality for all original rows.
+
+Runtime continuation now records the extra data.identity_supervision path in
+its resolved config/checkpoints. Its scoped resume adapter permits only this
+verified derived-label superset in addition to training.steps; optimizer,
+model, sample order, input targets, RNG and all other settings remain guarded
+by the original strict extension check. Original training/model/preparation
+files and root config are not edited. Operational before/after source snapshots
+and amended continuation_6000.json are recorded under setup/labels6k_repair_*.
+Actual resumed optimizer updates remain pending label preparation.
+
+Credit at02:36UTC was2.3939USD (~4.8h at0.4983/h), versus roughly5h remaining
+including preparation, training and full96. User notified that1USD additional
+credit would provide a buffer. No credit purchase or machine lifecycle action.
+
+
+FLUX1a6k recovery confirmed2026-10-05 03:02UTC: extended identity labels cover
+all6000 rows, accepted fraction98.5%; all4000 original records/embeddings are
+exactly preserved. identity_extension_6000.json was copied locally. Training
+resumed successfully from4000 and advanced to4156 with finite loss/gradients;
+peak reserved59.994GiB/49.33%. Main6k controller16449/trainer17880 and publisher
+16487 are healthy; original4k controller exited normally. The label-coverage
+failure is resolved. Local checkpoint downloader remains active for6000.
+
+
+FLUX1a Vast9B milestone2026-10-05 06:32UTC: training completed6000 updates and
+full6k checkpoint was automatically downloaded at06:20:30UTC to
+/mnt/c/Users/ogure/FLUX1a_checkpoints/FLUX1a_vast9B_20261004/checkpoint-006000.
+Recomputed all five local SHA256 hashes against the transfer receipt; all match
+and manifest.step=6000. Both requested4k/6k local copies are verified. Downloader
+exited successfully after completing both, so inactive is now expected.
+Full96 step6000 inference is advancing with18 images confirmed in Comet;
+Running=true/hasCrashed=false. Final scoring/publication is not yet complete.
+Credit is0.4474USD (~54min), versus roughly75min remaining validation/scoring;
+previous top-up warning still applies. No running job was interrupted.
+
+
+FLUX1a Vast9B interruption2026-10-05 07:32UTC: credit is0USD and instance53994096
+again reports exited/intended stopped; SSH refuses connections. Comet is ended
+(running=false,hasCrashed=false), with78/96 fixed96 step6000 images confirmed.
+Training6000 and both full4k/6k local checkpoint downloads are complete and
+SHA256-verified. Remaining work: resume incomplete6k inference, generate/upload
+remaining18 images, score/summarize all96, then verify Comet publication. No6k
+full-panel metric result is claimed. Await credit/machine restoration; do not
+purchase credit or repeatedly attempt starts. On restoration inspect complete
+latents/stream receipts, resume rsrch_flux1a_6k and progress owner, preserving all
+completed work. Approximate remaining GPU/scoring/reload time25–30minutes.
+
+
+### 2026-10-05 — Local FLUX1a 6k validation feasibility (not launched)
+
+User requested feasibility/timing for the saved Vast9B 6k checkpoint on the
+local 16GB machine. Read-only hardware inspection: RTX4090 Laptop16GB,
+13.78GiB VRAM free; WSL30GiB RAM/~28GiB available, Ryzen9 7945HX16cores.
+Linux workspace has~941MiB free; Windows C: has~94GiB free. Checkpoint is
+local but weights/flux9b and weights/flux9b_text are absent. Pinned lock sizes
+are18.157GB backbone and16.397GB Qwen3-8B encoder. Original9B native fixed96
+artifacts exist locally from earlier validation; their hashes and frozen
+FLUX1a input contract must be checked before reuse. No9B conditioning configs
+were found in the local conditioning cache.
+
+Current loader moves the complete backbone to CUDA; inference explicitly uses
+CUDA throughout. Existing pipeline offload patches do not supply block
+offloading for this custom validation loop. Proposed feasible route: preserve
+BF16 weights and patched isolated-reference BA, batch1 initially, CPU-backed
+block offload, serial encoder/denoiser/VAE residency, bounded reference cache.
+This needs an isolated frozen-runtime adaptation and pretrained output/parity
+check; it is not yet a qualified local validation runtime. CPU-only also needs
+device-plumbing changes and careful RAM management. Do not use quantization
+or reduced resolution/denoising steps for canonical fixed96 validation.
+
+A bounded synthetic4096-wide matrix/transfer probe measured GPU BF1654.89TF/s,
+CPU BF161.473TF/s, CPU FP320.685TF/s and pinned host-to-device13.77GiB/s.
+Receipt:scratch/flux1a_local_feasibility_probe.json. These are component
+throughput measurements, not pretrained9B inference results. Planning range
+for local GPU block offload: full96 ~3–6hours, remaining18 ~35–75minutes,
+excluding adaptation/download/setup; full CPU roughly40–100hours for96 and
+8–20hours for18. Actual attention, reference passes, cache, thermal limits and
+offload overhead require a real two-image benchmark to narrow these ranges.
+The78 existing6k images/latents are still remote (Comet images published);
+resuming only18 requires recovering and verifying partial artifacts. No large
+download, validation launch, remote lifecycle operation or source sync done.
+
+
+FLUX1a Vast9B restoration 2026-10-05 12:05UTC: instance53994096 was restored externally;
+credit4.373USD. Reboot left research supervisors stopped and GPU idle. Started
+only rsrch_flux1a_6k (1359, inference1376) and rsrch_flux1a_progress (1393).
+Completed training6000/preparation receipts were skipped; original78 outputs
+and upload receipts were reused in2seconds. Worker is now generating missing
+images with96% GPU utilization, and Comet Running=true/hasCrashed=false.
+Final96 scoring/verification remains pending. Local4k/6k transfers remain done;
+no download service restart, scientific source sync or machine lifecycle action.
+
+
+FLUX1a Vast9B completion2026-10-05 12:31UTC: training6000, full96 validation
+and Comet publication are complete. Supervisor6k exited normally12:24UTC;
+progress owner exited12:25UTC after comet_verified_006000.json passed.
+All96 step6000 images independently read back from Comet; Running=false and
+hasCrashed=false correctly reflect completion. Owner-ID0.28458708553080214,
+CLIP29.46402845780055;4k remains best measured owner-ID0.2943213313592423
+(vs2k0.28100960698066046). No statistical significance claim.
+Final verifier receipt, per-image CSV, quality summary, inference/background
+audits and done receipts copied locally. Both4k/6k complete checkpoints were
+already SHA256-verified on Windows; transfer receipts remain verified.
+The completed follow-up automation is removed. No instance stop/termination
+was performed; machine lifecycle remains under user control.
+
+
+User-requested GB10 stop verified 2026-10-05 14:08UTC: Vast53994096 now actual_status=exited, intended_status=stopped. Instance was stopped, not terminated; files preserved. FLUX1a monitoring automation was already deleted after verified completion.
+
+
+2026-10-05: Completed 8-page FLUX1a Vast9B PDF report with architecture, verified0/2k/4k/6k metrics, native/historical controls, identity-cluster bootstrap intervals and eight deterministic sample panels. All24 included trained sample images match publication SHA256; native examples match routing-mask baseline hashes. PDF layout inspected; no text bounds violations. Saved reports/261005_FLUX1a_results/FLUX1a_results_report.pdf and uploaded to /Apps/temp/rsrch_new/2026-10-04/FLUX1a_results_2026-10-05.pdf (Dropbox completed receipt). No GPU startup or monitoring restart.
+
+### 2026-10-05 — Flux 2 architecture proposal after Flux 1A 6K
+
+AICODE-NOTE: The user named the proposed successor **Flux 2**. It is a project
+experiment on FLUX.2-klein Base, not a new BFL release. No Flux 2 model or runtime
+configuration is implemented or admitted by this report.
+
+Completed the 23-page [architecture review and proposal](../../reports/261005_FLUX2_proposal/Flux2_architecture_review_and_proposal.pdf),
+with portable HTML, six architecture diagrams, two measured charts, eleven
+primary research sources (including September 2026 papers), deployment-source
+hashes and a staged ablation plan. CPU recomputation matches all existing
+fixed96 scores and order. New mask-geometry analysis: median native owner-box
+short side 105px; 59/96 are below 112px. The existing admission identity/flow
+gradient ratio is 0.0444 at one test point, not a training-wide measurement.
+
+The proposal separates immutable reference memory, a persistent face state and
+RGB-sanitized one-way context, with all-layer ID/detail attention and identity
+modulation. It specifies 9B/80GB-class, 4B/48GB and 4B/16GB candidates plus a
+separately named ROI384 local fallback. Flux 2 quality, memory and throughput
+remain unmeasured; proposed_profiles.json is explicitly design-only. The PDF
+was rendered and inspected, with no text-bounds violations. Historical model
+sources/checkpoints were preserved; no training, GPU lifecycle action, commit
+or push was performed.

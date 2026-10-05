@@ -1,8 +1,8 @@
 diff --git a/extensions_built_in/diffusion_models/flux2/src/model.py b/extensions_built_in/diffusion_models/flux2/src/model.py
-index ee7dd58..cceb5bb 100644
+index ee7dd58..fdcba2f 100644
 --- a/extensions_built_in/diffusion_models/flux2/src/model.py
 +++ b/extensions_built_in/diffusion_models/flux2/src/model.py
-@@ -50,6 +50,14 @@ class Klein4BParams:
+@@ -50,6 +50,15 @@ class Klein4BParams:
      use_guidance_embed: bool = False
  
  
@@ -12,12 +12,13 @@ index ee7dd58..cceb5bb 100644
 +    reference_indices: Tensor  # absolute positions in the image stream
 +    text_tokens: int
 +    target_mask: Tensor | None = None
++    reference_bank: object | None = None
 +
 +
  class FakeConfig:
      # for diffusers compatability
      def __init__(self):
-@@ -155,8 +163,27 @@ class Flux2(nn.Module, OstrisModelMixin):
+@@ -155,8 +164,29 @@ class Flux2(nn.Module, OstrisModelMixin):
          ctx: Tensor,
          ctx_ids: Tensor,
          guidance: Tensor | None,
@@ -25,6 +26,7 @@ index ee7dd58..cceb5bb 100644
 +        branch_target_tokens: int | None = None,
 +        branch_max_reference_keys: int = 512,
 +        branch_target_mask: Tensor | None = None,
++        branch_reference_bank: object | None = None,
      ):
          num_txt_tokens = ctx.shape[1]
 +        branch_context = None
@@ -41,11 +43,12 @@ index ee7dd58..cceb5bb 100644
 +                reference_indices=branch_target_tokens + selected,
 +                text_tokens=num_txt_tokens,
 +                target_mask=branch_target_mask,
++                reference_bank=branch_reference_bank,
 +            )
  
          timestep_emb = timestep_embedding(timesteps, 256)
          vec = self.time_in(timestep_emb)
-@@ -184,6 +211,7 @@ class Flux2(nn.Module, OstrisModelMixin):
+@@ -184,6 +214,7 @@ class Flux2(nn.Module, OstrisModelMixin):
                      pe_ctx,
                      double_block_mod_img,
                      double_block_mod_txt,
@@ -53,7 +56,7 @@ index ee7dd58..cceb5bb 100644
                      use_reentrant=False,
                  )
              else:
-@@ -194,6 +222,7 @@ class Flux2(nn.Module, OstrisModelMixin):
+@@ -194,6 +225,7 @@ class Flux2(nn.Module, OstrisModelMixin):
                      pe_ctx,
                      double_block_mod_img,
                      double_block_mod_txt,
@@ -61,7 +64,7 @@ index ee7dd58..cceb5bb 100644
                  )
  
          img = torch.cat((txt, img), dim=1)
-@@ -206,6 +235,7 @@ class Flux2(nn.Module, OstrisModelMixin):
+@@ -206,6 +238,7 @@ class Flux2(nn.Module, OstrisModelMixin):
                      img,
                      pe,
                      single_block_mod,
@@ -69,7 +72,7 @@ index ee7dd58..cceb5bb 100644
                      use_reentrant=False,
                  )
              else:
-@@ -213,6 +243,7 @@ class Flux2(nn.Module, OstrisModelMixin):
+@@ -213,6 +246,7 @@ class Flux2(nn.Module, OstrisModelMixin):
                      img,
                      pe,
                      single_block_mod,
@@ -77,7 +80,7 @@ index ee7dd58..cceb5bb 100644
                  )
  
          img = img[:, num_txt_tokens:, ...]
-@@ -323,6 +354,7 @@ class SingleStreamBlock(nn.Module):
+@@ -323,6 +357,7 @@ class SingleStreamBlock(nn.Module):
          x: Tensor,
          pe: Tensor,
          mod: tuple[Tensor, Tensor],
@@ -85,7 +88,7 @@ index ee7dd58..cceb5bb 100644
      ) -> Tensor:
          mod_shift, mod_scale, mod_gate = mod
          x_mod = (1 + mod_scale) * self.pre_norm(x) + mod_shift
-@@ -337,9 +369,19 @@ class SingleStreamBlock(nn.Module):
+@@ -337,9 +372,19 @@ class SingleStreamBlock(nn.Module):
          q, k = self.norm(q, k, v)
  
          attn = attention(q, k, v, pe)
@@ -105,7 +108,7 @@ index ee7dd58..cceb5bb 100644
          return x + mod_gate * output
  
  
-@@ -398,6 +440,7 @@ class DoubleStreamBlock(nn.Module):
+@@ -398,6 +443,7 @@ class DoubleStreamBlock(nn.Module):
          pe_ctx: Tensor,
          mod_img: tuple[Tensor, Tensor],
          mod_txt: tuple[Tensor, Tensor],
@@ -113,7 +116,7 @@ index ee7dd58..cceb5bb 100644
      ) -> tuple[Tensor, Tensor]:
          img_mod1, img_mod2 = mod_img
          txt_mod1, txt_mod2 = mod_txt
-@@ -434,9 +477,24 @@ class DoubleStreamBlock(nn.Module):
+@@ -434,9 +480,24 @@ class DoubleStreamBlock(nn.Module):
          pe = torch.cat((pe_ctx, pe), dim=2)
          attn = attention(q, k, v, pe)
          txt_attn, img_attn = attn[:, : txt_q.shape[2]], attn[:, txt_q.shape[2] :]

@@ -1,0 +1,58 @@
+{
+  "pages": 8,
+  "sections": [
+    {
+      "section": 1,
+      "start": 1,
+      "pages": 1
+    },
+    {
+      "section": 2,
+      "start": 2,
+      "pages": 1
+    },
+    {
+      "section": 3,
+      "start": 3,
+      "pages": 1
+    },
+    {
+      "section": 4,
+      "start": 4,
+      "pages": 1
+    },
+    {
+      "section": 5,
+      "start": 5,
+      "pages": 1
+    },
+    {
+      "section": 6,
+      "start": 6,
+      "pages": 1
+    },
+    {
+      "section": 7,
+      "start": 7,
+      "pages": 1
+    },
+    {
+      "section": 8,
+      "start": 8,
+      "pages": 1
+    }
+  ],
+  "bounds_violations": [],
+  "images": 9,
+  "links": 11,
+  "characters": [
+    1289,
+    2760,
+    2060,
+    2997,
+    596,
+    601,
+    579,
+    570
+  ]
+}

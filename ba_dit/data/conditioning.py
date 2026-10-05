@@ -13,11 +13,14 @@ class TrainingConditioner:
         # Construct before restoring training RNG/optimizer state.
         if self.online:
             self.encoder = backend.load_encoder(config)
+        if self.online or config.get('training', {}).get('identity_loss', {}).get('weight', 0) > 0:
             self.vae = backend.load_vae(config)
 
     def __call__(self, row):
         if not self.online:
-            return load_pair(self.config, row, device='cuda')
+            # Safetensors resolves bare "cuda" to cuda:0, regardless of the
+            # process's current device. Each DDP rank must load its own inputs.
+            return load_pair(self.config, row, device=f'cuda:{torch.cuda.current_device()}')
         # Encoding must not advance the RNG used by flow noise/timestep sampling.
         with torch.no_grad(), torch.random.fork_rng(devices=conditioning_devices(self.encoder)):
             text, text_info = self.backend.encode_text(self.encoder, self.config, row)

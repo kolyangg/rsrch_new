@@ -36,7 +36,7 @@ def square_face_crop(image, bbox):
 
 
 @torch.inference_mode()
-def evaluate(directory, no_comet=False, log_dir=None, step=0, threads=DEFAULT_THREADS):
+def evaluate(directory, no_comet=False, log_dir=None, step=0, threads=DEFAULT_THREADS, device="cpu"):
     import pyiqa
 
     if importlib.metadata.version("pyiqa") != "0.1.15":
@@ -50,7 +50,7 @@ def evaluate(directory, no_comet=False, log_dir=None, step=0, threads=DEFAULT_TH
         config["logging"]["enabled"] = False
     report = json.loads((directory / "validation.json").read_text())
     detector = LegacyFaces(recognition=False)
-    models = {name: pyiqa.create_metric(name, device="cpu").eval() for name in MODELS}
+    models = {name: pyiqa.create_metric(name, device=device).eval() for name in MODELS}
     rows, crops = [], []
     for sample in report["samples"]:
         image = Image.open(directory / sample["image"]).convert("RGB")
@@ -71,7 +71,7 @@ def evaluate(directory, no_comet=False, log_dir=None, step=0, threads=DEFAULT_TH
         scores = []
         batch_size = 1 if name == "topiq_nr-face" else 8
         for start in range(0, len(crops), batch_size):
-            batch = torch.stack(crops[start:start+batch_size])
+            batch = torch.stack(crops[start:start+batch_size]).to(device)
             try:
                 values = models[name](batch).detach().float().reshape(-1).tolist()
             except Exception as error:
@@ -82,6 +82,8 @@ def evaluate(directory, no_comet=False, log_dir=None, step=0, threads=DEFAULT_TH
             if len(values) != len(batch):
                 raise ValueError(f"{name} returned the wrong score count")
             scores.extend(value if value is not None and math.isfinite(value) else None for value in values)
+            from ba_dit.progress import stage_progress
+            stage_progress('validation/'+name,len(scores),len(crops),started)
             if len(scores) % 8 == 0 or len(scores) == len(crops):
                 print(json.dumps({"face_quality_model": name, "processed": len(scores), "total_crops": len(crops),
                                   "seconds": round(perf_counter()-started, 2)}), flush=True)
@@ -105,7 +107,11 @@ def evaluate(directory, no_comet=False, log_dir=None, step=0, threads=DEFAULT_TH
         writer.writerows(rows)
     result = {"metrics": summary, "images": len(rows), "pyiqa_version": "0.1.15", "torch_version": torch.__version__,
               "crop_policy": "largest detected face; 25% padding per side; square clipped to image; 512px Lanczos; all four models use this same crop",
-              "models": MODELS, "device": "cpu", "cpu_threads": threads, "model_seconds": model_seconds}
+              "models": MODELS, "device": device, "cpu_threads": threads, "model_seconds": model_seconds}
+    if device == 'cuda':
+        result['peak_reserved_gib'] = torch.cuda.max_memory_reserved()/2**30
+        result['reserved_fraction'] = torch.cuda.max_memory_reserved()/torch.cuda.get_device_properties(0).total_memory
+        assert result['reserved_fraction'] < .9, 'GPU scoring exceeded the admitted memory budget'
     json_path = directory / "face_quality_summary.json"
     json_path.write_text(json.dumps(result, indent=2) + "\n")
     experiment = connect(config, log_dir or directory)

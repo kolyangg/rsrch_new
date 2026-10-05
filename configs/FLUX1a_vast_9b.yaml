@@ -1,0 +1,62 @@
+# Proposed follow-up; fresh BA, fixed96 at 0/2000/4000. GPU admission required.
+schema_version: 2
+name: FLUX1a_vast_9b
+model:
+  backend: flux
+  arch: flux2_klein_9b
+  weights: ${BA_ROOT}/weights/flux9b
+  encoder: ${BA_ROOT}/weights/flux9b_text
+  vae: ${BA_ROOT}/weights/flux_vae/ae.safetensors
+  revision_lock: ${BA_ROOT}/locks/weights-flux80.json
+data:
+  conditioning: online
+  train_manifest: ${BA_ROOT}/data/train_pairs_large.jsonl
+  train_limit: null
+  validation_manifest: ${BA_ROOT}/data/validation/manual_val_96.jsonl
+  target_size:
+  - 768
+  - 768
+  reference_size: 512
+  cache_dir: ${BA_ROOT}/cache/conditioning
+  identity_supervision: ${BA_ROOT}/data/identity_supervision/FLUX1_768
+branch:
+  kind: masked_face_qkvo
+  rank: 128
+  alpha: 128
+  gamma: 1.0
+  query_chunk: 128
+  max_reference_keys: 512
+  mask_feather_pixels: 16
+  reference_bank: isolated_image
+  token_ownership: binary_support
+lora:
+  rank: 8
+  alpha: 8
+training:
+  steps: 4000
+  grad_accum: 1
+  lr: 5.0e-05
+  warmup: 100
+  checkpoint_every: 500
+  validation_every: 2000
+  seed: 142
+  deterministic: true
+  gradient_checkpointing: false
+  weight_decay: 0.0
+  gradient_clip: 1.0
+  max_reserved_fraction: 0.85
+  microbatch_size: 1
+  identity_loss:
+    weight: 0.05
+    max_sigma: 0.5
+    every: 1
+validation:
+  steps: 20
+  guidance: 4.0
+  limit: 96
+  batch_size: 2
+hardware:
+  min_vram_gb: 75
+logging:
+  comet_project: rsrch_new
+  enabled: true

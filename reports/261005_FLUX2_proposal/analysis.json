@@ -1,0 +1,197 @@
+{
+  "date": "2026-10-05",
+  "status": "Flux 2 unimplemented and unmeasured",
+  "metrics": {
+    "0": {
+      "id_sim": 0.02638946290547513,
+      "text_sim": 28.949335634708405
+    },
+    "2000": {
+      "id_sim": 0.28100960698066046,
+      "text_sim": 29.32846971352895
+    },
+    "4000": {
+      "id_sim": 0.2943213313592423,
+      "text_sim": 29.38190931081772
+    },
+    "6000": {
+      "id_sim": 0.28458708553080214,
+      "text_sim": 29.46402845780055
+    },
+    "native": {
+      "id_sim": 0.27418509811589803,
+      "text_sim": 29.44020426273346
+    }
+  },
+  "paired": {
+    "4000-native": {
+      "delta": 0.020136233243344275,
+      "wins": 61,
+      "identity_wins": 3,
+      "ci95": [
+        -0.003290950839679378,
+        0.04647692514117807
+      ],
+      "by_identity": {
+        "eddie": 0.06274972731868426,
+        "elon": -0.019121192395687103,
+        "jennie": -0.002410118468105793,
+        "jensen": 0.05877913348376751,
+        "jisoo": -0.007124578395936017,
+        "keanu": 0.07514449519415696,
+        "lex": -0.005242049732866387,
+        "marion": -0.0016855510572592418
+      }
+    },
+    "6000-native": {
+      "delta": 0.010401987414904093,
+      "wins": 55,
+      "identity_wins": 6,
+      "ci95": [
+        -0.004005190016566,
+        0.026581735185269885
+      ],
+      "by_identity": {
+        "eddie": 0.010767615089813868,
+        "elon": 0.0004911795258522034,
+        "jennie": -0.007517401808096717,
+        "jensen": 0.03063216432929039,
+        "jisoo": 0.0019316126126796007,
+        "keanu": 0.05509065526227156,
+        "lex": 0.013092209895451864,
+        "marion": -0.02127213558803002
+      }
+    },
+    "6000-4000": {
+      "delta": -0.00973424582844018,
+      "wins": 39,
+      "identity_wins": 3,
+      "ci95": [
+        -0.02621391209443876,
+        0.005873721928461843
+      ],
+      "by_identity": {
+        "eddie": -0.05198211222887039,
+        "elon": 0.019612371921539307,
+        "jennie": -0.005107283339990924,
+        "jensen": -0.02814696915447712,
+        "jisoo": 0.009056191008615619,
+        "keanu": -0.020053839931885403,
+        "lex": 0.01833425962831825,
+        "marion": -0.01958658453077078
+      }
+    }
+  },
+  "face_geometry": {
+    "short_side_quantiles_pixels": [
+      50.0,
+      77.0,
+      105.0,
+      123.5,
+      245.0
+    ],
+    "short_side_below_112": 59,
+    "median_short_side_tokens": 6.5625,
+    "area_fraction_quantiles": [
+      0.007120768229166667,
+      0.01619508531358507,
+      0.024654812282986112,
+      0.036702473958333336,
+      0.14081319173177084
+    ]
+  },
+  "admission": {
+    "trainable_parameters": 33554432,
+    "native_off_exact": true,
+    "zero_mask_exact": true,
+    "all_frozen_parameters_exact": true,
+    "peak_reserved_gib": 60.66796875,
+    "identity_gradient_norm": 0.002956364657918386,
+    "flow_gradient_norm_at_id_sigma": 0.06653352747158504,
+    "weighted_identity_to_flow_gradient_ratio": 0.04443420889086306
+  },
+  "evidence_hashes": {
+    "reports/261005_FLUX1a_results/analysis.json": "1e4380fbbe4620ec6cf315d956106d5a4d844aaf184159c4e99e588f07085d70",
+    "reports/261005_FLUX1a_results/evidence/None_native_checks.json": "ec484d5cbf48235c7910fa47f5acedbd7f19aeb7ed07f403070d6faa3eed6211",
+    "reports/261005_FLUX1a_results/evidence/None_routing_masks.json": "530571f38c88585d0a05cccb3f3989ea5362d2d7bc1889d3cdd4d44ebbd702cc",
+    "reports/261005_FLUX1a_results/selection.json": "ad2f907255fe42f0eab087fb0386bd8d1b681fe9d9e5a597f433c35527c588f2",
+    "reports/261004_FLUX1_review/evidence/full96_2k_8k_comparison.json": "820810076cd712a837cc4826e202da2b6a162135eb35de6314b98f9cf76b0c56",
+    "reports/261004_FLUX1_review/evidence/reference_metric_audit.json": "49a20ef2576bff599962868909bead650e8fe75c4c2b010d577d8360a0f2866a",
+    "runs/FLUX1a_vast9B_20261004/checkpoint-002000/manifest.json": "37b5c1f357a9567982c7598b3062db4aef6513e2d1a8ec79d6bb29203b19010f",
+    "runs/FLUX1a_vast9B_20261004/comet_verified_006000.json": "f2f35506fe88018d63cfc51d42fff50068cd1792b3d22a676df023a2e2869fdb",
+    "reports/261005_FLUX1a_results/evidence/0_quality_per_image.csv": "03b6d3b93f656d0ebbc7e81c9ad54c215fbc79929dee458f36c95b255769256f",
+    "reports/261005_FLUX1a_results/evidence/2000_quality_per_image.csv": "53bf2e90d98958602437ff2cf9262558ba51e1fe61ce85dad8754679329c28d1",
+    "reports/261005_FLUX1a_results/evidence/4000_quality_per_image.csv": "11d061f754881c1be10767f138fe5964682129ed28cb80458376d848d356dbe2",
+    "reports/261005_FLUX1a_results/evidence/6000_quality_per_image.csv": "617ede11b8a48efc2a557e266e3bf7465f2ad7f3564e274dfae040fa74bde1a9",
+    "reports/261004_FLUX1_review/evidence/native96_quality_per_image.csv": "08090032b132300851b46d97eb102ad12e9345973cf8444aad023196c61a0e21"
+  },
+  "deployment_source_audit": {
+    "ba_dit/nn/isolated_reference.py": {
+      "deployment_sha256": "4510ad8089e112bbdea42e83f983939e1c50f036e64cd3e91324ad9024c51548",
+      "local_sha256": "2593ad0765bfd091573f0641600c22ae51e21940282ebe317c079bead32463d2",
+      "local_equals_deployed": false
+    },
+    "ba_dit/nn/masked_face_attention.py": {
+      "deployment_sha256": "3b4a97533da20f8e883c7c0a5824e8ddd41642bfec6cac8a61ed3e0c30cc8c67",
+      "local_sha256": "3b4a97533da20f8e883c7c0a5824e8ddd41642bfec6cac8a61ed3e0c30cc8c67",
+      "local_equals_deployed": true
+    },
+    "ba_dit/nn/online_identity_loss.py": {
+      "deployment_sha256": "8416b45989c0e176b36a4be3209fb71af085ab6593615c36e17d1ea7c196c8e1",
+      "local_sha256": "ac0dd75a8ed6ab61f185ccc254b3a1e4c507e4a6d630bde03f4d5587c16eb0c8",
+      "local_equals_deployed": false
+    },
+    "ba_dit/backends/flux_runtime.py": {
+      "deployment_sha256": "b8c01781bbcaf86f5f1004f3b067a10f135a7604336d39094789a2bd9458eae8",
+      "local_sha256": "b8c01781bbcaf86f5f1004f3b067a10f135a7604336d39094789a2bd9458eae8",
+      "local_equals_deployed": true
+    },
+    "ba_dit/nn/masked_face_flow.py": {
+      "deployment_sha256": "df511b10dd4fa8ab0008f4e86961abf0ec58a21c52c8970231625436919c1730",
+      "local_sha256": "df511b10dd4fa8ab0008f4e86961abf0ec58a21c52c8970231625436919c1730",
+      "local_equals_deployed": true
+    },
+    "scripts/online_face_ba.py": {
+      "deployment_sha256": "411017955b79e8020d04aa7b43a0e1c4ab9c78af418ce8a8d4afd37a6cc924a0",
+      "local_sha256": "a7ebf0169e12caf0ea2f8bf6fdda41bc17aab45d54f75490406d1ad92331ff41",
+      "local_equals_deployed": false
+    },
+    "patches/flux2_reference_branch_and_offload.patch": {
+      "deployment_sha256": "82108c59cc337a28ef4bf992d9aa7d92d1114807dbd9822aca15353bda090b9a",
+      "local_sha256": "82108c59cc337a28ef4bf992d9aa7d92d1114807dbd9822aca15353bda090b9a",
+      "local_equals_deployed": true
+    }
+  },
+  "checkpoint_identity": {
+    "backend": "flux",
+    "arch": "flux2_klein_9b",
+    "revisions": {
+      "flux9b": "32773329fbe7e81a90ef971740e8ba4b0364ecf3",
+      "flux9b_text": "b968826d9c46dd6066d109eabc6255188de91218",
+      "flux_vae": "3f679cf232e6d91d28396522d9502c31e8f7ccbe"
+    },
+    "source_commit": "ecee894ed2b1f3716d9d7326693061ec1a3105bb",
+    "source_patch_sha256": "82108c59cc337a28ef4bf992d9aa7d92d1114807dbd9822aca15353bda090b9a",
+    "adapter_code_sha256": "9a2656bb33833413b1d935bddd99acfaf06b24c8bc140a50a7dabbc6f0249bca",
+    "branch": {
+      "kind": "masked_face_qkvo",
+      "rank": 128,
+      "alpha": 128,
+      "gamma": 1.0,
+      "query_chunk": 128,
+      "max_reference_keys": 512,
+      "mask_feather_pixels": 16,
+      "reference_bank": "isolated_image",
+      "token_ownership": "binary_support"
+    },
+    "lora": {
+      "rank": 8,
+      "alpha": 8
+    }
+  },
+  "checkpoint_6k_manifest": {
+    "path": "/mnt/c/Users/ogure/FLUX1a_checkpoints/FLUX1a_vast9B_20261004/checkpoint-006000/manifest.json",
+    "sha256": "9cd01d206144d808477eaa4d3ea2ec19b52c9c50c1e69a0c9376f3b240f6c859",
+    "identity_and_training_digest_match_2k": true
+  }
+}

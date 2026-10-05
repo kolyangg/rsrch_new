@@ -1,0 +1,79 @@
+{
+  "R1": {
+    "title": "AnyPhoto",
+    "date": "16 March 2026; arXiv v1",
+    "url": "https://arxiv.org/html/2603.14770v1",
+    "accessed": "2026-10-05",
+    "role": "primary source; not a local reproduction"
+  },
+  "R2": {
+    "title": "WithAnyone",
+    "date": "16 October 2025; arXiv v1; ICLR 2026 project",
+    "url": "https://arxiv.org/html/2510.14975v1",
+    "accessed": "2026-10-05",
+    "role": "primary source; not a local reproduction"
+  },
+  "R3": {
+    "title": "InfiniteYou",
+    "date": "20 March 2025; ICCV 2025",
+    "url": "https://arxiv.org/html/2503.16418v1",
+    "accessed": "2026-10-05",
+    "role": "primary source; not a local reproduction"
+  },
+  "R4": {
+    "title": "DreamO",
+    "date": "2025; arXiv v3; SIGGRAPH Asia 2025",
+    "url": "https://arxiv.org/html/2504.16915v3",
+    "accessed": "2026-10-05",
+    "role": "primary source; not a local reproduction"
+  },
+  "R5": {
+    "title": "IdGlow",
+    "date": "28 February 2026; revised 8 May 2026, v2",
+    "url": "https://arxiv.org/html/2603.00607v2",
+    "accessed": "2026-10-05",
+    "role": "primary source; not a local reproduction"
+  },
+  "R6": {
+    "title": "SpatialID: Inject Where It Matters",
+    "date": "February 2026; arXiv v1",
+    "url": "https://arxiv.org/html/2602.13994v1",
+    "accessed": "2026-10-05",
+    "role": "primary source; not a local reproduction"
+  },
+  "R7": {
+    "title": "RefDiT",
+    "date": "4 September 2026; arXiv v1",
+    "url": "https://arxiv.org/html/2609.04976v1",
+    "accessed": "2026-10-05",
+    "role": "primary source; not a local reproduction"
+  },
+  "R8": {
+    "title": "ReGain",
+    "date": "30 September 2026; arXiv v1",
+    "url": "https://arxiv.org/html/2609.38680v1",
+    "accessed": "2026-10-05",
+    "role": "primary source; not a local reproduction"
+  },
+  "R9": {
+    "title": "PuLID",
+    "date": "2024; NeurIPS 2024",
+    "url": "https://arxiv.org/abs/2404.16022",
+    "accessed": "2026-10-05",
+    "role": "primary source; not a local reproduction"
+  },
+  "R10": {
+    "title": "IP-Adapter",
+    "date": "2023; decoupled cross-attention",
+    "url": "https://arxiv.org/abs/2308.06721",
+    "accessed": "2026-10-05",
+    "role": "primary source; not a local reproduction"
+  },
+  "R11": {
+    "title": "DINOv2 official implementation",
+    "date": "Frozen visual-feature encoder candidate; accessed 5 October 2026",
+    "url": "https://github.com/facebookresearch/dinov2",
+    "accessed": "2026-10-05",
+    "role": "primary source; not a local reproduction"
+  }
+}

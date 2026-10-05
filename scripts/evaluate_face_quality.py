@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Score the original four face-quality models in their isolated CPU environment."""
+"""Score the original four face-quality models in their isolated scoring environment."""
 
 import argparse
 
@@ -11,7 +11,8 @@ parser.add_argument("--no-comet", action="store_true")
 parser.add_argument("--log-dir")
 parser.add_argument("--global-step", type=int, default=0)
 parser.add_argument("--threads", type=int, default=DEFAULT_THREADS)
+parser.add_argument("--device", choices=("cpu", "cuda"), default="cpu")
 args = parser.parse_args()
 if args.threads < 1:
     parser.error("--threads must be positive")
-evaluate(args.validation, args.no_comet, args.log_dir, args.global_step, args.threads)
+evaluate(args.validation, args.no_comet, args.log_dir, args.global_step, args.threads, args.device)

@@ -1,0 +1,148 @@
+{
+  "pages": 23,
+  "sections": [
+    {
+      "title": "Flux 2: give the reference lasting control",
+      "start_page": 1,
+      "pages": 1
+    },
+    {
+      "title": "What the completed 6K run actually shows",
+      "start_page": 2,
+      "pages": 1
+    },
+    {
+      "title": "Where the aggregate score hides the difficulty",
+      "start_page": 3,
+      "pages": 1
+    },
+    {
+      "title": "Visual evidence: coherent changes, incomplete identity",
+      "start_page": 4,
+      "pages": 1
+    },
+    {
+      "title": "Flux 1A: exact computational structure",
+      "start_page": 5,
+      "pages": 1
+    },
+    {
+      "title": "Flux 1A: equations and routes that remain",
+      "start_page": 6,
+      "pages": 1
+    },
+    {
+      "title": "Ranked diagnosis: what is known and what is not",
+      "start_page": 7,
+      "pages": 1
+    },
+    {
+      "title": "Recent research: directly useful mechanisms",
+      "start_page": 8,
+      "pages": 1
+    },
+    {
+      "title": "Newest work and limits of transfer",
+      "start_page": 9,
+      "pages": 1
+    },
+    {
+      "title": "Flux 2: whole-model design",
+      "start_page": 10,
+      "pages": 1
+    },
+    {
+      "title": "An all-layer information boundary",
+      "start_page": 11,
+      "pages": 1
+    },
+    {
+      "title": "Inside one Flux 2 block",
+      "start_page": 12,
+      "pages": 1
+    },
+    {
+      "title": "Reference memory, positions and spatial authority",
+      "start_page": 13,
+      "pages": 1
+    },
+    {
+      "title": "Training: preserve flow, strengthen identity learning",
+      "start_page": 14,
+      "pages": 1
+    },
+    {
+      "title": "Noise coverage, data and training/inference alignment",
+      "start_page": 15,
+      "pages": 1
+    },
+    {
+      "title": "Large-GPU profiles and parameter budgets",
+      "start_page": 16,
+      "pages": 1
+    },
+    {
+      "title": "A practical 16GB implementation path",
+      "start_page": 17,
+      "pages": 1
+    },
+    {
+      "title": "Flux 2-Lite-ROI384: more face detail, fewer tokens",
+      "start_page": 18,
+      "pages": 1
+    },
+    {
+      "title": "Experiment sequence: make each improvement attributable",
+      "start_page": 19,
+      "pages": 1
+    },
+    {
+      "title": "How Flux 2 earns a claim of stronger reference use",
+      "start_page": 20,
+      "pages": 1
+    },
+    {
+      "title": "Implementation map, admission and failure handling",
+      "start_page": 21,
+      "pages": 1
+    },
+    {
+      "title": "Evidence, reproducibility and remaining uncertainty",
+      "start_page": 22,
+      "pages": 1
+    },
+    {
+      "title": "Primary research sources and reading guide",
+      "start_page": 23,
+      "pages": 1
+    }
+  ],
+  "bounds_violations": [],
+  "characters": [
+    2654,
+    1596,
+    1938,
+    1078,
+    1427,
+    2338,
+    2680,
+    2356,
+    2684,
+    1488,
+    1878,
+    1429,
+    2850,
+    1733,
+    2941,
+    1815,
+    2837,
+    2939,
+    2740,
+    2847,
+    2990,
+    2567,
+    1422
+  ],
+  "links": 105,
+  "pdf_sha256": "36c9d01dfa31c7bd729e8a95f873f3c913d5358a6092d2297d8498b61c77412a"
+}

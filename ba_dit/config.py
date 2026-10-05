@@ -31,8 +31,10 @@ def portable_config(config):
     result = copy.deepcopy(config)
     root = Path(os.getenv("BA_ROOT", ROOT)).resolve()
     for section, fields in (("model", ("weights", "encoder", "vae", "revision_lock")),
-                            ("data", ("train_manifest", "validation_manifest", "cache_dir"))):
+                            ("data", ("train_manifest", "validation_manifest", "cache_dir", "identity_supervision"))):
         for field in fields:
+            if field not in result[section]:
+                continue
             path = Path(result[section][field])
             if path.is_relative_to(root):
                 result[section][field] = "${BA_ROOT}/" + str(path.relative_to(root))
@@ -54,9 +56,9 @@ def load_config(path: str | Path) -> dict:
     if set(config) != expected or config["schema_version"] != 2:
         raise ValueError(f"Expected schema 2 and fields {sorted(expected)}")
     for section, fields in FIELDS.items():
-        optional = {"validation": {"batch_size"}, "branch": {"kind", "mask_feather_pixels"},
-                    "data": {"conditioning", "encoder_device"},
-                    "model": {"dtype", "conditioning_dtype", "compute_precision"}, "training": {"world_size", "microbatch_size"}}
+        optional = {"validation": {"batch_size"}, "branch": {"kind", "mask_feather_pixels", "reference_bank", "token_ownership"},
+                    "data": {"conditioning", "encoder_device", "identity_supervision"},
+                    "model": {"dtype", "conditioning_dtype", "compute_precision"}, "training": {"world_size", "microbatch_size", "identity_loss"}}
         allowed = fields | optional.get(section, set())
         if not fields <= set(config[section]) or set(config[section]) - allowed:
             raise ValueError(f"Invalid {section} fields: missing={fields-set(config[section])}, unknown={set(config[section])-allowed}")
@@ -94,8 +96,9 @@ def load_config(path: str | Path) -> dict:
                 config['model'].get('dtype') != 'float32' or
                 config['model'].get('conditioning_dtype') != 'float32' or
                 config['branch'].get('kind') != 'masked_face_qkvo' or
-                world != 1 or config['training'].get('microbatch_size', 1) != 1):
-            raise ValueError('Measured mixed precision requires single-worker FP32-master masked FLUX4B')
+                config['training'].get('microbatch_size', 1) != 1 or
+                (world == 2 and config['data'].get('conditioning') != 'cached')):
+            raise ValueError('Mixed precision requires FP32-master masked FLUX4B; two workers require cached conditioning')
     arches = {"flux": {"flux2_klein_4b", "flux2_klein_9b"}, "qwen": {"qwen_image_2_1"}}
     if config["model"]["arch"] not in arches[config["model"]["backend"]]:
         raise ValueError("Architecture does not belong to this backend")
@@ -117,6 +120,23 @@ def load_config(path: str | Path) -> dict:
     if config['branch'].get('kind') == 'masked_face_qkvo':
         if config['model']['backend'] != 'flux' or config['branch'].get('mask_feather_pixels', -1) < 0:
             raise ValueError('Masked Q/K/V/O requires FLUX Klein and an explicit nonnegative mask feather')
+    bank = config['branch'].get('reference_bank', 'joint')
+    ownership = config['branch'].get('token_ownership', 'soft')
+    if bank not in {'joint', 'isolated_image'} or ownership not in {'soft', 'binary_support'}:
+        raise ValueError('Unknown reference bank or token ownership policy')
+    objective = config['training'].get('identity_loss', {})
+    if objective and (set(objective) != {'weight', 'max_sigma', 'every'} or
+            not 0 <= objective['weight'] <= 1 or not 0 < objective['max_sigma'] <= 1 or
+            type(objective['every']) is not int or objective['every'] < 1):
+        raise ValueError('identity_loss needs weight in [0,1], max_sigma in (0,1], integer every >= 1')
+    if bank != 'joint' or ownership != 'soft' or objective:
+        bf16 = (config['model'].get('dtype', 'bfloat16') == 'bfloat16' and
+                config['model'].get('conditioning_dtype', 'bfloat16') == 'bfloat16')
+        v100 = config['model'].get('compute_precision') == 'amp_fp16_fp32_branch'
+        if config['branch'].get('kind') != 'masked_face_qkvo' or batch != 1 or not (bf16 or v100):
+            raise ValueError('FLUX1 follow-ups require masked FLUX, microbatch 1 and BF16 or the explicit V100 precision policy')
+    if objective.get('weight', 0) > 0 and not config['data'].get('identity_supervision'):
+        raise ValueError('Identity supervision requires its prepared data path and the live frozen VAE')
     return config
 
 
@@ -138,6 +158,8 @@ def adapter_identity(config: dict) -> dict:
                       "backends/flux2_native.py", "backends/qwen21.py"]
     if config['branch'].get('kind') == 'masked_face_qkvo':
         implementation += ['nn/masked_face_attention.py', 'nn/masked_face_flow.py', 'nn/batched_face_attention.py']
+    if config['branch'].get('reference_bank') == 'isolated_image':
+        implementation.append('nn/isolated_reference.py')
     if 'compute_precision' in config['model']:
         implementation.append('precision.py')
     code = hashlib.sha256(b"".join((ROOT / "ba_dit" / name).read_bytes() for name in implementation)).hexdigest()

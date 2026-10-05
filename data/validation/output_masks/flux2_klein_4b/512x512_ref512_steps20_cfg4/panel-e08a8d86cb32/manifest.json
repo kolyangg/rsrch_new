@@ -1,0 +1,80 @@
+{
+  "coverage": {
+    "needs_review": [],
+    "prepared": 2,
+    "usable": 2
+  },
+  "samples": {
+    "oneid_00": {
+      "baseline_image_sha256": "5fd146ea15232babf1ad9d6b750adbe805a86da2a50b4631013416a986fe8275",
+      "detected_boxes": [
+        [
+          222,
+          48,
+          327,
+          189
+        ]
+      ],
+      "detected_face_count": 1,
+      "face_bbox": [
+        222,
+        48,
+        327,
+        189
+      ],
+      "identity_id": "51",
+      "pixel_mask": "oneid_00.png",
+      "pixel_mask_sha256": "9131d37ea32f6f79d0ccc579059c027b2b048590748f026b04176113b2277a44",
+      "prompt": "Reading paper man img, park bench, calm face, grey overcoat",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "oneid_00.tokens.png",
+      "token_mask_sha256": "9daed0e1a8d053a4ae2ac2b658b680d5643fc9bbaea9416a9514eb1bd344dba3"
+    },
+    "oneid_01": {
+      "baseline_image_sha256": "2f065ab87bdbff401367b9b2602acc89712b31e353b61d13235f6e13ad0574f4",
+      "detected_boxes": [
+        [
+          244,
+          63,
+          286,
+          129
+        ]
+      ],
+      "detected_face_count": 1,
+      "face_bbox": [
+        244,
+        63,
+        286,
+        129
+      ],
+      "identity_id": "51",
+      "pixel_mask": "oneid_01.png",
+      "pixel_mask_sha256": "66e84e4cfe23a2d3bb745b0170309238f5c4488e9d9a2e1d3d3b636ad4dc07f0",
+      "prompt": "Rushing man img portrait, subway platform, anxious face, swinging briefcase",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "oneid_01.tokens.png",
+      "token_mask_sha256": "93a6bdd8b2e9faa462a3c824ce8b2f34d0b8acd5a30de7683974538ce7414ba2"
+    }
+  },
+  "schema": 1,
+  "selection": "largest detected face; >=.95 area tie is ambiguous; no identity-score selection",
+  "signature": {
+    "arch": "flux2_klein_4b",
+    "guidance": 4.0,
+    "panel_sha256": "e08a8d86cb3264d5b5c837a61e7bea08a5952a18a339b2e285584208d5f8063e",
+    "reference_size": 512,
+    "revisions": {
+      "flux4b": "a3b4f4849157f664bdbc776fd7453c2783562f4d",
+      "flux4b_text": "1cfa9a7208912126459214e8b04321603b3df60c",
+      "flux_vae": "3f679cf232e6d91d28396522d9502c31e8f7ccbe"
+    },
+    "steps": 20,
+    "target_size": [
+      512,
+      512
+    ]
+  },
+  "usage": "validation scoring only"
+}

@@ -1,0 +1,67 @@
+# Fresh FLUX1a adapters; 4B V100 variant, two real training workers.
+schema_version: 2
+name: FLUX1a_cluster_4b_2V100
+model:
+  backend: flux
+  arch: flux2_klein_4b
+  weights: ${BA_ROOT}/weights/flux4b
+  encoder: ${BA_ROOT}/weights/flux4b_text
+  vae: ${BA_ROOT}/weights/flux_vae/ae.safetensors
+  revision_lock: ${BA_ROOT}/locks/weights-small.json
+  dtype: float32
+  conditioning_dtype: float32
+  compute_precision: amp_fp16_fp32_branch
+data:
+  conditioning: cached
+  train_manifest: ${BA_ROOT}/data/train_pairs_large_clust.jsonl
+  train_limit: null
+  validation_manifest: ${BA_ROOT}/data/validation/manual_val_96.jsonl
+  target_size:
+  - 768
+  - 768
+  reference_size: 512
+  cache_dir: ${BA_ROOT}/cache/FLUX1a_conditioning
+  identity_supervision: ${BA_ROOT}/data/identity_supervision/FLUX1a_768
+  encoder_device: cuda
+branch:
+  kind: masked_face_qkvo
+  rank: 128
+  alpha: 128
+  gamma: 1.0
+  query_chunk: 128
+  max_reference_keys: 512
+  mask_feather_pixels: 16
+  reference_bank: isolated_image
+  token_ownership: binary_support
+lora:
+  rank: 8
+  alpha: 8
+training:
+  steps: 20000
+  grad_accum: 1
+  lr: 5.0e-05
+  warmup: 100
+  checkpoint_every: 500
+  validation_every: 2000
+  seed: 142
+  deterministic: true
+  gradient_checkpointing: true
+  weight_decay: 0.0
+  gradient_clip: 1.0
+  max_reserved_fraction: 0.9
+  world_size: 2
+  microbatch_size: 1
+  identity_loss:
+    weight: 0.05
+    max_sigma: 0.5
+    every: 1
+validation:
+  steps: 20
+  guidance: 4.0
+  limit: 96
+  batch_size: 1
+hardware:
+  min_vram_gb: 30
+logging:
+  comet_project: rsrch_new
+  enabled: true

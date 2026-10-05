@@ -1,0 +1,147 @@
+{
+  "status": "DESIGN_ONLY_NOT_ACCEPTED_BY_CURRENT_CONFIG_SCHEMA",
+  "date": "2026-10-05",
+  "shared": {
+    "backbone": "frozen pinned FLUX.2-klein Base",
+    "reference_memory": {
+      "identity_encoder": "existing pinned ArcFace; reference only",
+      "identity_tokens": 4,
+      "detail_encoder": "DINOv2 ViT-S/14; revision to lock",
+      "detail_crop_pixels": 224,
+      "detail_tokens": 64
+    },
+    "attention": {
+      "T_reads": [
+        "T"
+      ],
+      "C_reads": [
+        "T",
+        "C"
+      ],
+      "F_reads": [
+        "T",
+        "C",
+        "F"
+      ],
+      "F_extra_reads": [
+        "R_identity",
+        "R_detail"
+      ],
+      "R_reads_target": false
+    },
+    "context": {
+      "redact_before_vae": true,
+      "extra_halo_pixels_proposal": 32,
+      "reuse_original_native_latent_in_face_pass": false
+    },
+    "optimization": {
+      "lr": 5e-05,
+      "warmup": 100,
+      "seed": 142,
+      "weight_decay": 0,
+      "gradient_clip": 1,
+      "checkpoint_every": 500,
+      "pilot_steps": 2000
+    },
+    "validation": {
+      "output_size": [
+        768,
+        768
+      ],
+      "steps": 20,
+      "guidance": 4,
+      "fixed96_at": [
+        0,
+        2000,
+        4000,
+        6000
+      ],
+      "serial": true
+    },
+    "admission": {
+      "max_reserved_fraction": 0.9,
+      "hardware_fit_measured": false,
+      "requires_pretrained_parity_and_invariance": true
+    }
+  },
+  "profiles": [
+    {
+      "name": "Flux2_9B_768_proposed",
+      "arch": "flux2_klein_9b",
+      "target": [
+        768,
+        768
+      ],
+      "sites": "all 8 double + 24 single",
+      "branch_width": 512,
+      "modulation_rank": 128,
+      "core_parameters": 230686720,
+      "parameter_budget": 240000000,
+      "microbatch": 1,
+      "grad_accum": 1,
+      "checkpointing": true,
+      "hardware_target": "80GB or GB10-class, specified host required"
+    },
+    {
+      "name": "Flux2_4B_48G_proposed",
+      "arch": "flux2_klein_4b",
+      "target": [
+        768,
+        768
+      ],
+      "sites": "all 5 double + 20 single",
+      "branch_width": 256,
+      "modulation_rank": 64,
+      "core_parameters": 63569920,
+      "parameter_budget": 70000000,
+      "microbatch": 1,
+      "grad_accum": 1,
+      "checkpointing": true,
+      "hardware_target": "48GB"
+    },
+    {
+      "name": "Flux2_Lite_4B_16G_proposed",
+      "arch": "flux2_klein_4b",
+      "target": [
+        768,
+        768
+      ],
+      "sites": "all 5 double + 20 single",
+      "branch_width": 128,
+      "modulation_rank": 32,
+      "core_parameters": 30146560,
+      "parameter_budget": 35000000,
+      "microbatch": 1,
+      "grad_accum": 4,
+      "checkpointing": true,
+      "identity_every_updates": 4,
+      "hardware_target": "16GB",
+      "first_smoke": "existing 19-pair one-ID / fixed24"
+    },
+    {
+      "name": "Flux2_Lite_ROI384_16G_proposed",
+      "arch": "flux2_klein_4b",
+      "target": [
+        384,
+        384
+      ],
+      "final_canvas": [
+        768,
+        768
+      ],
+      "global_sanitized_context": [
+        256,
+        256
+      ],
+      "sites": "all 5 double + 20 single",
+      "branch_width": 128,
+      "modulation_rank": 32,
+      "crop_side": "2 * max(owner_box_width, owner_box_height)",
+      "microbatch": 1,
+      "grad_accum": 4,
+      "checkpointing": true,
+      "validation_protocol": "fixed96_flux2_roi384; separate from full-scene protocol",
+      "hardware_target": "16GB fallback; not measured"
+    }
+  ]
+}

@@ -1,5 +1,9 @@
 # FLUX1 deployment provenance
 
+The original deployment snapshots below remain historical records. The October 4
+cluster continuation replaces the encoder-GPU allocation with staged two-worker
+DDP; use [current cluster operations](FLUX1_CLUSTER_DDP.md).
+
 FLUX1 is the full-denoiser, masked Q/K/V/output BA mechanism. The user requested
 this naming on 4 October 2026. Architecture and hyperparameters are unchanged by
 the rename. `main` contains current source and renamed configs for fresh runs.
@@ -56,3 +60,133 @@ SBATCH file points at its FLUX1 config and a fresh FLUX1 run folder.
 
 This rename did not launch or alter training on either host. The archive
 branches are reproducibility records, not branches to merge over main.
+
+## Proposed FLUX1a / FLUX1b / FLUX1c, 4 October 2026
+
+These are **new Vast9B experiments**, prepared but not launched or pretrained-
+qualified. Start **FLUX1a** first. The shortcut audit and implementation are in
+[the follow-up report](../reports/261004_FLUX1_review/FLUX1_shortcut_audit_and_next_experiments.pdf).
+These names do not rename either historical FLUX1 deployment.
+
+| Priority | Config and launcher | Change | Trainable parameters |
+|---|---|---|---|
+| 1 | [FLUX1a config](../configs/FLUX1a_vast_9b.yaml), [launcher](../scripts/run_FLUX1a.sh) | Isolated reference bank; binary face-token ownership; rank128; training-target identity auxiliary, weight0.05 at sigma<=0.5 | 33,554,432 |
+| 2 | [FLUX1b config](../configs/FLUX1b_vast_9b.yaml), [launcher](../scripts/run_FLUX1b.sh) | FLUX1a with flow loss only, to establish whether the identity objective contributes | 33,554,432 |
+| 3 | [FLUX1c config](../configs/FLUX1c_vast_9b.yaml), [launcher](../scripts/run_FLUX1c.sh) | FLUX1a with rank256/alpha256, to test extra BA capacity | 67,108,864 |
+
+All three use the same frozen FLUX.2-klein Base9B, native attention operations,
+conditioning, eight branch sites, Q/K/V/output adapters and original fixed96
+panel. Each reference bank comes from a separate frozen image-only forward at
+the current sigma, with zero target/text tokens. Face K/V are selected after
+that pass; reference-image context can still inform those features. Native
+target queries, residuals, MLPs and the original native conditioning remain.
+Binary token ownership switches each token touching the existing face-mask
+support fully to BA; the original pixel feathering only composes the exterior
+after decoding. There is no proposed native/reference attention-output fusion.
+
+Training is fresh BA initialization, not a resume of old FLUX1: 4,000 updates,
+seed142, unchanged full Large pairs/order, microbatch1, AdamW lr5e-5, warmup100,
+gradient clipping1, save every500. Validate the complete96 at0/2000/4000 using
+the same prompts, references, seeds, frozen native images/masks,768px,20 steps,
+CFG4, batch2 and original ID/CLIP definitions. Keep Comet keys separate for
+each new run under `rsrch_new`; save them in `comet_experiment.json`.
+
+Use a **separate checkout**, for example `/workspace/rsrch_FLUX1abc`, with the
+pinned AI Toolkit commit and this checkout's recorded patch. Do not update
+`/workspace/rsrch_9b_8k` while its historical evaluation runs. Reuse verified
+weights, environments and conditioning caches via explicit paths; copy the
+full training manifest and its import audit with valid image paths. Keep new
+identity supervision and new runs in the new checkout. FLUX1a/c require the
+existing `onnx==1.23.1` auxiliary dependency in the FLUX environment and
+InsightFace/buffalo_l in the metrics environment. No V100 launch is provided.
+
+```bash
+# These commands are for the prepared, separate GB10 checkout.
+# No --action means plan only: no CUDA, data reads or writes.
+scripts/run_FLUX1a.sh
+
+# CPU preparation uses only training targets, never validation target photos.
+scripts/run_FLUX1a.sh --action prepare
+
+# Launch only when ready to start the new experiment on that checkout.
+scripts/run_FLUX1a.sh --action run \
+  --native-bundle /workspace/rsrch_9b_8k/runs/flux9b_8000_fixed96_20261004
+
+# Later ablations: b needs no ID preparation; c reuses a's verified labels.
+scripts/run_FLUX1b.sh --action run \
+  --native-bundle /workspace/rsrch_9b_8k/runs/flux9b_8000_fixed96_20261004
+scripts/run_FLUX1c.sh --action run \
+  --native-bundle /workspace/rsrch_9b_8k/runs/flux9b_8000_fixed96_20261004
+```
+
+The controller runs pretrained BA-off/zero-mask parity, finite branch and
+identity gradients, all64 parameter updates, largest-layout memory stress and
+exact fresh-process checkpoint replay before long training. The recipes require
+peak reserved memory below85%, stricter than the project90% ceiling. It fails
+closed on changed source/data/weights, inadequate identity-label coverage
+(<90%), missing fixed96 artifacts or failed admission. No automatic precision,
+batch, resolution or mask fallback is allowed. Passing CPU tests does not
+establish that the new pretrained configuration fits GB10 or improves quality.
+
+Run the separate eight-image causal diagnostic after a completed validation
+when the GPU is free. It picks the first fixed96 sample for each identity and
+holds the native stream, prompt, mask, noise and sampler fixed across BA-off,
+own-bank and different-person-bank arms. Donor tokens enter only the isolated
+bank. This diagnostic never replaces or logs over the full96 metrics.
+
+```bash
+envs/flux-toolkit/bin/python -m scripts.probe_flux1_reference generate \
+  --run runs/FLUX1a_vast_9b --step 2000 \
+  --output runs/FLUX1a_vast_9b/probe_swap8_002000
+envs/metrics/bin/python -m scripts.probe_flux1_reference score \
+  --output runs/FLUX1a_vast_9b/probe_swap8_002000
+```
+
+Promote based on paired full96 target-ID improvement across identities, visible
+pose/expression preservation and reference-swap causality. Lower similarity to
+native alone is not success. ArcFace is both the auxiliary and the existing ID
+metric, so compare an independent recognizer and inspect all96 images before
+claiming general identity gains. Runtime/memory/quality for these proposals
+remain unmeasured until pretrained admission and the first complete panel.
+
+### Authorized FLUX1a launch
+
+On4October the user requested starting FLUX1a on existing GB10 instance53994096.
+Supervisor `rsrch_flux1a` now owns its serial startup/training pipeline in
+`/workspace/rsrch_FLUX1abc`, run `FLUX1a_vast9B_20261004`, Comet
+`2018ec7a730243bc98d922178e58aa5c`. The GPU was free after the completed2k replay.
+See `MACHINES.md` for the latest measured stage; launch registration alone does
+not establish that optimizer updates have started.
+
+CPU identity preparation was optimized without changing training: four worker
+processes, two ONNX threads each, and `--scheduled-only` covering every sample
+that the exact trainer schedule will consume. The complete47,341-pair training
+manifest/order remains authoritative. The supervision manifest records its
+scheduled scope and full-manifest hash; loading rejects incomplete coverage
+for the requested trajectory. Admission's two-update replay is covered by the
+same labels. Extending training beyond the prepared trajectory requires labels
+for the additional samples. Earlier full-preparation receipts remain archived.
+
+The overlay environment adds the already tested ONNX1.23.1, protobuf7.36.2 and
+ml_dtypes0.5.4 without changing packages in the historical FLUX environment.
+The parallel preparer produced exactly matching embeddings and landmark
+geometry on the two-target CPU regression. Historical validation publication
+was repaired by a separate filename-normalization helper; native and BA image
+generation and metric definitions were not changed.
+
+FLUX1a admission is now measured on GB10: BA-off parity, branch/identity gradients,
+all64 parameter updates, exact checkpoint replay and memory checks passed;
+peak reserved60.67GiB (49.88%). At12:00UTC the controller was generating the
+required full96 step0 panel. `scripts.publish_flux1a_progress` runs as separate
+supervisor `rsrch_flux1a_progress` and records live stage/optimizer/validation
+counts in Comet's `runtime/live_progress` and `runtime/*` metrics. It does not
+modify or bypass the serialized training/validation workflow.
+
+For the active GB10 FLUX1a deployment, supervisor rsrch_flux1a now starts
+scripts.flux1a_live. Keep its paired rsrch_flux1a_progress process alive: it owns
+the Comet session across generation, scoring and training, and streams stage
+console output. Worker SDK sessions flush without ending the parent experiment.
+Validation now decodes/uploads every completed pair during inference, with
+live_decode_<step>.json acknowledged image receipts. The frozen original
+controller still schedules all96 scoring at2000/4000 and optimizer continuation.
+Source snapshots and deployment hashes are preserved under the run setup folder.

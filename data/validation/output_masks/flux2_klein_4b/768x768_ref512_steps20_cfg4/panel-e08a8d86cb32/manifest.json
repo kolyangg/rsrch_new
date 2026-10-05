@@ -1,0 +1,174 @@
+{
+  "coverage": {
+    "needs_review": [],
+    "prepared": 4,
+    "usable": 4
+  },
+  "samples": {
+    "oneid_00": {
+      "baseline_image_sha256": "82c270a9397213763bc0d5d0d8f602874cdff4460cfbc14c08e5d2239fb7fad5",
+      "detected_boxes": [
+        [
+          329,
+          115,
+          472,
+          296
+        ]
+      ],
+      "detected_face_count": 1,
+      "face_bbox": [
+        329,
+        115,
+        472,
+        296
+      ],
+      "identity_id": "51",
+      "pixel_mask": "oneid_00.png",
+      "pixel_mask_sha256": "4dee006dfa09211b34b8074bc979a61dd17d64f9048670923d805af35664efa1",
+      "prompt": "Reading paper man img, park bench, calm face, grey overcoat",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "oneid_00.tokens.png",
+      "token_mask_sha256": "6d7a569c613357f21a33e2e2ba558aea1ced22028e9ecbba5a960c22ea67b8e5"
+    },
+    "oneid_01": {
+      "baseline_image_sha256": "8ee3046497978d173c3bbbe57b6e78f08c963590de25878ed3db23dee76fdee2",
+      "detected_boxes": [
+        [
+          370,
+          170,
+          442,
+          268
+        ],
+        [
+          512,
+          247,
+          527,
+          269
+        ]
+      ],
+      "detected_face_count": 2,
+      "face_bbox": [
+        370,
+        170,
+        442,
+        268
+      ],
+      "identity_id": "51",
+      "pixel_mask": "oneid_01.png",
+      "pixel_mask_sha256": "69f9373aa44a650cec6ed526d1e1c8772622ab2aca0d56fd8a7632bc5120cddf",
+      "prompt": "Rushing man img portrait, subway platform, anxious face, swinging briefcase",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "oneid_01.tokens.png",
+      "token_mask_sha256": "9cf772108f313ad5e0ad947f83debaf19c79dd26ca2d6770b16dfe4b6fe0ac16"
+    },
+    "oneid_02": {
+      "baseline_image_sha256": "947f8c3cc7415eb4e5c1cc739b58872fab1bd59fbac5451299e91b6e042e1a12",
+      "detected_boxes": [
+        [
+          340,
+          125,
+          449,
+          279
+        ]
+      ],
+      "detected_face_count": 1,
+      "face_bbox": [
+        340,
+        125,
+        449,
+        279
+      ],
+      "identity_id": "51",
+      "pixel_mask": "oneid_02.png",
+      "pixel_mask_sha256": "6fa9c0778dc0e65c9965994b3c2a4c74946400c007d7f3c142849545ae426a02",
+      "prompt": "Skiing man img, snowy slope, fearless grin, orange goggles",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "oneid_02.tokens.png",
+      "token_mask_sha256": "d59d9220cfa422015dbf60185b8996afbe67eb3e300f6a38db6a2077caa9d399"
+    },
+    "oneid_03": {
+      "baseline_image_sha256": "64b847bd6353170eeb8301355799d462f7d39047a64e6abea4461a46db10ff82",
+      "detected_boxes": [
+        [
+          362,
+          115,
+          470,
+          299
+        ],
+        [
+          677,
+          503,
+          693,
+          525
+        ],
+        [
+          598,
+          475,
+          615,
+          495
+        ],
+        [
+          646,
+          488,
+          665,
+          511
+        ],
+        [
+          735,
+          493,
+          752,
+          516
+        ],
+        [
+          549,
+          417,
+          564,
+          436
+        ],
+        [
+          754,
+          500,
+          768,
+          522
+        ]
+      ],
+      "detected_face_count": 7,
+      "face_bbox": [
+        362,
+        115,
+        470,
+        299
+      ],
+      "identity_id": "51",
+      "pixel_mask": "oneid_03.png",
+      "pixel_mask_sha256": "11c810d06ec40a63d99dc19373ba90f58f78c4099f2a2a294b316d7f54657f9f",
+      "prompt": "Drumming man img, rock concert in rain, passionate angry face, black t-shirt",
+      "seed": 0,
+      "status": "largest_face",
+      "token_mask": "oneid_03.tokens.png",
+      "token_mask_sha256": "cf2f8911e9fa36122d0527eef1207c1d3c0c1b398b7ef0565811407c7b212d67"
+    }
+  },
+  "schema": 1,
+  "selection": "largest detected face; >=.95 area tie is ambiguous; no identity-score selection",
+  "signature": {
+    "arch": "flux2_klein_4b",
+    "guidance": 4.0,
+    "panel_sha256": "e08a8d86cb3264d5b5c837a61e7bea08a5952a18a339b2e285584208d5f8063e",
+    "reference_size": 512,
+    "revisions": {
+      "flux4b": "a3b4f4849157f664bdbc776fd7453c2783562f4d",
+      "flux4b_text": "1cfa9a7208912126459214e8b04321603b3df60c",
+      "flux_vae": "3f679cf232e6d91d28396522d9502c31e8f7ccbe"
+    },
+    "steps": 20,
+    "target_size": [
+      768,
+      768
+    ]
+  },
+  "usage": "validation scoring only"
+}

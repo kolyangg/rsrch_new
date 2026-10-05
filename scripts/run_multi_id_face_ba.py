@@ -118,7 +118,8 @@ def main(args):
             'stages':['import downloaded Large images if needed', 'preflight',
                       f'cache fixed{panel_size} validation only' if config['data'].get('conditioning') == 'online' else 'cache full training and validation inputs',
                       'pretrained parity / gradient / exact resume admission',
-                      f'native fixed{panel_size} / masks / scoring', 'train and validate serially']}
+                      'reuse frozen native bundle' if args.native_bundle else f'native fixed{panel_size} / masks / scoring',
+                      'train and validate serially']}
     print(json.dumps(plan, indent=2), flush=True)
     if args.dry_run:
         return  # Deliberately no data reads, cache preparation, CUDA calls or writes.
@@ -126,7 +127,7 @@ def main(args):
     import torch
     from ba_dit.data.manifest import read_manifest, assert_disjoint, file_hash
     from ba_dit.data.cache import cache_path
-    from scripts.online_face_ba import SOURCES, verify, write
+    from scripts.online_face_ba import SOURCES, followup_sources, verify, write
 
     (ROOT/'runs').mkdir(exist_ok=True)
     lock = (ROOT/'runs/face_flow_gpu.lock').open('a')
@@ -140,7 +141,7 @@ def main(args):
     os.set_inheritable(lock.fileno(), True)
     envs = Path(os.environ.get('BA_ENVS_DIR', ROOT/'envs')).resolve()
     metrics = str(envs/'metrics/bin/python'); quality = str(envs/'face-quality/bin/python')
-    for python in (metrics, quality):
+    for python in ((metrics,) if args.id_clip_only else (metrics, quality)):
         if not Path(python).is_file():
             raise FileNotFoundError(f'Missing {python}; complete scripts/setup_machine.sh flux48 first')
     if (run.exists() or setup.exists()) and not args.resume:
@@ -215,7 +216,7 @@ def main(args):
     extra_sources = ('ba_dit/distributed_training.py', 'scripts/run_clust_v100.sh') if world > 1 else ()
     guard = {'config':digest(config), 'train':file_hash(train_path),
              'validation':file_hash(config['data']['validation_manifest']),
-             'sources':{p:file_hash(ROOT/p) for p in (*SOURCES, 'scripts/run_multi_id_face_ba.py',
+             'sources':{p:file_hash(ROOT/p) for p in (*SOURCES, *followup_sources(config), 'scripts/run_multi_id_face_ba.py',
                          'scripts/check_online_face_ba.py', 'ba_dit/validation_masks.py',
                          'ba_dit/data/conditioning.py', *extra_sources)}}
     guard_path = setup/'identity.json'
@@ -247,7 +248,9 @@ def main(args):
         required = int(missing*1.1)
         if shutil.disk_usage(cache_root).free < required:
             raise RuntimeError(f'Need approximately {required/2**30:.1f} GiB free for missing input caches at {cache_root}')
-        checkpoint_budget = (config['training']['steps']//config['training']['checkpoint_every']+1)*.4*2**30+8*2**30
+        from ba_dit.nn.masked_face_attention import parameter_count
+        checkpoints = config['training']['steps']//config['training']['checkpoint_every']+1
+        checkpoint_budget = checkpoints*parameter_count(config)*12*1.1+8*2**30
         shared_disk = cache_root.stat().st_dev == setup.stat().st_dev
         if shutil.disk_usage(setup).free < checkpoint_budget+(required if shared_disk else 0):
             raise RuntimeError('Insufficient run/cache disk space; reserve caches plus checkpoints and validation images')
@@ -265,20 +268,25 @@ def main(args):
             call(admission.name,[sys.executable,'-m','scripts.check_online_face_ba',
                                 '--config',config_path,'--output',admission])
             write(admission_receipt,{'path':str(admission)})
-        baseline = setup/f'native{panel_size}'
-        command = cli+['infer','--config',config_path,'--mode','native','--output-dir',baseline,
-                       '--no-comet','--no-quality-metrics','--skip-output-masks']
-        if baseline.exists(): command += ['--resume-validation']
-        call('native96',command)
-        command = [metrics,ROOT/'scripts/build_validation_output_masks.py','--validation',baseline]
-        if args.mask_overrides:
-            command += ['--overrides',args.mask_overrides.resolve()]
-        # An explicit correction gets a new receipt and invalidates pre-init native scoring.
-        mask_key = 'masks_'+(file_hash(args.mask_overrides)[:12] if args.mask_overrides else 'auto')
-        call(mask_key,command)
-        call('native_score_'+mask_key,[metrics,'-m','scripts.evaluate_metrics','--validation',baseline,'--no-comet'])
-        bundle = setup/'native_bundle'
-        freeze_native(config,baseline,bundle,validation)
+        if args.native_bundle:
+            if args.mask_overrides:
+                raise ValueError('A reused frozen native bundle cannot accept new mask overrides')
+            bundle = args.native_bundle.resolve()
+        else:
+            baseline = setup/f'native{panel_size}'
+            command = cli+['infer','--config',config_path,'--mode','native','--output-dir',baseline,
+                           '--no-comet','--no-quality-metrics','--skip-output-masks']
+            if baseline.exists(): command += ['--resume-validation']
+            call('native96',command)
+            command = [metrics,ROOT/'scripts/build_validation_output_masks.py','--validation',baseline]
+            if args.mask_overrides:
+                command += ['--overrides',args.mask_overrides.resolve()]
+            # An explicit correction gets a new receipt and invalidates pre-init native scoring.
+            mask_key = 'masks_'+(file_hash(args.mask_overrides)[:12] if args.mask_overrides else 'auto')
+            call(mask_key,command)
+            call('native_score_'+mask_key,[metrics,'-m','scripts.evaluate_metrics','--validation',baseline,'--no-comet'])
+            bundle = setup/'native_bundle'
+            freeze_native(config,baseline,bundle,validation)
         if run.exists():
             # Preserve evidence of an interrupted initialization before rebuilding step zero.
             run.rename(setup/f'interrupted-init-{datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%f")}')
@@ -329,6 +337,7 @@ if __name__ == '__main__':
     parser.add_argument('--images-root', type=Path, help='Already extracted adjusted Large image directory')
     parser.add_argument('--metadata', type=Path, help='Pinned filtered_ids3_adj.json; defaults to private metadata bundle')
     parser.add_argument('--mask-overrides', type=Path, help='Reviewed native-image boxes; allowed only before initialization')
+    parser.add_argument('--native-bundle', type=Path, help='Reuse an existing immutable native image/latent/mask bundle')
     parser.add_argument('--conditioning', choices=('online','cached'),
                         help='Default config uses online encoding; cached explicitly prepares all training inputs')
     parser.add_argument('--resume', action='store_true')

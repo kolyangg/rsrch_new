@@ -39,7 +39,7 @@ def frozen_hash(model):
 def parity(config, out):
     os.environ['CUBLAS_WORKSPACE_CONFIG'] = ':4096:8'
     torch.use_deterministic_algorithms(True)
-    torch.set_num_threads(8)
+    torch.set_num_threads(int(os.getenv('OMP_NUM_THREADS', '8')))
     torch.manual_seed(config['training']['seed'])
     backend = backend_module(config)
     model = backend.load_transformer(config)
@@ -47,6 +47,21 @@ def parity(config, out):
     # Include the largest face support to qualify the worst routing workload.
     row = max(rows, key=lambda r: float(training_mask(r, config).sum()))
     conditioner = TrainingConditioner(config, backend)
+    identity_objective = None
+    identity_checks = {}
+    if config['training'].get('identity_loss', {}).get('weight', 0) > 0:
+        from ba_dit.nn.online_identity_loss import OnlineIdentityObjective
+        identity_objective = OnlineIdentityObjective(config, conditioner.vae)
+        eligible = [r for r in rows if identity_objective.rows.get(r['sample_id'],{}).get('accepted',False)]
+        row = max(eligible, key=lambda r: float(training_mask(r, config).sum()))
+        import numpy as np
+        probe = np.load(Path(config['data']['identity_supervision'])/'arcface_parity.npz')
+        with torch.no_grad():
+            expected = torch.from_numpy(probe['embedding']).cuda()
+            actual = identity_objective.recognizer(torch.from_numpy(probe['input']).cuda())
+            difference = float((actual-expected).abs().max())
+            assert difference < .01, 'Differentiable ArcFace differs from frozen ONNX evaluator'
+        identity_checks['arcface_onnx_parity_max_abs'] = difference
     live_check = {}
     if conditioner.online:
         # Compare against an independently prepared validation cache, not a
@@ -99,11 +114,36 @@ def parity(config, out):
     optimizer = torch.optim.AdamW(adapters.groups(model, config['training']['lr']), weight_decay=0.)
     scaler = make_scaler(config)
     torch.cuda.reset_peak_memory_stats()
+    if identity_objective is not None:
+        # Force one decoded auxiliary gradient independently of random sigma
+        # admission draws, using valid training-target landmarks only.
+        id_sigma = sigma.new_tensor([.4])
+        id_noisy = .6*tensors['target_latent'] + .4*noisy
+        prediction = backend.predict(model,tensors,id_noisy,id_sigma,config,True)
+        id_loss = identity_objective.loss(prediction,id_noisy,id_sigma,row,0,force=True)
+        id_loss.backward()
+        id_norm = sum(float(p.grad.float().square().sum()) for p in params.values() if p.grad is not None)**.5
+        assert id_norm > 0 and all(torch.isfinite(p.grad).all() for p in params.values() if p.grad is not None)
+        assert all(p.grad is None for p in conditioner.vae.parameters())
+        identity_checks.update(identity_gradient_norm=id_norm, weighted_identity_loss=float(id_loss.detach()))
+        optimizer.zero_grad(set_to_none=True)
+        del prediction, id_loss
+        prediction = backend.predict(model,tensors,id_noisy,id_sigma,config,True)
+        mask = tensors['target_face_mask'].reshape(tensors['target_latent'].shape[0],1,*id_noisy.shape[-2:])
+        flow_probe = ((prediction.float()-(noisy-tensors['target_latent']).float()).square()*mask).sum()/(mask.sum()*id_noisy.shape[1])
+        flow_probe.backward()
+        flow_norm = sum(float(p.grad.float().square().sum()) for p in params.values() if p.grad is not None)**.5
+        assert flow_norm > 0
+        identity_checks.update(flow_gradient_norm_at_id_sigma=flow_norm,
+                               weighted_identity_to_flow_gradient_ratio=id_norm/flow_norm)
+        optimizer.zero_grad(set_to_none=True)
+        del prediction, flow_probe, id_noisy
     gradients = []
     for _ in range(2):
         optimizer.zero_grad(set_to_none=True)
         with read_context():
-            loss = batch_loss(backend,model,tensors,config) if batch > 1 else backend.training_loss(model,tensors,config,True)
+            extra = {'identity_objective':identity_objective, 'row':row, 'step':0} if identity_objective else {}
+            loss = batch_loss(backend,model,tensors,config) if batch > 1 else backend.training_loss(model,tensors,config,True,**extra)
             scaler.scale(loss).backward()
         scaler.unscale_(optimizer)
         assert torch.isfinite(loss)
@@ -123,7 +163,7 @@ def parity(config, out):
         off = backend.predict(model, tensors, noisy, sigma, config, False)
     assert torch.equal(native, off) and not torch.equal(initial, trained)
     stress = None
-    if mixed(config):
+    if mixed(config) or config['branch'].get('reference_bank') == 'isolated_image':
         # Qualify the largest real reference grid with maximal routing support.
         # This is a memory/numerics stress probe, not a changed training mask.
         import math
@@ -137,13 +177,15 @@ def parity(config, out):
                 scale = min(1., math.sqrt(config['data']['reference_size']**2/(width*height)))
                 sizes[path] = (int(width*scale)//16)*(int(height*scale)//16)
             return sizes[path]
-        largest = max(rows, key=reference_tokens)
+        eligible = [r for r in rows if identity_objective.rows.get(r['sample_id'],{}).get('accepted',False)] if identity_objective else rows
+        largest = max(eligible, key=reference_tokens)
         full, _ = conditioner(largest)
         full['reference_mask'] = torch.ones_like(full['reference_mask'])
         full['target_face_mask'] = torch.ones_like(training_mask(largest, config)).cuda()
         assert full['reference_tokens'].shape[1] == reference_tokens(largest)
         optimizer.zero_grad(set_to_none=True)
-        stress_loss = backend.training_loss(model, full, config, True)
+        extra = {'identity_objective':identity_objective, 'row':largest, 'force_identity':True} if identity_objective else {}
+        stress_loss = backend.training_loss(model, full, config, True, **extra)
         scaler.scale(stress_loss).backward()
         scaler.unscale_(optimizer)
         assert torch.isfinite(stress_loss)
@@ -162,7 +204,7 @@ def parity(config, out):
         'parameter_changes':changes, 'branch_on_off_mean_abs':float((initial-native).abs().float().mean()),
         'trained_prediction_change':float((trained-initial).abs().float().mean()),
         'peak_reserved_gib':torch.cuda.max_memory_reserved()/2**30, 'reserved_fraction':fraction,
-        'inventory':inventory, 'device_memory':per_device, 'largest_layout_stress':stress, **live_check})
+        'inventory':inventory, 'device_memory':per_device, 'largest_layout_stress':stress, **live_check, **identity_checks})
     print('Pretrained parity, gradients, frozen equality and memory passed', flush=True)
 
 
@@ -204,7 +246,12 @@ def main(args):
         return x==y
     assert same(a,b)
     if mixed(config):
-        assert a['grad_scaler'] and len(a['cuda_rng']) == 2
+        assert a['grad_scaler']
+        if config['training'].get('world_size', 1) > 1:
+            assert a['distributed']['scaler'] == a['grad_scaler']
+            assert len(a['distributed']['ranks']) == config['training']['world_size']
+        else:
+            assert len(a['cuda_rng']) == (2 if config['data'].get('encoder_device') == 'cuda:1' else 1)
     write(out/'resume_parity.json', {'exact_parameters':True,'exact_optimizer_scheduler_rng_cursor':True,
                                    'exact_gradient_scaler':mixed(config), 'cuda_rng_devices':len(a['cuda_rng']),
                                    'optimizer_updates':2,'microbatch':config['training'].get('microbatch_size',1),

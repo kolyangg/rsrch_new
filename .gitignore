@@ -15,6 +15,7 @@ data/validation/*.pth
 data/train_smoke/
 data/qwen_smoke_dataset/
 data/pairs_export/
+data/identity_supervision/
 __pycache__/
 *.pyc
 *.egg-info/

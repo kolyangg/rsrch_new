@@ -36,7 +36,7 @@ outside Git. The report's equations and numerical results have not changed.
 | Variant | Config | Actual setup | Validation |
 |---|---|---|---|
 | **Vast — current 9B** | [FLUX1_vast_9b.yaml](configs/FLUX1_vast_9b.yaml) | GB10, BF16, microbatch 1 / accumulation 1, 768 px / reference 512; 2k pilot continued to8k | Fixed12 during training; native96 and trained8k full96 separately |
-| **HSE cluster — current 4B** | [FLUX1_cluster_4b.yaml](configs/clust/FLUX1_cluster_4b.yaml) | Two V100s: GPU 0 denoiser, GPU 1 frozen text encoder; one training worker; selective FP16 with FP32 BA/residual safeguards; batch 1 | Original fixed96 at 0 / every 2k; configured 20k target |
+| **HSE cluster — 4B continuation** | [Staged DDP deployment](docs/FLUX1_CLUSTER_DDP.md) | Two V100 training workers, microbatch 1 each / effective batch 2; selective FP16 with FP32 BA/residual safeguards; bounded frozen-conditioning cache | Original fixed96 at 0 / every 2k; configured 20k target; real DDP admission required |
 | **Local — 4B one-ID** | [FLUX1_local_4b_one_id.yaml](configs/FLUX1_local_4b_one_id.yaml) | 16GB, full-denoiser BA-only, accumulation 4, 2k | Named fixed24 one-ID panel |
 | **Vast — 4B alternative** | [FLUX1_vast_4b.yaml](configs/FLUX1_vast_4b.yaml) | 48GB proposal, online conditioning, effective batch 8 | Fixed96 at 0 / every 2k |
 
@@ -77,25 +77,30 @@ bound to that run and must not be used as generic new-machine launchers.
 
 Environment: `scripts/setup_clust_v100.sh` and `scripts/activate_clust_env.sh`.
 Dataset locations/import: `configs/clust/training_sources.yaml` and
-`scripts/import_training_dataset.py`. The cluster launcher is separate from
-Vast's training-first pilot:
+`scripts/import_training_dataset.py`. The current continuation uses
+[`scripts/clust_staged.py`](scripts/clust_staged.py) and
+[`jobs/flux1_clust_stage.sbatch`](jobs/flux1_clust_stage.sbatch) in an isolated
+copy of the frozen cluster runtime. See [exact paths, stage resources and
+resume gates](docs/FLUX1_CLUSTER_DDP.md).
 
 ```bash
-# On the cluster after environment/data setup; scheduler allocation is required.
-mkdir -p logs/clust
-sbatch jobs/flux4b_clust_2v100_amp.sbatch
+# Inspect the already-submitted continuation; do not submit it twice.
+cd /home/nasilaev/rsrch_new_staged
+source /home/nasilaev/rsrch_new/scripts/activate_clust_env.sh
+export BA_ROOT="$PWD" PYTHONPATH="$PWD"
+python -m scripts.clust_staged status --run runs/FLUX1_cluster_4b_ddp_20261004
 ```
 
-- `jobs/flux4b_clust_2v100_amp.sbatch` selects **FLUX1_cluster_4b.yaml** and runs
-  `scripts/run_clust_v100.sh` → `scripts/run_multi_id_face_ba.py`.
-- `jobs/clust_comet.sbatch` / `scripts/upload_clust_comet.py` publish job status.
-  `scripts/sync_clust_comet.py` relays metrics/images from the workstation when
-  compute-node uploads fail. All publishers reuse the saved Comet key.
+- Training stages request two GPUs, cache/validation stages one, and dataset
+  verification/scoring stages zero. Each stage exits before the next starts.
+- `scripts/sync_clust_comet.py --pipeline` relays status, metrics and images
+  from the workstation into the saved Comet key without a logging allocation.
 - `scripts/check_clust_v100.py` and `scripts/check_online_face_ba.py` verify the
   environment and pretrained training invariants. Benchmark/proposal configs
   ending `_fp32` or `_bf16_proposed` are not the active selective-FP16 setup.
-- Two V100s do **not** mean two data-parallel workers in this configuration:
-  the second GPU holds the frozen text encoder.
+- The older **FLUX1_cluster_4b.yaml** and encoder-GPU launcher describe the
+  superseded batch-1 experiment. They are retained for provenance; do not use
+  that allocation for the continuation.
 
 ### Config rename and existing checkpoints
 

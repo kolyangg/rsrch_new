@@ -21,7 +21,7 @@ from ba_dit.data.cache import cache_path, cache_spec, load_pair
 from ba_dit.data.manifest import assert_disjoint, file_hash, read_manifest
 from ba_dit.logging import connect
 from ba_dit.nn.masked_face_attention import training_mask, parameter_count
-from ba_dit.nn.masked_face_flow import face_alpha, token_alpha, scene_latent, preserve_background
+from ba_dit.nn.masked_face_flow import face_alpha, token_alpha, routing_token_alpha, scene_latent, preserve_background
 from ba_dit.runtime import backend_module
 from ba_dit.training import train_segment
 from ba_dit.precision import make_scaler
@@ -35,6 +35,27 @@ SOURCES = ('scripts/online_face_ba.py','scripts/run_online_face_ba.py',
     'ba_dit/data/cache.py','ba_dit/data/geometry.py','ba_dit/data/manifest.py','ba_dit/metrics.py',
     'patches/flux2_reference_branch_and_offload.patch')
 NATIVE_SOURCE = ROOT/'runs/flux4b_deep_identity1024_det_20261001'
+
+
+def followup_sources(config):
+    sources = ()
+    if config['branch'].get('reference_bank') == 'isolated_image':
+        sources += ('ba_dit/nn/isolated_reference.py', 'scripts/run_flux1_experiment.py')
+    if config['training'].get('identity_loss', {}).get('weight', 0) > 0:
+        sources += ('ba_dit/nn/online_identity_loss.py', 'ba_dit/nn/arcface_identity.py',
+                    'ba_dit/nn/deterministic_identity_loss.py', 'scripts/prepare_flux1_identity.py')
+    return sources
+
+
+def variant(config):
+    return config['name'] if config['branch'].get('reference_bank') == 'isolated_image' else 'online_masked_qkvo_v1'
+
+
+def loss_description(config):
+    value = 'face-mask-normalized native flow MSE'
+    if config['training'].get('identity_loss', {}).get('weight', 0) > 0:
+        value += '; differentiable training-target aligned identity auxiliary'
+    return value
 
 
 def write(path, value):
@@ -53,13 +74,15 @@ def memory():
 
 def experiment(config, run):
     exp = connect(config, run, name=run.name)
-    exp.log_parameters({'experiment/variant':'online_masked_qkvo_v1',
+    exp.log_parameters({'experiment/variant':variant(config),
         'trainable_scope':'branch Q/K/V/output LoRA only', 'trainable_parameters':parameter_count(config),
         'native_lora_enabled':False, 'full_denoiser_each_microbatch':True,
         'fresh_noise_and_timesteps':True, 'cached_target_hidden_states':False,
         'training/microbatch':config['training'].get('microbatch_size',1), 'training/world_size':config['training'].get('world_size', 1),
         'training/effective_batch':config['training']['grad_accum']*config['training'].get('world_size', 1)*config['training'].get('microbatch_size',1),
-        'loss':'face-mask-normalized native flow MSE; no ArcFace auxiliary',
+        'loss':loss_description(config),
+        'reference_bank':config['branch'].get('reference_bank','joint'),
+        'token_ownership':config['branch'].get('token_ownership','soft'),
         'validation/images':config['validation']['limit'],
         'validation/checkpoints':validation_steps(config),
         'validation/task':'prompt/reference generation; native background composed explicitly',
@@ -87,16 +110,21 @@ def verify(run):
     for split in ('train','validation'):
         assert file_hash(config['data'][split+'_manifest']) == identity[split+'_manifest_sha256']
     assert file_hash(run/'routing_masks.json') == identity['routing_masks_sha256']
+    if identity.get('identity_supervision') is not None:
+        from ba_dit.nn.online_identity_loss import supervision_identity
+        assert supervision_identity(config) == identity['identity_supervision']
     return config, identity
 
 
-def initialize(run, config_path, admission, native_source=None):
+def initialize(run, config_path, admission, native_source=None, cached_training_rows=None):
     config = load_config(config_path)
     native_check = json.loads((admission/'native_checks.json').read_text())
     resume_check = json.loads((admission/'resume_parity.json').read_text())
     assert native_check['all_frozen_parameters_exact'] and native_check['reserved_fraction'] < .9
     assert resume_check['exact_parameters'] and resume_check['exact_optimizer_scheduler_rng_cursor']
     assert resume_check.get('world_size', 1) == config['training'].get('world_size', 1)
+    if config['training'].get('identity_loss', {}).get('weight', 0) > 0:
+        assert native_check['identity_gradient_norm'] > 0 and native_check['arcface_onnx_parity_max_abs'] < .01
     if config['data'].get('conditioning') == 'online':
         assert native_check['live_cached_conditioning_exact'] and native_check['conditioning_preserves_training_rng']
     rows = read_manifest(config['data']['validation_manifest'])
@@ -112,7 +140,8 @@ def initialize(run, config_path, admission, native_source=None):
         assert len(rows)==24 and len(train_rows)==19
     native_source = Path(native_source or NATIVE_SOURCE)
     # Verify cache headers without rereading hundreds of GB of training tensors.
-    cached_train = [] if config['data'].get('conditioning') == 'online' else train_rows
+    cached_train = ([] if config['data'].get('conditioning') == 'online' else
+                    train_rows if cached_training_rows is None else cached_training_rows)
     for split_rows, validation in ((cached_train,False),(rows,True)):
         for row in split_rows:
             entries=[(row,'encoder'),(row,'vae')]
@@ -148,7 +177,7 @@ def initialize(run, config_path, admission, native_source=None):
     if native_quality.is_file(): shutil.copyfile(native_quality,run/'native/quality_summary.json')
     for name in ('native_checks.json','resume_parity.json'):
         shutil.copyfile(admission/name,run/name)
-    sources=SOURCES + (('scripts/run_multi_id_face_ba.py','scripts/run_flux4b_multi_id.sh',
+    sources=SOURCES + followup_sources(config) + (('scripts/run_multi_id_face_ba.py','scripts/run_flux4b_multi_id.sh',
         'scripts/check_online_face_ba.py','ba_dit/validation_masks.py','ba_dit/data/conditioning.py') if multi_id else ())
     if config['training'].get('world_size', 1) > 1:
         sources += ('ba_dit/distributed_training.py', 'scripts/run_clust_v100.sh')
@@ -156,7 +185,7 @@ def initialize(run, config_path, admission, native_source=None):
         target=run/'source_snapshot'/source
         target.parent.mkdir(parents=True,exist_ok=True)
         shutil.copyfile(ROOT/source,target)
-    identity={'variant':'online_masked_qkvo_v1','base':adapter_identity(config),
+    identity={'variant':variant(config),'base':adapter_identity(config),
         'config_sha256':digest(config),'source_sha256':{p:file_hash(ROOT/p) for p in sources},
         'train_manifest_sha256':file_hash(config['data']['train_manifest']),
         'validation_manifest_sha256':file_hash(config['data']['validation_manifest']),
@@ -164,10 +193,15 @@ def initialize(run, config_path, admission, native_source=None):
         'native_source':str(native_source), 'admission':str(admission),
         'split_policy':'identity_disjoint' if multi_id else 'one_id_diagnostic',
         'trainable_parameters':parameter_count(config),'trainable_tensors':64,
-        'loss':'mask-normalized flow MSE, fresh native noise and sigma',
+        'loss':loss_description(config),
         'validation_targets':False,'mask_feather_pixels':16,
         'training_masks':{r['sample_id']:{'target_hash':r['target_hash'],
              'source_face_box':r['target_box']} for r in train_rows}}
+    if config['training'].get('identity_loss', {}).get('weight', 0) > 0:
+        from ba_dit.nn.online_identity_loss import supervision_identity
+        identity['identity_supervision'] = supervision_identity(config)
+    identity['reference_bank'] = config['branch'].get('reference_bank', 'joint')
+    identity['token_ownership'] = config['branch'].get('token_ownership', 'soft')
     write(run/'identity.json',identity)
     torch.manual_seed(config['training']['seed']);random.seed(config['training']['seed'])
     model=backend_module(config).load_transformer(config)
@@ -224,7 +258,7 @@ def infer(run,config,step):
             tensors={key:loaded[0][key] if key=='reference_mask' else torch.cat([pair[key] for pair in loaded]) for key in loaded[0]}
             assert all(torch.equal(pair['reference_mask'],tensors['reference_mask']) for pair in loaded)
             native=torch.cat([load_file(run/'native'/path.name)['latent'] for path in paths]).cuda()
-            alpha=torch.cat([token_alpha(face_alpha((width,height),masks[row['sample_id']]['face_bbox'],config['branch']['mask_feather_pixels'])) for row in group]).cuda()
+            alpha=torch.cat([routing_token_alpha(face_alpha((width,height),masks[row['sample_id']]['face_bbox'],config['branch']['mask_feather_pixels']),config) for row in group]).cuda()
             tensors['target_face_mask']=alpha.flatten(1)
             noise=torch.cat([torch.randn(native[i:i+1].shape,generator=torch.Generator().manual_seed(row['seed']),dtype=native.dtype) for i,row in enumerate(group)]).cuda()
             face=noise.clone()
@@ -248,11 +282,15 @@ def infer(run,config,step):
                 'image':key+'.png','checkpoint_sha256':sha,'target_photo_loaded':False,
                 'mask_source':'frozen native generation','face_cfg':config['validation']['guidance']})
         write(folder/'validation.json',{'backend':config['model']['arch'],'mode':'branch_only',
-            'variant':'online_masked_qkvo_v1','checkpoint':str(checkpoint),'checkpoint_sha256':sha,
+            'variant':variant(config),'checkpoint':str(checkpoint),'checkpoint_sha256':sha,
             'panel_sha256':file_hash(config['data']['validation_manifest']),'samples':samples})
+        from ba_dit.progress import stage_progress
+        stage_progress('validation/inference', len(samples), len(rows), started)
         print(f'Validation {step}: {len(samples)}/{len(rows)}; {time.monotonic()-started:.0f}s',flush=True)
     write(run/f'inference_audit_{step}.json',{'checkpoint_sha256':sha,'samples':len(rows),
-        'full_denoiser':True,'target_photos_loaded':False,'exact_latent_exterior':True,**memory()})
+        'full_denoiser':True,'target_photos_loaded':False,'exact_latent_exterior':True,
+        'reference_bank':config['branch'].get('reference_bank','joint'),
+        'token_ownership':config['branch'].get('token_ownership','soft'),**memory()})
 
 
 @torch.no_grad()
@@ -261,7 +299,7 @@ def decode(run,config,step):
     folder=run/f'validation-{step:06d}'
     report=json.loads((folder/'validation.json').read_text())
     masks=json.loads((run/'routing_masks.json').read_text())['samples']
-    exp=experiment(config,run);audit=[]
+    exp=experiment(config,run);audit=[];started=time.monotonic()
     try:
         for row in report['samples']:
             key=row['sample_id'];original=run/'native'/f'{key}.png'
@@ -279,6 +317,8 @@ def decode(run,config,step):
             audit.append({'sample_id':key,'background_max_abs':float(difference[~support].max()) if (~support).any() else 0.,
                           'face_mean_abs':float(difference[support].mean())})
             exp.log_image(image,name=f"fixed{config['validation']['limit']}/{key}",step=step,metadata={'prompt':row['prompt'],'seed':row['seed']})
+            from ba_dit.progress import stage_progress
+            stage_progress('validation/decode',len(audit),len(report['samples']),started)
         write(run/f'background_audit_{step}.json',audit)
         exp.log_asset(str(folder/'validation.json'),file_name=f'validation_{step:06d}.json')
     finally:exp.end()

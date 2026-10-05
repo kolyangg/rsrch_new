@@ -1,0 +1,261 @@
+{
+  "evidence_cutoff": "2026-10-01T19:12:53+00:00",
+  "run": "/home/kolyangg/rsrch_new/runs/flux4b_reference_refiner1024_b128_20261001",
+  "identity": {
+    "variant": "masked_face_reference_refiner_v4",
+    "base": {
+      "backend": "flux",
+      "arch": "flux2_klein_4b",
+      "revisions": {
+        "flux4b": "a3b4f4849157f664bdbc776fd7453c2783562f4d",
+        "flux4b_text": "1cfa9a7208912126459214e8b04321603b3df60c",
+        "flux_vae": "3f679cf232e6d91d28396522d9502c31e8f7ccbe"
+      },
+      "source_commit": "ecee894ed2b1f3716d9d7326693061ec1a3105bb",
+      "source_patch_sha256": "e3b8e1b61857a9d0071283e7e0e593833ff9b45cfc6a9dac7aad132a4872cdb3",
+      "adapter_code_sha256": "e0995efb7df54403b1a3d94a66ae6fa577b37ae330805b47450ce128c22960c1",
+      "branch": {
+        "alpha": 256,
+        "gamma": 1.0,
+        "max_reference_keys": 512,
+        "query_chunk": 128,
+        "rank": 256
+      },
+      "lora": {
+        "alpha": 8,
+        "rank": 8
+      }
+    },
+    "config_sha256": "79a97cb11385d1bc18d024d7e1ba9ed617bb1d685bf43f4ff62eaa40f5131e0e",
+    "source_sha256": {
+      "scripts/masked_face_flow.py": "8872789b49fd8e4122a512601aff981958e36baa83440389c84cad94907e29e1",
+      "scripts/train_masked_face_flow.py": "a7b9eed206251af9042efa9ec8ddd43314e6a57bf4956e6394e5232046853fe5",
+      "ba_dit/nn/masked_face_flow.py": "c57b4ced830fc306bfc073299be9a9937eea06e579e8eb9c291a7a841bdf0596",
+      "scripts/face_crop_flow.py": "5c02da42e754e970edc5ac434982e93adacb7bfe57616e15da155e5fac1f8cb2",
+      "ba_dit/nn/face_crop_flow.py": "3af7d82b99db8dc8b499decfcde876ef3a41d1aebcbbe924fd3c3c85e5b5947d",
+      "ba_dit/backends/attention.py": "8a60ef1e945acdc8558597cdde542d29a0f7f4b5cf7cccd255eba429e39d4e0b",
+      "ba_dit/backends/flux_runtime.py": "ba3f9f39549917875303641067913315229afed593fc28649eb68e89fd64f036",
+      "scripts/conditioned_face_flow.py": "ebc7ac956d2725ea020be5204e7f3700c9c42e84cd87a38da638ef76d30d0845",
+      "ba_dit/nn/conditioned_face_flow.py": "2e6a1d86b0c04b8b21330949b32b87a4ffcfb8c32ccd1cdc57dfba90223c9fa4",
+      "ba_dit/nn/reference_refiner_flow.py": "a53d750859ed4d0de9f50eff82581ee44f65aaace52f868dd2786630ce230a51",
+      "scripts/run_reference_refiner.py": "4454e0af21fb52da7f10e87fa7315c02352c9e4c77bdc51c6681b0dc6f8443b3",
+      "scripts/benchmark_reference_refiner.py": "d057ac6825d1ab5c799fc38133afc87da2b9b6b82a83c25f92bd3afb020713d1",
+      "scripts/expand_face_flow_cache.py": "80e929b6126f9e0701b9426863eb4632c55d4a8e2e4d61447f965d0776f4cbe7"
+    },
+    "train_manifest_sha256": "fca34ce7041276fa7c45edc6102f7f2560019884c8cb940f0eb6b75f4e0a3262",
+    "validation_manifest_sha256": "508e72d74861f2ae26414352c1291eef9d46fa9d18b9c7c088481a8f384bf98c",
+    "routing_masks_sha256": "92a2e571ffb10da0f91cb19ae4a8c24d74f8e4354a2441ca2fb7f50ccbc26628",
+    "initial_sha256": "15b10b4830a4b26c74d8c8c00428ae02920086d966865b8ec71aceb2980ab7d9",
+    "query_residual": true,
+    "noise_skip": true,
+    "timestep_scaling": false,
+    "trainable_parameters": 14048385,
+    "loss": "unweighted native flow MSE on 64 sampled face tokens per full-image case",
+    "sigmas": "original six values plus fresh stratified continuous sigmas; see cache manifest",
+    "training_reference": {
+      "sample_id": "oneid_00",
+      "identity_id": "51",
+      "prompt": "Reading paper man img, park bench, calm face, grey overcoat",
+      "reference": "/home/kolyangg/rsrch_new/data/datasets/one_id/ref/51.jpg",
+      "reference_box": [
+        425,
+        119,
+        666,
+        448
+      ],
+      "reference_hash": "5fdc48f461b0629b75113cfb2a7e078cc94d6a4f1b61eb1121452d87b4d77ed9",
+      "seed": 0,
+      "split_policy": "one_id_diagnostic"
+    },
+    "training_images": 19,
+    "native_background_cfg": 4.0,
+    "face_cfg": 1.0,
+    "validation_targets": false,
+    "native_velocity_inside_face": false,
+    "background": "frozen native generated image; noised interpolation; exact final pixel preservation",
+    "cache_source": {
+      "run": "/home/kolyangg/rsrch_new/runs/face_flow_refiner_cache_20261001",
+      "manifest_sha256": "f04e1315aa35a1b6e3ac7be98cf9a4d290058ec9637e173e7eac69371996b475"
+    },
+    "head": {
+      "kind": "refiner",
+      "width": 1024,
+      "heads": 16,
+      "weight_decay": 0.01
+    },
+    "probe_every": 1000,
+    "live_metric_every": 100,
+    "optimizer_batch_size": 128,
+    "frozen_core_cache": true,
+    "batch_gather": "stacked CUDA tensors",
+    "comparison": "bundled architecture, noise diversity and optimizer experiment",
+    "initial_flow_is_zero": false,
+    "initialization": "frozen trained 512-wide BA core plus zero-output 1024-wide reference refiner",
+    "core_checkpoint": {
+      "path": "/home/kolyangg/rsrch_new/runs/flux4b_face_conditioned512_diverse_20261001/checkpoint-010000/branch.safetensors",
+      "sha256": "a5c88a2914b6d32911e15eae996d8a9d7c3ad1f79c47c7fabefff89e1780468f",
+      "manifest_sha256": "061e3d5f05b6a39994782d382718ba38e9aa7c508076993df191250711de8553",
+      "step": 10000
+    },
+    "ablation": "new refiner off; frozen core retains its own reference conditioning",
+    "frozen_BA_parameters": 5327360
+  },
+  "status": {
+    "controller_pid": 247164,
+    "status": "running",
+    "run": "/home/kolyangg/rsrch_new/runs/flux4b_reference_refiner1024_b128_20261001",
+    "stage": "infer",
+    "target_step": 2000,
+    "updated_at": "2026-10-01T19:12:01.980156+00:00",
+    "child_pid": 249081,
+    "last_completed_validation": 500,
+    "training_steps": 500,
+    "best_step": 500,
+    "best_id_sim": 0.22971392112473646,
+    "consecutive_small_gains": 0,
+    "plateau": false,
+    "minimum_gain": 0.003,
+    "patience": 2,
+    "history": [
+      {
+        "step": 500,
+        "id_sim": 0.22971392112473646,
+        "gain_over_previous_best": 0.0031179633612433977,
+        "consecutive_small_gains": 0
+      }
+    ]
+  },
+  "image_scores": {
+    "0": {
+      "id_sim_legacy_best": 0.2267913126076261,
+      "id_sim_face_count": 4.125,
+      "id_sim_no_face": 0.0,
+      "id_sim": 0.22659595776349306,
+      "id_sim_mask_iou": 0.9094060970720808,
+      "id_sim_unowned": 0.0,
+      "output_mask_missing": 0.0,
+      "id_sim_ambiguous": 0.0,
+      "text_sim": 26.187713861465454
+    },
+    "500": {
+      "id_sim_legacy_best": 0.22971392112473646,
+      "id_sim_face_count": 4.125,
+      "id_sim_no_face": 0.0,
+      "id_sim": 0.22971392112473646,
+      "id_sim_mask_iou": 0.9137215835435603,
+      "id_sim_unowned": 0.0,
+      "output_mask_missing": 0.0,
+      "id_sim_ambiguous": 0.0,
+      "text_sim": 26.164817730585735
+    }
+  },
+  "best_checkpoint": {
+    "best_step": 500,
+    "best_id_sim": 0.22971392112473646,
+    "consecutive_small_gains": 0,
+    "plateau": false,
+    "minimum_gain": 0.003,
+    "patience": 2,
+    "history": [
+      {
+        "step": 500,
+        "id_sim": 0.22971392112473646,
+        "gain_over_previous_best": 0.0031179633612433977,
+        "consecutive_small_gains": 0
+      }
+    ]
+  },
+  "git_head": "ff56337e9bd5b131eaf946895a3f73c8cec3c490",
+  "note": "Uncommitted implementation is identified by source hashes and run snapshot, not git HEAD alone.",
+  "source_hashes": {
+    "/home/kolyangg/rsrch_new/reports/261001_reference_refiner/build_report.py": "b951ed045b8e01243c54b5e7ea006d2bc5a3e60ac321172a97c1ad383ad826f2",
+    "/home/kolyangg/rsrch_new/reports/261001_reference_refiner/report_style.py": "4ecb706e583120723b28d6c8c80799b000670a6fbb6f851c9eb29e0777c66624",
+    "/home/kolyangg/rsrch_new/runs/flux4b_reference_refiner1024_b128_20261001/identity.json": "59a720f425c941502ac41dd781062b727cfe711fc9aee4e8c5abf2963988789e",
+    "/home/kolyangg/rsrch_new/runs/flux4b_reference_refiner1024_b128_20261001/status.json": "4cdb8c0077b0692613e15472c20747ba88c68b8102b49d546b546c56717a7c7c",
+    "/home/kolyangg/rsrch_new/runs/flux4b_reference_refiner1024_b128_20261001/training_summary.json": "d38a3057b07cd910aa635a4789b7be5b4c0d80312ebdb5fb67839725d126835a",
+    "/home/kolyangg/rsrch_new/runs/flux4b_reference_refiner1024_b128_20261001/probes.json": "f463e6fb6e639e148005b6ba171220d84b3b4b371be230466b6895fede7558ef",
+    "/home/kolyangg/rsrch_new/runs/flux4b_reference_refiner1024_b128_20261001/execution_plan.json": "f3df1eee8444625238faeab0734e0e439545e1921df8bc9d4e5d584ad49a75fb",
+    "/home/kolyangg/rsrch_new/sources/ai-toolkit-flux/extensions_built_in/diffusion_models/flux2/src/model.py": "a511a46ceffa247cb5c78e716fece7e4e5d44dc132030cb184b27156179faf2f",
+    "/home/kolyangg/rsrch_new/scripts/masked_face_flow.py": "8872789b49fd8e4122a512601aff981958e36baa83440389c84cad94907e29e1",
+    "/home/kolyangg/rsrch_new/scripts/train_masked_face_flow.py": "a7b9eed206251af9042efa9ec8ddd43314e6a57bf4956e6394e5232046853fe5",
+    "/home/kolyangg/rsrch_new/ba_dit/nn/masked_face_flow.py": "c57b4ced830fc306bfc073299be9a9937eea06e579e8eb9c291a7a841bdf0596",
+    "/home/kolyangg/rsrch_new/scripts/face_crop_flow.py": "5c02da42e754e970edc5ac434982e93adacb7bfe57616e15da155e5fac1f8cb2",
+    "/home/kolyangg/rsrch_new/ba_dit/nn/face_crop_flow.py": "3af7d82b99db8dc8b499decfcde876ef3a41d1aebcbbe924fd3c3c85e5b5947d",
+    "/home/kolyangg/rsrch_new/ba_dit/backends/attention.py": "8a60ef1e945acdc8558597cdde542d29a0f7f4b5cf7cccd255eba429e39d4e0b",
+    "/home/kolyangg/rsrch_new/ba_dit/backends/flux_runtime.py": "ba3f9f39549917875303641067913315229afed593fc28649eb68e89fd64f036",
+    "/home/kolyangg/rsrch_new/scripts/conditioned_face_flow.py": "ebc7ac956d2725ea020be5204e7f3700c9c42e84cd87a38da638ef76d30d0845",
+    "/home/kolyangg/rsrch_new/ba_dit/nn/conditioned_face_flow.py": "2e6a1d86b0c04b8b21330949b32b87a4ffcfb8c32ccd1cdc57dfba90223c9fa4",
+    "/home/kolyangg/rsrch_new/ba_dit/nn/reference_refiner_flow.py": "a53d750859ed4d0de9f50eff82581ee44f65aaace52f868dd2786630ce230a51",
+    "/home/kolyangg/rsrch_new/scripts/run_reference_refiner.py": "4454e0af21fb52da7f10e87fa7315c02352c9e4c77bdc51c6681b0dc6f8443b3",
+    "/home/kolyangg/rsrch_new/scripts/benchmark_reference_refiner.py": "d057ac6825d1ab5c799fc38133afc87da2b9b6b82a83c25f92bd3afb020713d1",
+    "/home/kolyangg/rsrch_new/scripts/expand_face_flow_cache.py": "80e929b6126f9e0701b9426863eb4632c55d4a8e2e4d61447f965d0776f4cbe7",
+    "/home/kolyangg/rsrch_new/runs/flux4b_reference_refiner1024_b128_20261001/validation-000000/quality_summary.json": "d3979c6854517c158b968402f854af2324117eb9820674aff7b023877310a0c3",
+    "/home/kolyangg/rsrch_new/runs/flux4b_reference_refiner1024_b128_20261001/validation-000500/quality_summary.json": "1d2652880090a6bd6059fda29eabb05840bd9debd0e1995cf5809cc27baff945"
+  },
+  "pages": [
+    {
+      "number": 1,
+      "title": "Stronger BA: reference-conditioned face refinement"
+    },
+    {
+      "number": 2,
+      "title": "Whole model: native scene, then BA face generation"
+    },
+    {
+      "number": 3,
+      "title": "Exact connection point: the final single-stream block"
+    },
+    {
+      "number": 4,
+      "title": "Branched attention: frozen base + stronger reference correction"
+    },
+    {
+      "number": 5,
+      "title": "Reference conditioning and bounded attention \u2014 actual code"
+    },
+    {
+      "number": 6,
+      "title": "What trains, and what stays frozen"
+    },
+    {
+      "number": 7,
+      "title": "Training data and why cached optimization is fast"
+    },
+    {
+      "number": 8,
+      "title": "Batch scaling: saturate compute before adding more memory"
+    },
+    {
+      "number": 9,
+      "title": "Native background + BA face: explicit spatial routing"
+    },
+    {
+      "number": 10,
+      "title": "Reviewed masks over the native validation images"
+    },
+    {
+      "number": 11,
+      "title": "Relationship to CL14 / CL39 and the earlier FLUX adapter"
+    },
+    {
+      "number": 12,
+      "title": "Evidence behind the redesign: more steps had reduced ID scores"
+    },
+    {
+      "number": 13,
+      "title": "Current experiment: image scores and flow-loss probes"
+    },
+    {
+      "number": 14,
+      "title": "Same scenes: native, frozen core and latest scored refiner"
+    },
+    {
+      "number": 15,
+      "title": "Measured checks, checkpoint identity and memory"
+    },
+    {
+      "number": 16,
+      "title": "Convergence, limitations and reproducible artifacts"
+    }
+  ]
+}

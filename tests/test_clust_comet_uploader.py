@@ -15,6 +15,33 @@ from scripts.sync_clust_comet import Publisher
 
 
 class CometUploaderTest(unittest.TestCase):
+    def test_pipeline_transport_failure_recovers_without_claiming_worker_failure(self):
+        from scripts import sync_clust_comet as relay
+        monitor, worker = Mock(), Mock()
+        observed = {'job_id':'123', 'worker_job_id':'124', 'active':False,
+                    'slurm_state':'COMPLETED', 'stage':'summarize_20000'}
+        worker.result={'observation':observed,'pending_assets':0,'pending_metric_steps':0,'pending_summary_metrics':0}
+        sdk=SimpleNamespace(API=Mock(return_value=SimpleNamespace(get_experiment_by_key=lambda key:monitor)))
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root/'.env').write_text('')
+            with patch.object(relay,'ROOT',root), \
+                    patch.object(relay,'PublicationWorker',return_value=worker), \
+                    patch.object(relay,'pipeline_status',side_effect=[
+                        subprocess.CalledProcessError(1,['ssh'],stderr='VPN unavailable'), observed]) as status, \
+                    patch.object(relay.time,'sleep'), \
+                    patch.dict(sys.modules,{'comet_ml':sdk,'comet_ml.config':SimpleNamespace(get_config=lambda:SimpleNamespace(override={}))}), \
+                    patch('scripts.upload_clust_comet.keep_alive'), \
+                    patch.object(sys,'argv',['relay','--run-name','run','--job-id','123',
+                                           '--experiment-key','key','--pipeline']):
+                relay.main()
+        self.assertEqual(status.call_count,2)
+        monitor.log_other.assert_any_call('cluster/monitoring_status',
+                                         'unreachable; last worker observation is stale')
+        monitor.log_other.assert_any_call('cluster/monitoring_status','connected')
+        monitor.set_state.assert_called_once_with('finished')
+        worker.submit.assert_called_once_with(observed)
+
     def test_resume_keeps_interrupted_metrics_out_of_new_curve(self):
         # The cancelled attempt has step 2 already, but its replay must still
         # publish and verify against the new attempt's curve.
@@ -95,3 +122,95 @@ class CometUploaderTest(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+def test_partial_panel_publishes_only_finished_pngs(tmp_path):
+    from PIL import Image
+    from scripts.sync_clust_comet import completed_outputs
+    panel=tmp_path/'validation-002000';panel.mkdir()
+    samples=[{'sample_id':str(i),'image':f'{i}.png','prompt':'same prompt','seed':i} for i in range(96)]
+    (panel/'validation.json').write_text(json.dumps({'samples':samples}))
+    Image.new('RGB',(8,8)).save(panel/'0.png')
+    (panel/'1.png').write_bytes((panel/'0.png').read_bytes()[:30])
+    images,assets,summaries=completed_outputs(tmp_path)
+    assert [(r[1],r[2]) for r in images]==[('fixed96/0',2000)]
+    assert not assets and not summaries
+    Image.new('RGB',(8,8)).save(panel/'1.png')
+    assert len(completed_outputs(tmp_path)[0])==2
+
+
+def outbox(tmp_path):
+    p=Publisher.__new__(Publisher)
+    p.key='key';p.folder=tmp_path;p.delivery_path=tmp_path/'asset_delivery.json'
+    p.delivery=json.loads(p.delivery_path.read_text()) if p.delivery_path.exists() else {}
+    p.api=Mock();p.experiment=Mock()
+    return p
+
+
+def test_image_name_without_extension_is_confirmed_without_reupload(tmp_path):
+    p=outbox(tmp_path)
+    lookup=p.api._api._client.get_experiment_assets_list_by_name
+    lookup.return_value=[{'userFileName':'fixed96/00','step':2000,'assetId':'existing'}]
+    image=tmp_path/'00.png';image.write_bytes(b'unchanged')
+    assert p.deliver([(image,'fixed96/00',2000,{})],[])==(1,0)
+    lookup.assert_called_once_with('key','fixed96/00',asset_type='image',timeout=15)
+    p.experiment.log_image.assert_not_called()
+    restarted=outbox(tmp_path)
+    assert restarted.deliver([(image,'fixed96/00',2000,{})],[])==(1,0)
+    restarted.api._api._client.get_experiment_assets_list_by_name.assert_not_called()
+
+
+def test_delayed_image_ack_survives_restart_without_duplicate_queue(tmp_path):
+    p=outbox(tmp_path)
+    lookup=p.api._api._client.get_experiment_assets_list_by_name
+    lookup.return_value=[]
+    image=tmp_path/'00.png';image.write_bytes(b'unchanged')
+    items=[(image,'fixed96/00',2000,{})]
+    assert p.deliver(items,[])==(0,1)
+    p.experiment.log_image.assert_called_once()
+    p=outbox(tmp_path);lookup=p.api._api._client.get_experiment_assets_list_by_name
+    lookup.return_value=[]
+    assert p.deliver(items,[])==(0,1)
+    p.experiment.log_image.assert_not_called()
+    lookup.return_value=[{'userFileName':'fixed96/00','step':2000,'assetId':'arrived'}]
+    assert p.deliver(items,[])==(1,0)
+    p.experiment.log_image.assert_not_called()
+
+
+def test_metadata_with_implicit_zero_step_is_acknowledged(tmp_path):
+    p=outbox(tmp_path)
+    p.api._api._client.get_experiment_assets_list_by_name.return_value=[{'step':0,'assetId':'metadata'}]
+    path=tmp_path/'admission.json';path.write_text('{}')
+    assert p.deliver([],[(path,'run/admission.json',None)])==(0,0)
+    p.experiment.log_asset.assert_not_called()
+
+
+def test_changed_metadata_gets_its_own_remote_revision(tmp_path):
+    p=outbox(tmp_path)
+    lookup=p.api._api._client.get_experiment_assets_list_by_name
+    lookup.return_value=[{'step':0,'assetId':'old'}]
+    path=tmp_path/'deployment.json';path.write_text('{}')
+    p.deliver([],[(path,'run/deployment.json',None)])
+    path.write_text('{"revision":2}')
+    lookup.return_value=[]
+    assert p.deliver([],[(path,'run/deployment.json',None)])==(0,1)
+    assert '.sha256-' in p.experiment.log_asset.call_args.kwargs['file_name']
+
+
+def test_slow_upload_does_not_block_latest_scheduler_observation(tmp_path):
+    from scripts.sync_clust_comet import PublicationWorker
+    worker=PublicationWorker(SimpleNamespace(),tmp_path)
+    started,release=threading.Event(),threading.Event()
+    observed=[]
+    def blocked(value):
+        observed.append(value);started.set();release.wait(5)
+    worker.publish_once=blocked
+    worker.thread.start()
+    try:
+        worker.submit({'stage':'decode','completed':1})
+        assert started.wait(2)
+        worker.submit({'stage':'decode','completed':50})
+        assert worker.observed['completed']==50 and len(observed)==1
+    finally:
+        worker.stop.set();release.set();worker.thread.join(2)
+    assert not worker.thread.is_alive()

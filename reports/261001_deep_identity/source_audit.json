@@ -1,0 +1,421 @@
+{
+  "evidence_cutoff": "2026-10-01T21:48:58+00:00",
+  "run": "/home/kolyangg/rsrch_new/runs/flux4b_deep_identity1024_det_20261001",
+  "comet": "https://www.comet.com/nikolay-2104/rsrch-new/75e5d8961bdf40efab63ffd2770711ca",
+  "identity": {
+    "variant": "masked_deep_identity_flow_v5",
+    "base": {
+      "backend": "flux",
+      "arch": "flux2_klein_4b",
+      "revisions": {
+        "flux4b": "a3b4f4849157f664bdbc776fd7453c2783562f4d",
+        "flux4b_text": "1cfa9a7208912126459214e8b04321603b3df60c",
+        "flux_vae": "3f679cf232e6d91d28396522d9502c31e8f7ccbe"
+      },
+      "source_commit": "ecee894ed2b1f3716d9d7326693061ec1a3105bb",
+      "source_patch_sha256": "e3b8e1b61857a9d0071283e7e0e593833ff9b45cfc6a9dac7aad132a4872cdb3",
+      "adapter_code_sha256": "e0995efb7df54403b1a3d94a66ae6fa577b37ae330805b47450ce128c22960c1",
+      "branch": {
+        "alpha": 256,
+        "gamma": 1.0,
+        "max_reference_keys": 512,
+        "query_chunk": 128,
+        "rank": 256
+      },
+      "lora": {
+        "alpha": 8,
+        "rank": 8
+      }
+    },
+    "config_sha256": "d1759bf8e2b41369858959632cf0de99e14a7b49171c797d6ddd0a3be1f77def",
+    "source_sha256": {
+      "scripts/masked_face_flow.py": "8872789b49fd8e4122a512601aff981958e36baa83440389c84cad94907e29e1",
+      "scripts/train_masked_face_flow.py": "a7b9eed206251af9042efa9ec8ddd43314e6a57bf4956e6394e5232046853fe5",
+      "ba_dit/nn/masked_face_flow.py": "c57b4ced830fc306bfc073299be9a9937eea06e579e8eb9c291a7a841bdf0596",
+      "scripts/face_crop_flow.py": "5c02da42e754e970edc5ac434982e93adacb7bfe57616e15da155e5fac1f8cb2",
+      "ba_dit/nn/face_crop_flow.py": "3af7d82b99db8dc8b499decfcde876ef3a41d1aebcbbe924fd3c3c85e5b5947d",
+      "ba_dit/backends/attention.py": "8a60ef1e945acdc8558597cdde542d29a0f7f4b5cf7cccd255eba429e39d4e0b",
+      "ba_dit/backends/flux_runtime.py": "ba3f9f39549917875303641067913315229afed593fc28649eb68e89fd64f036",
+      "scripts/conditioned_face_flow.py": "ebc7ac956d2725ea020be5204e7f3700c9c42e84cd87a38da638ef76d30d0845",
+      "ba_dit/nn/conditioned_face_flow.py": "2e6a1d86b0c04b8b21330949b32b87a4ffcfb8c32ccd1cdc57dfba90223c9fa4",
+      "ba_dit/nn/reference_refiner_flow.py": "a53d750859ed4d0de9f50eff82581ee44f65aaace52f868dd2786630ce230a51",
+      "scripts/run_reference_refiner.py": "4454e0af21fb52da7f10e87fa7315c02352c9e4c77bdc51c6681b0dc6f8443b3",
+      "scripts/benchmark_reference_refiner.py": "d057ac6825d1ab5c799fc38133afc87da2b9b6b82a83c25f92bd3afb020713d1",
+      "scripts/expand_face_flow_cache.py": "80e929b6126f9e0701b9426863eb4632c55d4a8e2e4d61447f965d0776f4cbe7",
+      "ba_dit/nn/deep_identity_flow.py": "e6bed24c9fd0dd73c1f0c723db602d48864816728f4d1e57051bbe9339331079",
+      "ba_dit/nn/arcface_identity.py": "2f90102459f60cf7eca7f14cd56c3e348d90a7ab0852ff2a3e2af1f42b7c9272",
+      "ba_dit/nn/face_identity_loss.py": "c1b35778408f2d98fcfb414e13870242385f161f27391a6bf30a34fad2d88129",
+      "scripts/prepare_identity_flow.py": "87568fb4674d4be0eedaa8c9ad1ec0b6637ce2c5777a5f8f6880f529a838a6d5",
+      "scripts/identity_face_flow.py": "63bb4e6962dcdfd37867e8e8b83ac62e640b757f6b18edd6e61bee13ac43f859",
+      "scripts/run_identity_flow.py": "e289348d458e1bbc44f03174fd988afda241731823be2a76c81917b646c210d5",
+      "scripts/check_identity_flow.py": "3aa4cf65daac0d4f9457a26c679a246d9ee70a5c03e722f538a5f6a57da3bd77",
+      "ba_dit/nn/deterministic_identity_loss.py": "f305f077b6c220b7662c88ef05980c4fddea7dde5d2b25dd245f33d8a84a161d",
+      "scripts/deterministic_identity_flow.py": "08f64b8c844222e949d34c9903cc8e350edb0bf1015bb49e974f70e1eedddaef",
+      "scripts/run_deterministic_identity_flow.py": "de6124495d2542ec695842bdaec4a28476a759d0f6d5594546d1d98c4dc8647e"
+    },
+    "train_manifest_sha256": "fca34ce7041276fa7c45edc6102f7f2560019884c8cb940f0eb6b75f4e0a3262",
+    "validation_manifest_sha256": "508e72d74861f2ae26414352c1291eef9d46fa9d18b9c7c088481a8f384bf98c",
+    "routing_masks_sha256": "92a2e571ffb10da0f91cb19ae4a8c24d74f8e4354a2441ca2fb7f50ccbc26628",
+    "initial_sha256": "fc474d7fc1d2ce5608eea33f05a4011b3a2b7e8bc52f6652bd80b5b641e4e660",
+    "query_residual": true,
+    "noise_skip": true,
+    "timestep_scaling": false,
+    "trainable_parameters": 30831747,
+    "loss": "native sampled-face-token flow MSE + periodic decoded face identity loss",
+    "sigmas": "original six values plus fresh stratified continuous sigmas; see cache manifest",
+    "training_reference": {
+      "sample_id": "oneid_00",
+      "identity_id": "51",
+      "prompt": "Reading paper man img, park bench, calm face, grey overcoat",
+      "reference": "/home/kolyangg/rsrch_new/data/datasets/one_id/ref/51.jpg",
+      "reference_box": [
+        425,
+        119,
+        666,
+        448
+      ],
+      "reference_hash": "5fdc48f461b0629b75113cfb2a7e078cc94d6a4f1b61eb1121452d87b4d77ed9",
+      "seed": 0,
+      "split_policy": "one_id_diagnostic"
+    },
+    "training_images": 19,
+    "native_background_cfg": 4.0,
+    "face_cfg": 1.0,
+    "validation_targets": false,
+    "native_velocity_inside_face": false,
+    "background": "frozen native generated image; noised interpolation; exact final pixel preservation",
+    "cache_source": {
+      "run": "/home/kolyangg/rsrch_new/runs/face_flow_refiner_cache_20261001",
+      "manifest_sha256": "f04e1315aa35a1b6e3ac7be98cf9a4d290058ec9637e173e7eac69371996b475"
+    },
+    "head": {
+      "kind": "deep_identity",
+      "width": 1024,
+      "heads": 16,
+      "extra_reference_reads": 2,
+      "weight_decay": 0.01
+    },
+    "probe_every": 1000,
+    "live_metric_every": 100,
+    "optimizer_batch_size": 256,
+    "frozen_core_cache": true,
+    "batch_gather": "stacked CUDA tensors",
+    "comparison": "bundled architecture, noise diversity and optimizer experiment",
+    "initial_flow_is_zero": false,
+    "initialization": "best refiner step 500; two new zero-output reference-read blocks",
+    "core_checkpoint": {
+      "path": "/home/kolyangg/rsrch_new/runs/flux4b_face_conditioned512_diverse_20261001/checkpoint-010000/branch.safetensors",
+      "sha256": "a5c88a2914b6d32911e15eae996d8a9d7c3ad1f79c47c7fabefff89e1780468f",
+      "manifest_sha256": "061e3d5f05b6a39994782d382718ba38e9aa7c508076993df191250711de8553",
+      "step": 10000
+    },
+    "ablation": "new refiner off; frozen core retains its own reference conditioning",
+    "frozen_BA_parameters": 5327360,
+    "parent_checkpoint": {
+      "path": "/home/kolyangg/rsrch_new/runs/flux4b_reference_refiner1024_b128_20261001/checkpoint-000500/branch.safetensors",
+      "sha256": "83df2682f9cb2300d6af44f4378c164972ab15af22f4a40965e7ac84b1071de6",
+      "step": 500,
+      "id_sim": 0.22971392112473646
+    },
+    "identity_objective": {
+      "weight": 0.5,
+      "every": 2,
+      "batch_size": 1,
+      "loss": "1 - ArcFace cosine to fixed training reference",
+      "alignment": "training-photo five landmarks",
+      "clean_estimate": "noisy - sigma * velocity",
+      "decoder": "frozen FLUX2 VAE; cropped packed latent with 48px context",
+      "cache": "/home/kolyangg/rsrch_new/runs/face_identity_aux_20261001",
+      "cache_manifest_sha256": "bee27ac51266fc07106de3bbf94dcbcbeb128965dcac2a6432ed9c9f1e0c1448",
+      "arcface_path": "/home/kolyangg/.insightface/models/buffalo_l/w600k_r50.onnx",
+      "arcface_sha256": "4c06341c33c2ca1f86781dab0e829f88ad5b64be9fba56e56bc9ebdefc619e43",
+      "reference_embedding_sha256": "cb99ba1a5722758473cad41ea3103c2524071f5416ec1a9f9876cb5382b55ff9",
+      "validation_data_used": false,
+      "optimizer_reset": true,
+      "cudnn_tf32": false,
+      "admission_sha256": "a3f06b756b9991ffaffdf6c4da7fba15e8a590441d1f8debdd521767346c38e7"
+    },
+    "continuation": {
+      "source": "/home/kolyangg/rsrch_new/runs/flux4b_deep_identity1024_20261001",
+      "step": 500,
+      "identity_sha256": "5967e10acb9554e2257097544aba7fab273732a77e62e490ee9e4dda72187f27",
+      "checkpoint_sha256": "74fb3205f688ac76665f61cb48384901a92b2454e1559d1d566e0522cc0ca5d3",
+      "optimizer_sha256": "9db958195bff1010b2c994c6ad254903937198509da86051b1385aead711a498",
+      "reason": "grid_sample CUDA backward is nondeterministic; use equivalent deterministic bilinear gather",
+      "optimizer_reset": false,
+      "historical_validations": "imported unchanged with original checkpoint hashes"
+    },
+    "runtime_determinism": {
+      "algorithms": true,
+      "cudnn_deterministic": true,
+      "cudnn_benchmark": false,
+      "cublas_workspace_config": ":4096:8",
+      "resume_check": "exact parameter equality"
+    }
+  },
+  "status": {
+    "controller_pid": 258582,
+    "status": "completed",
+    "run": "/home/kolyangg/rsrch_new/runs/flux4b_deep_identity1024_det_20261001",
+    "last_completed_validation": 5000,
+    "best_step": 500,
+    "best_id_sim": 0.251903938750426,
+    "consecutive_small_gains": 2,
+    "plateau": true,
+    "minimum_gain": 0.003,
+    "patience": 2,
+    "history": [
+      {
+        "step": 500,
+        "id_sim": 0.251903938750426,
+        "gain_over_previous_best": 0.022190017625689534,
+        "consecutive_small_gains": 0
+      },
+      {
+        "step": 2000,
+        "id_sim": 0.24137144985919198,
+        "gain_over_previous_best": -0.01053248889123401,
+        "consecutive_small_gains": 1
+      },
+      {
+        "step": 5000,
+        "id_sim": 0.22526481576884785,
+        "gain_over_previous_best": -0.02663912298157814,
+        "consecutive_small_gains": 2
+      }
+    ],
+    "updated_at": "2026-10-01T21:44:23.966596+00:00",
+    "stage": "ID plateau",
+    "target_step": 5000,
+    "child_pid": null,
+    "training_steps": 5000
+  },
+  "image_scores": {
+    "0": {
+      "id_sim_legacy_best": 0.22971392112473646,
+      "id_sim_face_count": 4.125,
+      "id_sim_no_face": 0.0,
+      "id_sim": 0.22971392112473646,
+      "id_sim_mask_iou": 0.9137215835435603,
+      "id_sim_unowned": 0.0,
+      "output_mask_missing": 0.0,
+      "id_sim_ambiguous": 0.0,
+      "text_sim": 26.164817730585735
+    },
+    "500": {
+      "id_sim_legacy_best": 0.251903938750426,
+      "id_sim_face_count": 4.125,
+      "id_sim_no_face": 0.0,
+      "id_sim": 0.251903938750426,
+      "id_sim_mask_iou": 0.911019400430196,
+      "id_sim_unowned": 0.0,
+      "output_mask_missing": 0.0,
+      "id_sim_ambiguous": 0.0,
+      "text_sim": 26.269514958063763
+    },
+    "2000": {
+      "id_sim_legacy_best": 0.24137144985919198,
+      "id_sim_face_count": 4.125,
+      "id_sim_no_face": 0.0,
+      "id_sim": 0.24137144985919198,
+      "id_sim_mask_iou": 0.910532451249809,
+      "id_sim_unowned": 0.0,
+      "output_mask_missing": 0.0,
+      "id_sim_ambiguous": 0.0,
+      "text_sim": 26.07942859331767
+    },
+    "5000": {
+      "id_sim_legacy_best": 0.22752917666609088,
+      "id_sim_face_count": 4.125,
+      "id_sim_no_face": 0.0,
+      "id_sim": 0.22526481576884785,
+      "id_sim_mask_iou": 0.8984515410614419,
+      "id_sim_unowned": 0.0,
+      "output_mask_missing": 0.0,
+      "id_sim_ambiguous": 0.0,
+      "text_sim": 26.211002906163532
+    }
+  },
+  "decision": {
+    "best_step": 500,
+    "best_id_sim": 0.251903938750426,
+    "consecutive_small_gains": 2,
+    "plateau": true,
+    "minimum_gain": 0.003,
+    "patience": 2,
+    "history": [
+      {
+        "step": 500,
+        "id_sim": 0.251903938750426,
+        "gain_over_previous_best": 0.022190017625689534,
+        "consecutive_small_gains": 0
+      },
+      {
+        "step": 2000,
+        "id_sim": 0.24137144985919198,
+        "gain_over_previous_best": -0.01053248889123401,
+        "consecutive_small_gains": 1
+      },
+      {
+        "step": 5000,
+        "id_sim": 0.22526481576884785,
+        "gain_over_previous_best": -0.02663912298157814,
+        "consecutive_small_gains": 2
+      }
+    ]
+  },
+  "git_head": "ff56337e9bd5b131eaf946895a3f73c8cec3c490",
+  "note": "Uncommitted implementation is identified by immutable source snapshots and hashes, not git HEAD alone.",
+  "source_hashes": {
+    "/home/kolyangg/rsrch_new/runs/flux4b_deep_identity1024_det_20261001/inference_audit_5000.json": "384e974fd9b6f899f3e3d8c3bdcfcb878a4fc0a0b01d9defd51b400d2ca3d42e",
+    "/home/kolyangg/rsrch_new/scripts/masked_face_flow.py": "8872789b49fd8e4122a512601aff981958e36baa83440389c84cad94907e29e1",
+    "/home/kolyangg/rsrch_new/scripts/expand_face_flow_cache.py": "80e929b6126f9e0701b9426863eb4632c55d4a8e2e4d61447f965d0776f4cbe7",
+    "/home/kolyangg/rsrch_new/scripts/prepare_identity_flow.py": "87568fb4674d4be0eedaa8c9ad1ec0b6637ce2c5777a5f8f6880f529a838a6d5",
+    "/home/kolyangg/rsrch_new/runs/flux4b_reference_refiner1024_b128_20261001/validation-005000/quality_summary.json": "a7daa3406c2ddbb9cb68516093907c8f51241fbb023c1ac537328e93c145fa90",
+    "/home/kolyangg/rsrch_new/ba_dit/nn/arcface_identity.py": "2f90102459f60cf7eca7f14cd56c3e348d90a7ab0852ff2a3e2af1f42b7c9272",
+    "/home/kolyangg/rsrch_new/ba_dit/nn/deterministic_identity_loss.py": "f305f077b6c220b7662c88ef05980c4fddea7dde5d2b25dd245f33d8a84a161d",
+    "/home/kolyangg/rsrch_new/runs/flux4b_deep_identity1024_det_20261001/validation-000500/quality_per_image.csv": "f3445ba732bcd9b8ceaf0ef05c017869b99633ba18d112421295307ec78b0c73",
+    "/tmp/codex-remote-attachments/01a0f18d-112a-7520-8ae2-cd6285ecf1e5/d225a994-d286-47e7-977a-c5315ed32378/2-branched_attention_short_combined_E13_CL14_Hardcase_CL19_CL23_CL39.pdf": "472f5e3ea3fbea46d3a8207d92310276eed0d2d8c5029a71b6200b98d5cba428",
+    "/home/kolyangg/rsrch_new/runs/flux4b_deep_identity1024_det_20261001/admission.json": "a3f06b756b9991ffaffdf6c4da7fba15e8a590441d1f8debdd521767346c38e7",
+    "/home/kolyangg/rsrch_new/runs/flux4b_deep_identity1024_det_20261001/metrics.jsonl": "fb7c486d319eb71286b463984d0206b7265935aa9983ce842ea10ffed01f4680",
+    "/home/kolyangg/rsrch_new/scripts/face_crop_flow.py": "5c02da42e754e970edc5ac434982e93adacb7bfe57616e15da155e5fac1f8cb2",
+    "/home/kolyangg/rsrch_new/scripts/run_deterministic_identity_flow.py": "de6124495d2542ec695842bdaec4a28476a759d0f6d5594546d1d98c4dc8647e",
+    "/home/kolyangg/rsrch_new/runs/flux4b_deep_identity1024_det_20261001/probes.json": "7234bb51f82679439472f70121c041d1ee768656929b36e06b670256832cefd9",
+    "/home/kolyangg/rsrch_new/scripts/deterministic_identity_flow.py": "08f64b8c844222e949d34c9903cc8e350edb0bf1015bb49e974f70e1eedddaef",
+    "/home/kolyangg/rsrch_new/ba_dit/nn/face_identity_loss.py": "c1b35778408f2d98fcfb414e13870242385f161f27391a6bf30a34fad2d88129",
+    "/home/kolyangg/rsrch_new/runs/flux4b_reference_refiner1024_b128_20261001/validation-000500/quality_summary.json": "1d2652880090a6bd6059fda29eabb05840bd9debd0e1995cf5809cc27baff945",
+    "/home/kolyangg/rsrch_new/scripts/check_identity_flow.py": "3aa4cf65daac0d4f9457a26c679a246d9ee70a5c03e722f538a5f6a57da3bd77",
+    "/home/kolyangg/rsrch_new/runs/flux4b_deep_identity1024_det_20261001/validation-002000/quality_summary.json": "c3726055b6f312d720ef231e1d8486cd17dfeb8fd6561fec03a76baf8a5d8b2f",
+    "/home/kolyangg/rsrch_new/scripts/run_reference_refiner.py": "4454e0af21fb52da7f10e87fa7315c02352c9e4c77bdc51c6681b0dc6f8443b3",
+    "/home/kolyangg/rsrch_new/reports/261001_reference_refiner/report_style.py": "4ecb706e583120723b28d6c8c80799b000670a6fbb6f851c9eb29e0777c66624",
+    "/home/kolyangg/rsrch_new/runs/flux4b_deep_identity1024_det_20261001/convergence.json": "c005d78e745b14efb3fb863a8cdebac51dc2fead38fc96075ed3d1d1e5ed43da",
+    "/home/kolyangg/rsrch_new/runs/flux4b_deep_identity1024_det_20261001/identity.json": "556e036b5a72b40c5ed398ae4e2691f244e1e4cc11035e80ac42d238bf6142dc",
+    "/home/kolyangg/rsrch_new/sources/ai-toolkit-flux/extensions_built_in/diffusion_models/flux2/src/model.py": "a511a46ceffa247cb5c78e716fece7e4e5d44dc132030cb184b27156179faf2f",
+    "/home/kolyangg/rsrch_new/ba_dit/nn/reference_refiner_flow.py": "a53d750859ed4d0de9f50eff82581ee44f65aaace52f868dd2786630ce230a51",
+    "/home/kolyangg/rsrch_new/ba_dit/nn/face_crop_flow.py": "3af7d82b99db8dc8b499decfcde876ef3a41d1aebcbbe924fd3c3c85e5b5947d",
+    "/home/kolyangg/rsrch_new/scripts/benchmark_reference_refiner.py": "d057ac6825d1ab5c799fc38133afc87da2b9b6b82a83c25f92bd3afb020713d1",
+    "/home/kolyangg/rsrch_new/runs/flux4b_deep_identity1024_det_20261001/routing_masks.json": "92a2e571ffb10da0f91cb19ae4a8c24d74f8e4354a2441ca2fb7f50ccbc26628",
+    "/home/kolyangg/rsrch_new/scripts/train_masked_face_flow.py": "a7b9eed206251af9042efa9ec8ddd43314e6a57bf4956e6394e5232046853fe5",
+    "/home/kolyangg/rsrch_new/runs/flux4b_deep_identity1024_det_20261001/validation-005000/quality_summary.json": "974cdebb555f6c410e74e3054eec2694355db1c04184d5ef2e55251bfe5e38bd",
+    "/home/kolyangg/rsrch_new/runs/flux4b_deep_identity1024_det_20261001/validation-000000/quality_summary.json": "1d2652880090a6bd6059fda29eabb05840bd9debd0e1995cf5809cc27baff945",
+    "/home/kolyangg/rsrch_new/ba_dit/nn/conditioned_face_flow.py": "2e6a1d86b0c04b8b21330949b32b87a4ffcfb8c32ccd1cdc57dfba90223c9fa4",
+    "/home/kolyangg/rsrch_new/ba_dit/nn/masked_face_flow.py": "c57b4ced830fc306bfc073299be9a9937eea06e579e8eb9c291a7a841bdf0596",
+    "/home/kolyangg/rsrch_new/runs/flux4b_reference_refiner1024_b128_20261001/validation-002000/quality_summary.json": "25182cf81b2e7385ebc3fa46043adda7faa75113d6084dd2ac1929f2ec7c71a0",
+    "/home/kolyangg/rsrch_new/scripts/run_identity_flow.py": "e289348d458e1bbc44f03174fd988afda241731823be2a76c81917b646c210d5",
+    "/home/kolyangg/rsrch_new/runs/flux4b_deep_identity1024_det_20261001/training_summary.json": "64653b5142a2fbf1ac6ead689f5242a1cb5c8ff1e81051c681056b0394ed42ad",
+    "/home/kolyangg/rsrch_new/runs/flux4b_deep_identity1024_det_20261001/status.json": "d3feb298d92e1689178c9e9f7e3877944510003c20235d90880657bc04f8075e",
+    "/home/kolyangg/rsrch_new/runs/flux4b_deep_identity1024_det_20261001/comparison_summary.json": "4877b3937440e4d1930685bf8f1cc5e0abf59c2daf414b69855b2a601090931b",
+    "/home/kolyangg/rsrch_new/ba_dit/backends/attention.py": "8a60ef1e945acdc8558597cdde542d29a0f7f4b5cf7cccd255eba429e39d4e0b",
+    "/home/kolyangg/rsrch_new/runs/flux4b_deep_identity1024_det_20261001/inference_audit_500.json": "2c57d09bd868fe6e1d1ef0b85d2acff75b28aab2a9d003621d6daeb3acc38022",
+    "/home/kolyangg/rsrch_new/runs/flux4b_deep_identity1024_det_20261001/resume_check.json": "b6ce9feaf43a224bb47a45850d346ecafa60c316d0b3783f27a07ef299d431ec",
+    "/home/kolyangg/rsrch_new/ba_dit/backends/flux_runtime.py": "ba3f9f39549917875303641067913315229afed593fc28649eb68e89fd64f036",
+    "/home/kolyangg/rsrch_new/runs/flux4b_deep_identity1024_det_20261001/validation-000500/quality_summary.json": "ad077f04158edf6a78df15e69b37b69cd9c48c77985f9f6b85bcae9e9ee82019",
+    "/home/kolyangg/rsrch_new/runs/flux4b_deep_identity1024_det_20261001/validation-005000/quality_per_image.csv": "b989f3218048b62cc6a923891779f13e4b51b76b95e489e3aa9e9107d30923fd",
+    "/home/kolyangg/rsrch_new/scripts/conditioned_face_flow.py": "ebc7ac956d2725ea020be5204e7f3700c9c42e84cd87a38da638ef76d30d0845",
+    "/home/kolyangg/rsrch_new/runs/flux4b_deep_identity1024_det_20261001/final_training_audit.json": "78374f0eb5c5bf5c0db68689a8069bffffe27e5a23ca5abd01c90a3c44ee13e0",
+    "/home/kolyangg/rsrch_new/runs/flux4b_deep_identity1024_det_20261001/inference_audit_0.json": "43d6363de212b53c842e7e10746015fffe7d48c5b91b4e86be00c014359453ab",
+    "/home/kolyangg/rsrch_new/ba_dit/nn/deep_identity_flow.py": "e6bed24c9fd0dd73c1f0c723db602d48864816728f4d1e57051bbe9339331079",
+    "/home/kolyangg/rsrch_new/runs/flux4b_deep_identity1024_det_20261001/inference_audit_2000.json": "287f84b95b6dedecc212a46a4ccccdece528d8368e31b126556bb79222812c24",
+    "/home/kolyangg/rsrch_new/runs/flux4b_deep_identity1024_det_20261001/validation-000000/quality_per_image.csv": "b802ca769a9574011b6b834543a05cd0008c12cf4bd6e460595c5c3112591df8",
+    "/home/kolyangg/rsrch_new/runs/flux4b_deep_identity1024_det_20261001/deterministic_replay.json": "08fa16022c2cf38a880b12bc77a4c7aeb32235291f7237e5d48fa1cc0dd9990a",
+    "/home/kolyangg/rsrch_new/scripts/identity_face_flow.py": "63bb4e6962dcdfd37867e8e8b83ac62e640b757f6b18edd6e61bee13ac43f859",
+    "/home/kolyangg/rsrch_new/reports/261001_deep_identity/build_report.py": "01827165388d71ab85afcb6be8b2c7f63311dcab0d666660fd0d0ab5263018ee",
+    "/home/kolyangg/rsrch_new/runs/flux4b_deep_identity1024_det_20261001/best_checkpoint.json": "b1bdaf258dc18243dce00e7e2d9466d24dde9e0337615281328639e10f3406ee",
+    "/home/kolyangg/rsrch_new/runs/flux4b_reference_refiner1024_b128_20261001/validation-000000/quality_summary.json": "d3979c6854517c158b968402f854af2324117eb9820674aff7b023877310a0c3"
+  },
+  "pdf_sha256": "0ac45675d1ec943ef2327602028cfcb95c2d29094fb75f9e9e8ae1fd22c79136",
+  "pages": [
+    {
+      "number": 1,
+      "title": "Three-read BA with direct face identity supervision"
+    },
+    {
+      "number": 2,
+      "title": "Whole model: native background and a new BA face trajectory"
+    },
+    {
+      "number": 3,
+      "title": "Connection point: final single-stream Q / K / V"
+    },
+    {
+      "number": 4,
+      "title": "Branched attention: three trainable reads and a frozen core"
+    },
+    {
+      "number": 5,
+      "title": "First read: reference attention and identity-conditioned context"
+    },
+    {
+      "number": 6,
+      "title": "Two extra reference reads \u2014 implementation"
+    },
+    {
+      "number": 7,
+      "title": "Training objective: flow accuracy plus decoded face identity"
+    },
+    {
+      "number": 8,
+      "title": "Deterministic recovery preserves the trained state"
+    },
+    {
+      "number": 9,
+      "title": "Parameter ownership and exact experiment settings"
+    },
+    {
+      "number": 10,
+      "title": "Training data and measured batch scaling"
+    },
+    {
+      "number": 11,
+      "title": "Spatial ownership: native scene outside, BA inside"
+    },
+    {
+      "number": 12,
+      "title": "CL14 and CL39: shared reference attention, different placement"
+    },
+    {
+      "number": 13,
+      "title": "Generated identity scores: an early gain, then regression"
+    },
+    {
+      "number": 14,
+      "title": "Lower cached losses do not guarantee better generated faces"
+    },
+    {
+      "number": 15,
+      "title": "All 24 cases: paired identity changes"
+    },
+    {
+      "number": 16,
+      "title": "Measured invariants and retained evidence"
+    },
+    {
+      "number": 17,
+      "title": "Stopping decision, limitations and reproducible artifacts"
+    },
+    {
+      "number": 18,
+      "title": "Paired faces \u00b7 fixed panel items 1\u20134 of 24"
+    },
+    {
+      "number": 19,
+      "title": "Paired faces \u00b7 fixed panel items 5\u20138 of 24"
+    },
+    {
+      "number": 20,
+      "title": "Paired faces \u00b7 fixed panel items 9\u201312 of 24"
+    },
+    {
+      "number": 21,
+      "title": "Paired faces \u00b7 fixed panel items 13\u201316 of 24"
+    },
+    {
+      "number": 22,
+      "title": "Paired faces \u00b7 fixed panel items 17\u201320 of 24"
+    },
+    {
+      "number": 23,
+      "title": "Paired faces \u00b7 fixed panel items 21\u201324 of 24"
+    }
+  ]
+}

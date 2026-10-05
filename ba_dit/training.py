@@ -61,6 +61,10 @@ def train_segment(config, mode, run_dir, until, resume=None, init_adapter=None, 
     schedule = torch.optim.lr_scheduler.LambdaLR(optimizer, lambda step: min(1.0, (step + 1) / max(1, warmup)))
     scaler = make_scaler(config)
     conditioner = TrainingConditioner(config, backend)
+    identity_objective = None
+    if config['training'].get('identity_loss', {}).get('weight', 0) > 0:
+        from ba_dit.nn.online_identity_loss import OnlineIdentityObjective
+        identity_objective = OnlineIdentityObjective(config, conditioner.vae)
     # Adapter modes consume different initialization draws. Match training noise
     # and timestep draws across the LoRA/branch controls after registration.
     torch.manual_seed(config["training"]["seed"])
@@ -127,7 +131,8 @@ def train_segment(config, mode, run_dir, until, resume=None, init_adapter=None, 
                     tensors, metadata = conditioner(row)
                     if config['branch'].get('kind') == 'masked_face_qkvo':
                         tensors['target_face_mask'] = face_mask_for(row)
-                    loss = backend.training_loss(model, tensors, config, branch_enabled)
+                    extra = {'identity_objective': identity_objective, 'row': row, 'step': step} if identity_objective else {}
+                    loss = backend.training_loss(model, tensors, config, branch_enabled, **extra)
                     if not torch.isfinite(loss):
                         raise RuntimeError(f"Nonfinite loss at sample {row['sample_id']}")
                     scaler.scale(loss / config["training"]["grad_accum"]).backward()
@@ -169,6 +174,8 @@ def train_segment(config, mode, run_dir, until, resume=None, init_adapter=None, 
                        "hardware/reserved_fraction": fraction,
                        "tokens/reference": metadata["vae"]["reference_tokens"],
                        "tokens/text_slots": metadata["encoder"]["text_tokens"]}
+            if identity_objective is not None:
+                metrics.update(identity_objective.last_metrics)
             if mixed(config):
                 memory = device_memory(config)
                 for device, values in memory.items():
